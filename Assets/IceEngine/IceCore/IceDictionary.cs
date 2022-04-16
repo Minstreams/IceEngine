@@ -4,11 +4,12 @@ using UnityEngine;
 
 namespace IceEngine
 {
+    public class IceDictionary { }
     /// <summary>
     /// 可序列化的Dictionary
     /// </summary>
     [System.Serializable]
-    public class IceDictionary<TKey, TValue> : IDictionary<TKey, TValue>, ISerializationCallbackReceiver
+    public class IceDictionary<TKey, TValue> : IceDictionary, IDictionary<TKey, TValue>, ISerializationCallbackReceiver
     {
         [SerializeField] List<TKey> m_Keys = new List<TKey>();
         [SerializeField] List<TValue> m_Values = new List<TValue>();
@@ -89,7 +90,7 @@ namespace IceEngine
 
             // 构造m_dic
             m_Dictionary.Clear();
-            for (int i = 0; i < count; ++i) m_Dictionary.Add(m_Keys[i], m_Values[i]);
+            for (int i = 0; i < count; ++i) if (!m_Dictionary.ContainsKey(m_Keys[i])) m_Dictionary.Add(m_Keys[i], m_Values[i]);
 
             Dirty = false;
         }
