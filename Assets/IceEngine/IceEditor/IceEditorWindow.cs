@@ -244,18 +244,18 @@ namespace IceEditor
         #endregion
 
         #region 临时数据托管
-        [SerializeField] readonly IceDictionary<string, Color> _stringColorMap = new IceDictionary<string, Color>();
+        [SerializeField] IceDictionary<string, Color> _stringColorMap = new IceDictionary<string, Color>();
         public Color GetColor(string key, Color defaultVal) => _stringColorMap.TryGetValue(key, out Color val) ? val : _stringColorMap[key] = defaultVal;
         public Color GetColor(string key) => GetColor(key, Color.white);
         public Color SetColor(string key, Color value) => _stringColorMap[key] = value;
 
 
-        [SerializeField] readonly IceDictionary<string, bool> _stringBoolMap = new IceDictionary<string, bool>();
+        [SerializeField] IceDictionary<string, bool> _stringBoolMap = new IceDictionary<string, bool>();
         public bool GetBool(string key, bool defaultVal = false) => _stringBoolMap.TryGetValue(key, out bool res) ? res : _stringBoolMap[key] = defaultVal;
         public bool SetBool(string key, bool value) => _stringBoolMap[key] = value;
 
 
-        [SerializeField] readonly IceDictionary<string, AnimBool> _stringAnimBoolMap = new IceDictionary<string, AnimBool>();
+        [SerializeField] IceDictionary<string, AnimBool> _stringAnimBoolMap = new IceDictionary<string, AnimBool>();
         public AnimBool GetAnimBool(string key, bool defaultVal = false)
         {
             if (_stringAnimBoolMap.TryGetValue(key, out AnimBool res))
@@ -272,28 +272,28 @@ namespace IceEditor
         public bool SetAnimBoolTarget(string key, bool value) => GetAnimBool(key).target = value;
 
 
-        [SerializeField] readonly IceDictionary<string, int> _stringIntMap = new IceDictionary<string, int>();
+        [SerializeField] IceDictionary<string, int> _stringIntMap = new IceDictionary<string, int>();
         public int GetInt(string key, int defaultVal = 0) => _stringIntMap.TryGetValue(key, out int res) ? res : _stringIntMap[key] = defaultVal;
         public int SetInt(string key, int value) => _stringIntMap[key] = value;
 
 
-        [SerializeField] readonly IceDictionary<string, float> _stringFloatMap = new IceDictionary<string, float>();
+        [SerializeField] IceDictionary<string, float> _stringFloatMap = new IceDictionary<string, float>();
         public float GetFloat(string key, float defaultVal = 0) => _stringFloatMap.TryGetValue(key, out float res) ? res : _stringFloatMap[key] = defaultVal;
         public float SetFloat(string key, float value) => _stringFloatMap[key] = value;
 
 
-        [SerializeField] readonly IceDictionary<string, string> _stringStringMap = new IceDictionary<string, string>();
+        [SerializeField] IceDictionary<string, string> _stringStringMap = new IceDictionary<string, string>();
         public string GetString(string key, string defaultVal = "") => _stringStringMap.TryGetValue(key, out string res) ? res : _stringStringMap[key] = defaultVal;
         public string SetString(string key, string value) => _stringStringMap[key] = value;
 
 
-        [SerializeField] readonly IceDictionary<string, Vector2> _stringVec2Map = new IceDictionary<string, Vector2>();
+        [SerializeField] IceDictionary<string, Vector2> _stringVec2Map = new IceDictionary<string, Vector2>();
         public Vector2 GetVector2(string key) => GetVector2(key, Vector2.zero);
         public Vector2 GetVector2(string key, Vector2 defaultVal) => _stringVec2Map.TryGetValue(key, out Vector2 res) ? res : _stringVec2Map[key] = defaultVal;
         public Vector2 SetVector2(string key, Vector2 value) => _stringVec2Map[key] = value;
 
 
-        [SerializeField] readonly IceDictionary<int, Vector2> _intVec2Map = new IceDictionary<int, Vector2>();
+        [SerializeField] IceDictionary<int, Vector2> _intVec2Map = new IceDictionary<int, Vector2>();
         public Vector2 GetVector2(int key) => GetVector2(key, Vector2.zero);
         public Vector2 GetVector2(int key, Vector2 defaultVal) => _intVec2Map.TryGetValue(key, out Vector2 res) ? res : _intVec2Map[key] = defaultVal;
         public Vector2 SetVector2(int key, Vector2 value) => _intVec2Map[key] = value;

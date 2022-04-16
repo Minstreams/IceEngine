@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
+using IceEngine;
 
 namespace IceEditor
 {
@@ -13,13 +14,12 @@ namespace IceEditor
 
         protected override void OnDebugGUI(Rect position)
         {
-        }
 
+        }
         protected override void OnWindowGUI(Rect position)
         {
             using (CHANGECHECK)
             {
-                EditorGUI.BeginChangeCheck();
                 using (CHANGECHECK)
                 {
                     Button("Anything1");
@@ -31,6 +31,13 @@ namespace IceEditor
                     if (Changed) LogImportant("Check 2!");
                 }
                 if (Changed) LogImportant("Check All!");
+            }
+            using (GROUP)
+            {
+                if (Button("Test"))
+                {
+                    IceIsland.LogImportant("asa");
+                }
             }
         }
     }

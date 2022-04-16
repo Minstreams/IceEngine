@@ -9,7 +9,7 @@ namespace IceEngine
     /// <summary>
     /// 各系统依赖的核心扩展方法
     /// </summary>
-    public static class CoreExtension
+    public static class IceExtension
     {
         #region GUIStyle
         /// <summary>
@@ -36,6 +36,13 @@ namespace IceEngine
         /// <param name="colorExp">颜色表达式</param>
         /// <returns>结果表达式</returns>
         public static string Color(this string self, string colorExp) => $"<color={colorExp}>{self}</color>";
+        /// <summary>
+        /// 等价于&lt;color=#<paramref name="color"/>&gt;<paramref name="self"/>&lt;/color&gt;
+        /// </summary>
+        /// <param name="self">原字符串</param>
+        /// <param name="color">颜色</param>
+        /// <returns>结果表达式</returns>
+        public static string Color(this string self, Color color) => $"<color=#{ColorUtility.ToHtmlStringRGB(color)}>{self}</color>";
         /// <summary>
         /// 等价于&lt;b&gt;<paramref name="self"/>&lt;/b&gt;
         /// </summary>
