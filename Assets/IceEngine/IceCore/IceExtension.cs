@@ -64,6 +64,14 @@ namespace IceEngine
         /// 给Rect应用一个指定xy两个轴向宽度的边框
         /// </summary>
         public static Rect ApplyBorder(this Rect self, float widthX, float widthY) => new Rect(self.x - widthX, self.y - widthY, self.width + widthX + widthX, self.height + widthY + widthY);
+        /// <summary>
+        /// 移动边缘
+        /// </summary>
+        public static Rect MoveEdge(this Rect self, float left, float right, float top, float bottom) => new Rect(self.x + left, self.y + top, self.width + right - left, self.height + bottom - top);
+        /// <summary>
+        /// 移动
+        /// </summary>
+        public static Rect Move(this Rect self, float x, float y) => new Rect(self.x + x, self.y + y, self.width, self.height);
         #endregion
     }
 }

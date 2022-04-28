@@ -6,6 +6,7 @@ using UnityEditor;
 using UnityEditor.AnimatedValues;
 using IceEngine;
 using System.Linq;
+using IceEditor.Internal;
 
 namespace IceEditor
 {
@@ -62,7 +63,7 @@ namespace IceEditor
         /// <summary>
         /// 默认主题颜色
         /// </summary>
-        protected virtual Color DefaultThemeColor => new Color(1, 0.6f, 0);
+        protected virtual Color DefaultThemeColor => IceConfig.Config.themeColor;
         /// <summary>
         /// 是否在 DebugUI 中显示 StatusUI
         /// </summary>
@@ -70,7 +71,7 @@ namespace IceEditor
         /// <summary>
         /// 反序列化事件
         /// </summary>
-        public virtual void OnAfterDeserialize() => RefreshThemeColor();
+        public virtual void OnAfterDeserialize() { }
         /// <summary>
         /// 序列化事件
         /// </summary>
@@ -131,39 +132,11 @@ namespace IceEditor
         /// <summary>
         /// 主题颜色
         /// </summary>
-        public Color ThemeColor
-        {
-            get => GetColor("ThemeColor", DefaultThemeColor);
-            set
-            {
-                if (ThemeColor != value)
-                {
-                    SetColor("ThemeColor", value);
-                    _themeColorExp = null;
-                    _stlSectionHeader = null;
-                    _stlPrefix = null;
-                    _stlSeparator = null;
-                    _stlSeparatorOn = null;
-                }
-            }
-        }
-        /// <summary>
-        /// 手动刷新颜色表达式和样式
-        /// </summary>
-        protected void RefreshThemeColor()
-        {
-            var c = ThemeColor;
-            Log(string.Format("RefreshThemeColor ({0:0.000}, {1:0.000}, {2:0.000})", c.r, c.g, c.b));
-            _themeColorExp = null;
-            _stlSectionHeader = null;
-            _stlPrefix = null;
-            _stlSeparator = null;
-            _stlSeparatorOn = null;
-        }
+        public Color ThemeColor { get => Island.ThemeColor; set => Island.ThemeColor = value; }
         /// <summary>
         /// 主题颜色表达式
         /// </summary>
-        public string ThemeColorExp => string.IsNullOrEmpty(_themeColorExp) ? _themeColorExp = $"#{ColorUtility.ToHtmlStringRGB(ThemeColor)}" : _themeColorExp; string _themeColorExp = null;
+        public string ThemeColorExp => Island.ThemeColorExp;
         #endregion
 
         #region Log & Dialog
@@ -244,60 +217,45 @@ namespace IceEditor
         #endregion
 
         #region 临时数据托管
-        [SerializeField] IceDictionary<string, Color> _stringColorMap = new IceDictionary<string, Color>();
-        public Color GetColor(string key, Color defaultVal) => _stringColorMap.TryGetValue(key, out Color val) ? val : _stringColorMap[key] = defaultVal;
-        public Color GetColor(string key) => GetColor(key, Color.white);
-        public Color SetColor(string key, Color value) => _stringColorMap[key] = value;
-
-
-        [SerializeField] IceDictionary<string, bool> _stringBoolMap = new IceDictionary<string, bool>();
-        public bool GetBool(string key, bool defaultVal = false) => _stringBoolMap.TryGetValue(key, out bool res) ? res : _stringBoolMap[key] = defaultVal;
-        public bool SetBool(string key, bool value) => _stringBoolMap[key] = value;
-
-
-        [SerializeField] IceDictionary<string, AnimBool> _stringAnimBoolMap = new IceDictionary<string, AnimBool>();
-        public AnimBool GetAnimBool(string key, bool defaultVal = false)
-        {
-            if (_stringAnimBoolMap.TryGetValue(key, out AnimBool res))
-            {
-                if (res.valueChanged.GetPersistentEventCount() == 0) res.valueChanged.AddListener(Repaint);
-                return res;
-            }
-            return _stringAnimBoolMap[key] = new AnimBool(defaultVal, Repaint);
-        }
-        public bool GetAnimBoolValue(string key, bool defaultVal = false) => GetAnimBool(key, defaultVal).value;
-        public bool GetAnimBoolTarget(string key, bool defaultVal = false) => GetAnimBool(key, defaultVal).target;
-        public float GetAnimBoolFaded(string key, bool defaultVal = false) => GetAnimBool(key, defaultVal).faded;
-        public bool SetAnimBoolValue(string key, bool value) => GetAnimBool(key).value = value;
-        public bool SetAnimBoolTarget(string key, bool value) => GetAnimBool(key).target = value;
-
-
-        [SerializeField] IceDictionary<string, int> _stringIntMap = new IceDictionary<string, int>();
-        public int GetInt(string key, int defaultVal = 0) => _stringIntMap.TryGetValue(key, out int res) ? res : _stringIntMap[key] = defaultVal;
-        public int SetInt(string key, int value) => _stringIntMap[key] = value;
-
-
-        [SerializeField] IceDictionary<string, float> _stringFloatMap = new IceDictionary<string, float>();
-        public float GetFloat(string key, float defaultVal = 0) => _stringFloatMap.TryGetValue(key, out float res) ? res : _stringFloatMap[key] = defaultVal;
-        public float SetFloat(string key, float value) => _stringFloatMap[key] = value;
-
-
-        [SerializeField] IceDictionary<string, string> _stringStringMap = new IceDictionary<string, string>();
-        public string GetString(string key, string defaultVal = "") => _stringStringMap.TryGetValue(key, out string res) ? res : _stringStringMap[key] = defaultVal;
-        public string SetString(string key, string value) => _stringStringMap[key] = value;
-
-
-        [SerializeField] IceDictionary<string, Vector2> _stringVec2Map = new IceDictionary<string, Vector2>();
-        public Vector2 GetVector2(string key) => GetVector2(key, Vector2.zero);
-        public Vector2 GetVector2(string key, Vector2 defaultVal) => _stringVec2Map.TryGetValue(key, out Vector2 res) ? res : _stringVec2Map[key] = defaultVal;
-        public Vector2 SetVector2(string key, Vector2 value) => _stringVec2Map[key] = value;
-
-
         [SerializeField] IceDictionary<int, Vector2> _intVec2Map = new IceDictionary<int, Vector2>();
         public Vector2 GetVector2(int key) => GetVector2(key, Vector2.zero);
         public Vector2 GetVector2(int key, Vector2 defaultVal) => _intVec2Map.TryGetValue(key, out Vector2 res) ? res : _intVec2Map[key] = defaultVal;
         public Vector2 SetVector2(int key, Vector2 value) => _intVec2Map[key] = value;
 
+        public Color GetColor(string key, Color defaultVal) => Island.GetColor(key, defaultVal);
+        public Color GetColor(string key) => Island.GetColor(key);
+        public Color SetColor(string key, Color value) => Island.SetColor(key, value);
+
+        public bool GetBool(string key, bool defaultVal = false) => Island.GetBool(key, defaultVal);
+        public bool SetBool(string key, bool value) => Island.SetBool(key, value);
+
+        public AnimBool GetAnimBool(string key, bool defaultVal = false) => Island.GetAnimBool(key, defaultVal);
+        public bool GetAnimBoolValue(string key, bool defaultVal = false) => Island.GetAnimBoolValue(key, defaultVal);
+        public bool GetAnimBoolTarget(string key, bool defaultVal = false) => Island.GetAnimBoolTarget(key, defaultVal);
+        public float GetAnimBoolFaded(string key, bool defaultVal = false) => Island.GetAnimBoolFaded(key, defaultVal);
+        public bool SetAnimBoolValue(string key, bool value) => Island.SetAnimBoolValue(key, value);
+        public bool SetAnimBoolTarget(string key, bool value) => Island.SetAnimBoolTarget(key, value);
+
+        public int GetInt(string key, int defaultVal = 0) => Island.GetInt(key, defaultVal);
+        public int SetInt(string key, int value) => Island.SetInt(key, value);
+
+        public float GetFloat(string key, float defaultVal = 0) => Island.GetFloat(key, defaultVal);
+        public float SetFloat(string key, float value) => Island.SetFloat(key, value);
+
+        public string GetString(string key, string defaultVal = "") => Island.GetString(key, defaultVal);
+        public string SetString(string key, string value) => Island.SetString(key, value);
+
+        public Vector2 GetVector2(string key) => Island.GetVector2(key);
+        public Vector2 GetVector2(string key, Vector2 defaultVal) => Island.GetVector2(key, defaultVal);
+        public Vector2 SetVector2(string key, Vector2 value) => Island.SetVector2(key, value);
+
+        public Vector3 GetVector3(string key) => Island.GetVector3(key);
+        public Vector3 GetVector3(string key, Vector3 defaultVal) => Island.GetVector3(key, defaultVal);
+        public Vector3 SetVector3(string key, Vector3 value) => Island.SetVector3(key, value);
+
+        public Vector4 GetVector4(string key) => Island.GetVector4(key);
+        public Vector4 GetVector4(string key, Vector4 defaultVal) => Island.GetVector4(key, defaultVal);
+        public Vector4 SetVector4(string key, Vector4 value) => Island.SetVector4(key, value);
         #endregion
 
         #endregion
@@ -305,72 +263,15 @@ namespace IceEditor
         #region 【GUI Shortcut】
 
         #region 用到的样式
-        protected static GUIStyle StlEmpty => _stlEmpty?.Check() ?? (_stlEmpty = new GUIStyle("label") { margin = new RectOffset(0, 0, 0, 0), padding = new RectOffset(0, 0, 0, 0), }); static GUIStyle _stlEmpty;
-        protected GUIStyle StlBackground => _stlBackground?.Check() ?? (_stlBackground = new GUIStyle("label") { margin = new RectOffset(0, 0, 0, 0), padding = new RectOffset(0, 0, 0, 0), stretchHeight = true, }); GUIStyle _stlBackground;
-        protected GUIStyle StlHeader => _stlHeader?.Check() ?? (_stlHeader = new GUIStyle("LODRendererRemove") { margin = new RectOffset(5, 3, 6, 2), fontSize = 12, fontStyle = FontStyle.Normal, richText = true, }); GUIStyle _stlHeader;
-        protected GUIStyle StlSectionHeader => _stlSectionHeader?.Check() ?? (_stlSectionHeader = new GUIStyle("AnimationEventTooltip")
-        {
-            padding = new RectOffset(1, 8, 2, 2),
-            overflow = new RectOffset(24, 0, 0, 0),
-            fontSize = 14,
-            alignment = TextAnchor.MiddleLeft,
-            imagePosition = ImagePosition.ImageLeft,
-            contentOffset = new Vector2(0f, 0f),
-            stretchWidth = false,
-        }.Initialize(stl =>
-        {
-            stl.normal.textColor = new Color(0.8396226f, 0.8396226f, 0.8396226f);
-            stl.hover.textColor = new Color(1, 1, 1);
-            stl.hover.background = stl.normal.background;
-            stl.onNormal.textColor = ThemeColor;
-            stl.onNormal.background = stl.normal.background;
-            stl.onHover.textColor = ThemeColor * 1.2f;
-            stl.onHover.background = stl.normal.background;
-        })); GUIStyle _stlSectionHeader;
-        protected GUIStyle StlDock => _stlDock?.Check() ?? (_stlDock = new GUIStyle("dockarea") { padding = new RectOffset(1, 1, 1, 1), contentOffset = new Vector2(0f, 0f), }); GUIStyle _stlDock;
-        protected GUIStyle StlLabel => _stlLabel?.Check() ?? (_stlLabel = new GUIStyle("label") { richText = true, wordWrap = true }); GUIStyle _stlLabel;
-        protected GUIStyle StlPrefix => _stlPrefix?.Check() ?? (_stlPrefix = new GUIStyle("PrefixLabel") { margin = new RectOffset(3, 3, 2, 2), padding = new RectOffset(1, 1, 0, 0), alignment = TextAnchor.MiddleLeft, richText = true, }.Initialize(stl => { stl.focused.textColor = stl.active.textColor = stl.onNormal.textColor = stl.onActive.textColor = ThemeColor; stl.onNormal.background = stl.active.background; })); GUIStyle _stlPrefix;
-        protected GUIStyle StlGroup => _stlGroup?.Check() ?? (_stlGroup = new GUIStyle("NotificationBackground") { border = new RectOffset(16, 16, 13, 13), margin = new RectOffset(6, 6, 6, 6), padding = new RectOffset(10, 10, 6, 6), }); GUIStyle _stlGroup;
-        protected GUIStyle StlBox => _stlBox?.Check() ?? (_stlBox = new GUIStyle("window") { margin = new RectOffset(4, 4, 4, 4), padding = new RectOffset(6, 6, 6, 6), contentOffset = new Vector2(0f, 0f), stretchWidth = false, stretchHeight = false, }); GUIStyle _stlBox;
-        protected GUIStyle StlNode => _stlNode?.Check() ?? (_stlNode = new GUIStyle("flow node 0") { margin = new RectOffset(6, 6, 4, 4), padding = new RectOffset(10, 10, 6, 6), contentOffset = new Vector2(0f, 0f), }); GUIStyle _stlNode;
-        protected GUIStyle StlHighlight => _stlHighlight?.Check() ?? (_stlHighlight = new GUIStyle("LightmapEditorSelectedHighlight") { margin = new RectOffset(6, 6, 4, 4), padding = new RectOffset(10, 10, 10, 10), overflow = new RectOffset(0, 0, 0, 0), }); GUIStyle _stlHighlight;
-        protected GUIStyle StlButton => _stlButton?.Check() ?? (_stlButton = new GUIStyle("LargeButton") { richText = true, }); GUIStyle _stlButton;
-        protected GUIStyle StlError => _stlError?.Check() ?? (_stlError = new GUIStyle("Wizard Error") { border = new RectOffset(32, 0, 32, 0), padding = new RectOffset(32, 0, 7, 7), fixedHeight = 0f, }.Initialize(stl => { stl.normal.textColor = new Color(1f, 0.8469602f, 0f); })); GUIStyle _stlError;
-        int GetThemeColorHueIndex()
-        {
-            Color.RGBToHSV(ThemeColor, out float h, out float s, out _);
-            if (s < 0.3f) return 0;
-            if (h < 0.06f) return 6;
-            if (h < 0.13f) return 5;
-            if (h < 0.19f) return 4;
-            if (h < 0.46f) return 3;
-            if (h < 0.52f) return 2;
-            if (h < 0.84f) return 1;
-            return 6;
-        }
-        protected GUIStyle StlSeparator => _stlSeparator?.Check() ?? (_stlSeparator = new GUIStyle($"flow node {GetThemeColorHueIndex() }")); GUIStyle _stlSeparator;
-        protected GUIStyle StlSeparatorOn => _stlSeparatorOn?.Check() ?? (_stlSeparatorOn = new GUIStyle($"flow node {GetThemeColorHueIndex()} on")); GUIStyle _stlSeparatorOn;
-        protected GUIStyle StlIce => _stlIce?.Check() ?? (_stlIce = new GUIStyle("BoldTextField") { padding = new RectOffset(3, 3, 2, 2), fontSize = 11, richText = true, fixedHeight = 0f, stretchWidth = false, imagePosition = ImagePosition.ImageLeft, fontStyle = FontStyle.Normal }); GUIStyle _stlIce;
+        protected GUIStyle StlSectionHeader => Island.StlSectionHeader;
+        protected GUIStyle StlPrefix => Island.StlPrefix;
+        protected GUIStyle StlSeparator => Island.StlSeparator;
+        protected GUIStyle StlSeparatorOn => Island.StlSeparatorOn;
         #endregion
 
-        #region Drawing Element
-        /// <summary>画一个标题</summary>
-        protected void Header(string text) => GUILayout.Label(text.Color(ThemeColorExp), StlHeader);
-        /// <summary>画一个节标题</summary>
-        protected bool SectionHeader(string key, bool defaultVal = true, string labelOverride = null, params GUILayoutOption[] options)
-        {
-            var ab = GetAnimBool(key, defaultVal);
-            return ab.target = GUILayout.Toggle(ab.target, string.IsNullOrEmpty(labelOverride) ? key : labelOverride, StlSectionHeader);
-        }
-        /// <summary>用特定Style填充区域</summary>
-        protected void Box(Rect rect, GUIStyle style) => GUI.Label(rect, GUIContent.none, style);
-        /// <summary>用特定Style填充区域</summary>
-        protected Rect Box(GUIStyle style, params GUILayoutOption[] options)
-        {
-            var rect = GUILayoutUtility.GetRect(GUIContent.none, style, options);
-            GUI.Label(rect, GUIContent.none, style);
-            return rect;
-        }
+        #region Drawing Elements
+        protected void Header(string text) => IceGUI.Header(text, ThemeColorExp);
+        protected bool SectionHeader(string key, bool defaultVal = true, string labelOverride = null, params GUILayoutOption[] options) => IceGUI.SectionHeader(GetAnimBool(key, defaultVal), string.IsNullOrEmpty(labelOverride) ? key : labelOverride, StlSectionHeader, options);
         /// <summary>用特定Style填充区域</summary>
         protected Rect Box(float width, float height, GUIStyle style = null, params GUILayoutOption[] options)
         {
@@ -1047,6 +948,8 @@ namespace IceEditor
         #endregion
 
         #region 【PRIVATE】
+        internal IceGUIIsland Island => _island ??= new IceGUIIsland(DefaultThemeColor, Repaint); [SerializeField] IceGUIIsland _island;
+
         bool drawingWindowGUI = false;
         bool needsCheckControlId = false;
         bool checkingControlId = false;

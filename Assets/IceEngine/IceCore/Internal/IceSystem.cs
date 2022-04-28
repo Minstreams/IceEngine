@@ -13,13 +13,12 @@ namespace IceEngine.Internal
         /// <summary>
         /// 主题颜色
         /// </summary>
-        internal virtual Color ThemeColor => IceIsland.ThemeColor;
+        internal virtual Color ThemeColor => IceConfig.Config.themeColor;
     }
 
     /// <summary>
     /// 冰屿系统的子系统基类，此类用于计算反射
     /// </summary>.
-    /// 
     public abstract class IceSystem { }
 
     /// <summary>

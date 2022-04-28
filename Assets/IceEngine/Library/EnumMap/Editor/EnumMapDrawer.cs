@@ -45,10 +45,8 @@ public class EnumMapDrawer : PropertyDrawer
             var enumNames = property.FindPropertyRelative("_").enumDisplayNames;
             int count = enumNames.Length;
             var list = property.FindPropertyRelative("list");
-            EditorGUI.BeginChangeCheck();
             while (list.arraySize < count) list.InsertArrayElementAtIndex(list.arraySize);
             while (list.arraySize > count) list.DeleteArrayElementAtIndex(list.arraySize - 1);
-            if (EditorGUI.EndChangeCheck()) property.serializedObject.ApplyModifiedProperties();
 
             if (count == 0)
             {
@@ -58,7 +56,6 @@ public class EnumMapDrawer : PropertyDrawer
             }
             else
             {
-                EditorGUI.BeginChangeCheck();
                 for (int i = 0; i < count; ++i)
                 {
                     var unitHeight = EditorGUI.GetPropertyHeight(list.GetArrayElementAtIndex(i), true);
@@ -70,10 +67,6 @@ public class EnumMapDrawer : PropertyDrawer
                     preRect.y += unitHeight + 14;
                     outerRect.y += unitHeight + 14;
                     propRect.y += unitHeight + 14;
-                }
-                if (EditorGUI.EndChangeCheck())
-                {
-                    property.serializedObject.ApplyModifiedProperties();
                 }
             }
         }

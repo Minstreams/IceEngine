@@ -16,6 +16,9 @@ public class EnumMap { }
 [System.Serializable]
 public class EnumMap<ET, DT> : EnumMap, IEnumerable<DT> where ET : System.Enum
 {
+    /// <summary>
+    /// 用于SerializedProperty获取ET的反射信息
+    /// </summary>
     [SerializeField] ET _;
 
     public List<DT> list = new List<DT>(System.Enum.GetNames(typeof(ET)).Length);

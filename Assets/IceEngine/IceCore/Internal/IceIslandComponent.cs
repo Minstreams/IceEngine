@@ -1,7 +1,7 @@
 ﻿using System.Collections;
 using UnityEngine;
 
-namespace IceEngine
+namespace IceEngine.Internal
 {
     /// <summary>
     /// IceIsland在场景中的组件实例
