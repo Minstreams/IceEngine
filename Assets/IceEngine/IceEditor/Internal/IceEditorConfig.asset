@@ -12,4 +12,3 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0175099901dea8443b8660293e06f1dc, type: 3}
   m_Name: IceEditorConfig
   m_EditorClassIdentifier: 
-  test: 

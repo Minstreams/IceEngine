@@ -12,4 +12,4 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0e7fce032a131e74fa50d9f503d2bbf2, type: 3}
   m_Name: IceConfig
   m_EditorClassIdentifier: 
-  themeColor: {r: 1, g: 0.7, b: 0, a: 1}
+  themeColor: {r: 1, g: 0.6, b: 0, a: 1}

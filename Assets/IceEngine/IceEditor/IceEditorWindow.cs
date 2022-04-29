@@ -6,7 +6,8 @@ using UnityEditor;
 using UnityEditor.AnimatedValues;
 using IceEngine;
 using System.Linq;
-using IceEditor.Internal;
+using static IceEditor.IceGUI;
+using static IceEditor.IceGUIAuto;
 
 namespace IceEditor
 {
@@ -132,11 +133,11 @@ namespace IceEditor
         /// <summary>
         /// 主题颜色
         /// </summary>
-        public Color ThemeColor { get => Island.ThemeColor; set => Island.ThemeColor = value; }
+        public Color ThemeColor { get => Pack.ThemeColor; set => Pack.ThemeColor = value; }
         /// <summary>
         /// 主题颜色表达式
         /// </summary>
-        public string ThemeColorExp => Island.ThemeColorExp;
+        public string ThemeColorExp => Pack.ThemeColorExp;
         #endregion
 
         #region Log & Dialog
@@ -216,644 +217,11 @@ namespace IceEditor
         protected void ClearProgressBar() => EditorUtility.ClearProgressBar();
         #endregion
 
-        #region 临时数据托管
-        [SerializeField] IceDictionary<int, Vector2> _intVec2Map = new IceDictionary<int, Vector2>();
-        public Vector2 GetVector2(int key) => GetVector2(key, Vector2.zero);
-        public Vector2 GetVector2(int key, Vector2 defaultVal) => _intVec2Map.TryGetValue(key, out Vector2 res) ? res : _intVec2Map[key] = defaultVal;
-        public Vector2 SetVector2(int key, Vector2 value) => _intVec2Map[key] = value;
-
-        public Color GetColor(string key, Color defaultVal) => Island.GetColor(key, defaultVal);
-        public Color GetColor(string key) => Island.GetColor(key);
-        public Color SetColor(string key, Color value) => Island.SetColor(key, value);
-
-        public bool GetBool(string key, bool defaultVal = false) => Island.GetBool(key, defaultVal);
-        public bool SetBool(string key, bool value) => Island.SetBool(key, value);
-
-        public AnimBool GetAnimBool(string key, bool defaultVal = false) => Island.GetAnimBool(key, defaultVal);
-        public bool GetAnimBoolValue(string key, bool defaultVal = false) => Island.GetAnimBoolValue(key, defaultVal);
-        public bool GetAnimBoolTarget(string key, bool defaultVal = false) => Island.GetAnimBoolTarget(key, defaultVal);
-        public float GetAnimBoolFaded(string key, bool defaultVal = false) => Island.GetAnimBoolFaded(key, defaultVal);
-        public bool SetAnimBoolValue(string key, bool value) => Island.SetAnimBoolValue(key, value);
-        public bool SetAnimBoolTarget(string key, bool value) => Island.SetAnimBoolTarget(key, value);
-
-        public int GetInt(string key, int defaultVal = 0) => Island.GetInt(key, defaultVal);
-        public int SetInt(string key, int value) => Island.SetInt(key, value);
-
-        public float GetFloat(string key, float defaultVal = 0) => Island.GetFloat(key, defaultVal);
-        public float SetFloat(string key, float value) => Island.SetFloat(key, value);
-
-        public string GetString(string key, string defaultVal = "") => Island.GetString(key, defaultVal);
-        public string SetString(string key, string value) => Island.SetString(key, value);
-
-        public Vector2 GetVector2(string key) => Island.GetVector2(key);
-        public Vector2 GetVector2(string key, Vector2 defaultVal) => Island.GetVector2(key, defaultVal);
-        public Vector2 SetVector2(string key, Vector2 value) => Island.SetVector2(key, value);
-
-        public Vector3 GetVector3(string key) => Island.GetVector3(key);
-        public Vector3 GetVector3(string key, Vector3 defaultVal) => Island.GetVector3(key, defaultVal);
-        public Vector3 SetVector3(string key, Vector3 value) => Island.SetVector3(key, value);
-
-        public Vector4 GetVector4(string key) => Island.GetVector4(key);
-        public Vector4 GetVector4(string key, Vector4 defaultVal) => Island.GetVector4(key, defaultVal);
-        public Vector4 SetVector4(string key, Vector4 value) => Island.SetVector4(key, value);
-        #endregion
-
         #endregion
 
         #region 【GUI Shortcut】
 
-        #region 用到的样式
-        protected GUIStyle StlSectionHeader => Island.StlSectionHeader;
-        protected GUIStyle StlPrefix => Island.StlPrefix;
-        protected GUIStyle StlSeparator => Island.StlSeparator;
-        protected GUIStyle StlSeparatorOn => Island.StlSeparatorOn;
-        #endregion
-
-        #region Drawing Elements
-        protected void Header(string text) => IceGUI.Header(text, ThemeColorExp);
-        protected bool SectionHeader(string key, bool defaultVal = true, string labelOverride = null, params GUILayoutOption[] options) => IceGUI.SectionHeader(GetAnimBool(key, defaultVal), string.IsNullOrEmpty(labelOverride) ? key : labelOverride, StlSectionHeader, options);
-        /// <summary>用特定Style填充区域</summary>
-        protected Rect Box(float width, float height, GUIStyle style = null, params GUILayoutOption[] options)
-        {
-            var rect = GUILayoutUtility.GetRect(width, height, style, options);
-            GUI.Label(rect, GUIContent.none, style);
-            return rect;
-        }
-        /// <summary>画一个支持RichText的Label</summary>
-        protected void Label(string text, params GUILayoutOption[] options) => GUILayout.Label(text, StlLabel, options);
-        /// <summary>画一个支持RichText的Label</summary>
-        protected void Label(GUIContent content, params GUILayoutOption[] options) => GUILayout.Label(content, StlLabel, options);
-        /// <summary>画一个自定义Label</summary>
-        protected void Label(string text, GUIStyle style, params GUILayoutOption[] options) => GUILayout.Label(text, style, options);
-        /// <summary>画一个自定义Label</summary>
-        protected void Label(GUIContent content, GUIStyle style, params GUILayoutOption[] options) => GUILayout.Label(content, style, options);
-        /// <summary>画一个Error</summary>
-        protected void LabelError(string text) => GUILayout.Label(text, StlError);
-        /// <summary>画一个Texture Preview</summary>
-        /// <param name="rect">尺寸</param>
-        protected void TextureBox(Texture texture, Rect rect) => EditorGUI.DrawPreviewTexture(rect, texture);
-        /// <summary>画一个自适应Layout的Texture</summary>
-        /// <param name="width">宽度</param>
-        /// <param name="height">高度</param>
-        protected void TextureBox(Texture texture, float width, float height) => EditorGUI.DrawPreviewTexture(GUILayoutUtility.GetRect(width, height, GUILayout.ExpandWidth(false)), texture);
-        /// <summary>画一个自适应Layout的Texture</summary>
-        /// <param name="expanded">是否自动扩展</param>
-        protected void TextureBox(Texture texture, bool expanded = false) => EditorGUI.DrawPreviewTexture(GUILayoutUtility.GetAspectRect(texture.width / (float)texture.height, expanded ? GUILayout.ExpandWidth(true) : GUILayout.MaxWidth(texture.width)), texture);
-        /// <summary>画一个自适应Layout的透明Texture</summary>
-        /// <param name="expanded">是否自动扩展</param>
-        protected void TextureBoxTransparent(Texture texture, bool expanded = false) => EditorGUI.DrawTextureTransparent(GUILayoutUtility.GetAspectRect(texture.width / (float)texture.height, expanded ? GUILayout.ExpandWidth(true) : GUILayout.MaxWidth(texture.width)), texture);
-        /// <summary>画一个自适应Layout的Texture，自带控制项</summary>
-        protected void TextureBoxComplex(Texture texture)
-        {
-            var name = texture.name;
-            ColorWriteMask cwMask = ColorWriteMask.All;
-
-            using (VERTICAL) using (NODE)
-            {
-                using (HORIZONTAL)
-                {
-                    IceToggle($"Expanded {name}", false, "Exp", "Is this texture Expanded");
-                    /*if (!texture.graphicsFormat.ToString().Contains("UNorm"))*/
-                    using (HORIZONTAL)
-                    {
-                        ColorWriteMask mask = (ColorWriteMask)0;
-                        if (IceToggle($"Color Write Mask R {name}", true, "R")) mask |= ColorWriteMask.Red;
-                        if (IceToggle($"Color Write Mask G {name}", true, "G")) mask |= ColorWriteMask.Green;
-                        if (IceToggle($"Color Write Mask B {name}", true, "B")) mask |= ColorWriteMask.Blue;
-                        if (IceToggle($"Color Write Mask A {name}", true, "A")) mask |= ColorWriteMask.Alpha;
-                        if (mask != 0) cwMask = mask;
-                    }
-                    GUILayout.Label($"{texture.width} : {texture.height} | {(texture is Texture2D t2 ? t2.format.ToString() : texture is RenderTexture rt ? rt.format.ToString() : texture.GetType().ToString())}");
-                    GUILayout.FlexibleSpace();
-                    IntSliderNoLabel($"Mip Level {name}", 0, 0, texture.mipmapCount - 1);
-                }
-
-                using (Horizontal(StlIce))
-                {
-                    bool expanded = GetBool($"Expanded {name}");
-                    if (!expanded) GUILayout.FlexibleSpace();
-                    var rect = GUILayoutUtility.GetAspectRect(texture.width / (float)texture.height, expanded ? GUILayout.ExpandWidth(true) : GUILayout.MaxWidth(texture.width >> GetInt($"Mip Level {name}")));
-                    if (!expanded) GUILayout.FlexibleSpace();
-                    if (Event.current.type == EventType.Repaint) EditorGUI.DrawPreviewTexture(rect, texture, null, ScaleMode.ScaleToFit, 0, GetInt($"Mip Level {name}"), cwMask);
-                }
-            }
-        }
-        protected static void Space(float pixels) => GUILayout.Space(pixels);
-        protected static void Space() => GUILayout.FlexibleSpace();
-        #endregion
-
-        #region Button & Field
-        static readonly GUILayoutOption[] defaultOptions = new GUILayoutOption[] { GUILayout.MinWidth(EditorGUIUtility.singleLineHeight) };
-        static GUILayoutOption[] CheckOptions(ref GUILayoutOption[] options) => options = options.Length > 0 ? options : defaultOptions;
-
-        protected bool Button(string text, GUIStyle styleOverride, params GUILayoutOption[] options) => GUILayout.Button(text, styleOverride ?? StlButton, options);
-        protected bool Button(string text, params GUILayoutOption[] options) => Button(text, null, options);
-        protected bool Button(GUIContent content, GUIStyle styleOverride, params GUILayoutOption[] options) => GUILayout.Button(content, styleOverride ?? StlButton, options);
-        protected bool Button(GUIContent content, params GUILayoutOption[] options) => Button(content, null, options);
-
-        protected bool _Toggle(bool val, GUIStyle styleOverride, params GUILayoutOption[] options) => ControlLabelScope.HasLabel ? EditorGUILayout.Toggle(ControlLabelScope.Label, val, styleOverride ?? "toggle") : EditorGUILayout.Toggle(val, styleOverride ?? "toggle");
-        protected bool _Toggle(bool val, params GUILayoutOption[] options) => _Toggle(val, null, options);
-        protected bool _Toggle(string label, bool val, GUIStyle styleOverride, params GUILayoutOption[] options) { using (ControlLabel(label)) return _Toggle(val, styleOverride, options); }
-        protected bool _Toggle(string label, bool val, params GUILayoutOption[] options) { using (ControlLabel(label)) return _Toggle(val, options); }
-
-        protected bool Toggle(ref bool val, GUIStyle styleOverride, params GUILayoutOption[] options) => val = _Toggle(val, styleOverride, options);
-        protected bool Toggle(ref bool val, params GUILayoutOption[] options) => val = _Toggle(val, options);
-        protected bool Toggle(string label, ref bool val, GUIStyle styleOverride, params GUILayoutOption[] options) => val = _Toggle(label, val, styleOverride, options);
-        protected bool Toggle(string label, ref bool val, params GUILayoutOption[] options) => val = _Toggle(label, val, options);
-        protected bool ToggleNoLabel(string key, bool defaultVal = false, GUIStyle styleOverride = null, params GUILayoutOption[] options) => SetBool(key, _Toggle(GetBool(key, defaultVal), styleOverride, options));
-        protected bool Toggle(string key, bool defaultVal = false, string labelOverride = null, GUIStyle styleOverride = null, params GUILayoutOption[] options) { using (ControlLabel(key, labelOverride)) return ToggleNoLabel(key, defaultVal, styleOverride, options); }
-
-        protected bool _ToggleLeft(bool val, string text, GUIStyle styleOverride, params GUILayoutOption[] options) => GUILayout.Toggle(val, text, styleOverride ?? "toggle", options);
-        protected bool _ToggleLeft(bool val, string text, params GUILayoutOption[] options) => GUILayout.Toggle(val, text, "toggle", options);
-        protected bool _ToggleLeft(bool val, GUIContent content, GUIStyle styleOverride, params GUILayoutOption[] options) => GUILayout.Toggle(val, content, styleOverride ?? "toggle", options);
-        protected bool _ToggleLeft(bool val, GUIContent content, params GUILayoutOption[] options) => GUILayout.Toggle(val, content, "toggle", options);
-        protected bool ToggleLeft(ref bool val, string text, GUIStyle styleOverride, params GUILayoutOption[] options) => val = _ToggleLeft(val, text, styleOverride, options);
-        protected bool ToggleLeft(ref bool val, string text, params GUILayoutOption[] options) => val = _ToggleLeft(val, text, options);
-        protected bool ToggleLeft(ref bool val, GUIContent content, GUIStyle styleOverride, params GUILayoutOption[] options) => val = _ToggleLeft(val, content, styleOverride, options);
-        protected bool ToggleLeft(ref bool val, GUIContent content, params GUILayoutOption[] options) => val = _ToggleLeft(val, content, options);
-        protected bool ToggleLeft(string key, bool defaultVal = false, string textOverride = null, GUIStyle styleOverride = null, params GUILayoutOption[] options) => SetBool(key, _ToggleLeft(GetBool(key, defaultVal), string.IsNullOrEmpty(textOverride) ? key : textOverride, styleOverride, options));
-
-        protected bool ToggleButton(string text, bool on, GUIStyle styleOverride, params GUILayoutOption[] options) => on != _ToggleLeft(on, text, styleOverride ?? StlButton, options);
-        protected bool ToggleButton(string text, bool on, params GUILayoutOption[] options) => ToggleButton(text, on, null, options);
-        protected bool ToggleButton(GUIContent content, bool on, GUIStyle styleOverride, params GUILayoutOption[] options) => on != _ToggleLeft(on, content, styleOverride ?? StlButton, options);
-        protected bool ToggleButton(GUIContent content, bool on, params GUILayoutOption[] options) => ToggleButton(content, on, null, options);
-        protected bool ToggleButton(Rect rect, string text, bool on, GUIStyle style) => on != GUI.Toggle(rect, on, text, style);
-
-        protected int _IntField(int val, params GUILayoutOption[] options) { CheckOptions(ref options); return DelayedScope.inScope ? (ControlLabelScope.HasLabel ? EditorGUILayout.DelayedIntField(ControlLabelScope.Label, val, options) : EditorGUILayout.DelayedIntField(val, options)) : (ControlLabelScope.HasLabel ? EditorGUILayout.IntField(ControlLabelScope.Label, val, options) : EditorGUILayout.IntField(val, options)); }
-        protected int _IntField(string label, int val, params GUILayoutOption[] options) { using (ControlLabel(label)) return _IntField(val, options); }
-        protected int IntField(ref int val, params GUILayoutOption[] options) => val = _IntField(val, options);
-        protected int IntField(string label, ref int val, params GUILayoutOption[] options) => val = _IntField(label, val, options);
-        protected int IntFieldNoLabel(string key, int defaultVal = 0, params GUILayoutOption[] options) => SetInt(key, _IntField(GetInt(key, defaultVal), options));
-        protected int IntField(string key, int defaultVal = 0, string labelOverride = null, params GUILayoutOption[] options) { using (ControlLabel(key, labelOverride)) return IntFieldNoLabel(key, defaultVal, options); }
-
-        protected int _IntSlider(int val, int min, int max, params GUILayoutOption[] options) { CheckOptions(ref options); return ControlLabelScope.HasLabel ? (int)EditorGUILayout.Slider(ControlLabelScope.Label, val, min, max, options) : (int)EditorGUILayout.Slider(val, min, max, options); }
-        protected int _IntSlider(string label, int val, int min, int max, params GUILayoutOption[] options) { using (ControlLabel(label)) return _IntSlider(val, min, max, options); }
-        protected int IntSlider(ref int val, int min, int max, params GUILayoutOption[] options) => val = _IntSlider(val, min, max, options);
-        protected int IntSlider(string label, ref int val, int min, int max, params GUILayoutOption[] options) => val = _IntSlider(label, val, min, max, options);
-        protected int IntSliderNoLabel(string key, int defaultVal, int min, int max, params GUILayoutOption[] options) => SetInt(key, _IntSlider(GetInt(key, defaultVal), min, max, options));
-        protected int IntSlider(string key, int defaultVal, int min, int max, string labelOverride = null, params GUILayoutOption[] options) { using (ControlLabel(key, labelOverride)) return IntSliderNoLabel(key, defaultVal, min, max, options); }
-        protected int IntSliderNoLabel(string key, int min, int max, params GUILayoutOption[] options) => SetInt(key, _IntSlider(GetInt(key), min, max, options));
-        protected int IntSlider(string key, int min, int max, string labelOverride = null, params GUILayoutOption[] options) { using (ControlLabel(key, labelOverride)) return IntSliderNoLabel(key, min, max, options); }
-
-        protected float _FloatField(float val, params GUILayoutOption[] options) { CheckOptions(ref options); return DelayedScope.inScope ? (ControlLabelScope.HasLabel ? EditorGUILayout.DelayedFloatField(ControlLabelScope.Label, val, options) : EditorGUILayout.DelayedFloatField(val, options)) : (ControlLabelScope.HasLabel ? EditorGUILayout.FloatField(ControlLabelScope.Label, val, options) : EditorGUILayout.FloatField(val, options)); }
-        protected float _FloatField(string label, float val, params GUILayoutOption[] options) { using (ControlLabel(label)) return _FloatField(val, options); }
-        protected float FloatField(ref float val, params GUILayoutOption[] options) => val = _FloatField(val, options);
-        protected float FloatField(string label, ref float val, params GUILayoutOption[] options) => val = _FloatField(label, val, options);
-        protected float FloatFieldNoLabel(string key, float defaultVal = 0, params GUILayoutOption[] options) => SetFloat(key, _FloatField(GetFloat(key, defaultVal), options));
-        protected float FloatField(string key, float defaultVal = 0, string labelOverride = null, params GUILayoutOption[] options) { using (ControlLabel(key, labelOverride)) return FloatFieldNoLabel(key, defaultVal, options); }
-
-        protected float _Slider(float val, float min = 0, float max = 1, params GUILayoutOption[] options) { CheckOptions(ref options); return ControlLabelScope.HasLabel ? EditorGUILayout.Slider(ControlLabelScope.Label, val, min, max, options) : EditorGUILayout.Slider(val, min, max, options); }
-        protected float _Slider(string label, float val, float min = 0, float max = 1, params GUILayoutOption[] options) { using (ControlLabel(label)) return _Slider(val, min, max, options); }
-        protected float Slider(ref float val, float min = 0, float max = 1, params GUILayoutOption[] options) => val = _Slider(val, min, max, options);
-        protected float Slider(string label, ref float val, float min = 0, float max = 1, params GUILayoutOption[] options) => val = _Slider(label, val, min, max, options);
-        protected float SliderNoLabel(string key, float defaultVal, float min = 0, float max = 1, params GUILayoutOption[] options) => SetFloat(key, _Slider(GetFloat(key, defaultVal), min, max, options));
-        protected float Slider(string key, float defaultVal, float min = 0, float max = 1, string labelOverride = null, params GUILayoutOption[] options) { using (ControlLabel(key, labelOverride)) return SliderNoLabel(key, defaultVal, min, max, options); }
-        protected float SliderNoLabel(string key, float min = 0, float max = 1, params GUILayoutOption[] options) => SetFloat(key, _Slider(GetFloat(key), min, max, options));
-        protected float Slider(string key, float min = 0, float max = 1, string labelOverride = null, params GUILayoutOption[] options) { using (ControlLabel(key, labelOverride)) return SliderNoLabel(key, min, max, options); }
-
-        protected string _TextField(string val, params GUILayoutOption[] options) { CheckOptions(ref options); return DelayedScope.inScope ? (ControlLabelScope.HasLabel ? EditorGUILayout.DelayedTextField(ControlLabelScope.Label, val, options) : EditorGUILayout.DelayedTextField(val, options)) : (ControlLabelScope.HasLabel ? EditorGUILayout.TextField(ControlLabelScope.Label, val, options) : EditorGUILayout.TextField(val, options)); }
-        protected string _TextField(string label, string val, params GUILayoutOption[] options) { using (ControlLabel(label)) return _TextField(val, options); }
-        protected string TextField(ref string val, params GUILayoutOption[] options) => val = _TextField(val, options);
-        protected string TextField(string label, ref string val, params GUILayoutOption[] options) => val = _TextField(label, val, options);
-        protected string TextFieldNoLabel(string key, string defaultVal = "", params GUILayoutOption[] options) => SetString(key, _TextField(GetString(key, defaultVal), options));
-        protected string TextField(string key, string defaultVal = "", string labelOverride = null, params GUILayoutOption[] options) { using (ControlLabel(key, labelOverride)) return TextFieldNoLabel(key, defaultVal, options); }
-
-        protected Vector2 _Vector2Field(Vector2 val, string xLabel = null, string yLabel = null)
-        {
-            using (HORIZONTAL)
-            {
-                Rect labelRect = new Rect();
-                if (ControlLabelScope.HasLabel) labelRect = GUILayoutUtility.GetRect(GUIContent.none, StlPrefix, GUILayout.Width(EditorGUIUtility.labelWidth - 1));
-
-                const string controlNameX = "Vector2FieldX";
-                GUI.SetNextControlName(controlNameX);
-                if (!string.IsNullOrEmpty(xLabel))
-                {
-                    using (LabelWidth(StlPrefix.CalcSize(new GUIContent(xLabel)).x)) using (ControlLabel(xLabel)) FloatField(ref val.x);
-                }
-                else
-                {
-                    val.x = DelayedScope.inScope ? EditorGUILayout.DelayedFloatField(val.x, defaultOptions) : EditorGUILayout.FloatField(val.x, defaultOptions);
-                }
-
-                const string controlNameY = "Vector2FieldY";
-                GUI.SetNextControlName(controlNameY);
-                if (!string.IsNullOrEmpty(yLabel))
-                {
-                    using (LabelWidth(StlPrefix.CalcSize(new GUIContent(yLabel)).x)) using (ControlLabel(yLabel)) FloatField(ref val.y);
-                }
-                else
-                {
-                    val.y = DelayedScope.inScope ? EditorGUILayout.DelayedFloatField(val.y, defaultOptions) : EditorGUILayout.FloatField(val.y, defaultOptions);
-                }
-
-                if (ControlLabelScope.HasLabel)
-                {
-                    string focusedControl = GUI.GetNameOfFocusedControl();
-                    bool on = focusedControl == controlNameX || focusedControl == controlNameY;
-                    labelRect.y += 2;
-                    if (ToggleButton(labelRect, ControlLabelScope.Label, on, StlPrefix) && !on) GUI.FocusControl(controlNameX);
-                }
-            }
-            return val;
-        }
-        protected Vector2 _Vector2Field(string label, Vector2 val, string xLabel = null, string yLabel = null) { using (ControlLabel(label)) return _Vector2Field(val, xLabel, yLabel); }
-        protected Vector2 Vector2Field(ref Vector2 val, string xLabel = null, string yLabel = null) => val = _Vector2Field(val, xLabel, yLabel);
-        protected Vector2 Vector2Field(string label, ref Vector2 val, string xLabel = null, string yLabel = null) => val = _Vector2Field(label, val, xLabel, yLabel);
-        protected Vector2 Vector2FieldNoLabel(string key, Vector2 defaultVal, string xLabel = null, string yLabel = null) => SetVector2(key, _Vector2Field(GetVector2(key, defaultVal), xLabel, yLabel));
-        protected Vector2 Vector2Field(string key, Vector2 defaultVal, string labelOverride = null, string xLabel = null, string yLabel = null) { using (ControlLabel(key, labelOverride)) return Vector2FieldNoLabel(key, defaultVal, xLabel, yLabel); }
-        protected Vector2 Vector2FieldNoLabel(string key, string xLabel = null, string yLabel = null) => SetVector2(key, _Vector2Field(GetVector2(key), xLabel, yLabel));
-        protected Vector2 Vector2Field(string key, string labelOverride = null, string xLabel = null, string yLabel = null) { using (ControlLabel(key, labelOverride)) return Vector2FieldNoLabel(key, xLabel, yLabel); }
-
-        protected void MinMaxSlider(ref float l, ref float r, float min = 0, float max = 1, params GUILayoutOption[] options) { CheckOptions(ref options); EditorGUILayout.MinMaxSlider(ref l, ref r, min, max, options); }
-        protected Vector2 _Vector2Slider(Vector2 val, float min = 0, float max = 1, params GUILayoutOption[] options)
-        {
-            using (HORIZONTAL)
-            {
-                Rect labelRect = new Rect();
-                if (ControlLabelScope.HasLabel) labelRect = GUILayoutUtility.GetRect(GUIContent.none, StlPrefix, GUILayout.Width(EditorGUIUtility.labelWidth - 1));
-
-                const string controlNameX = "Vector2SliderX";
-                if (ControlLabelScope.HasLabel)
-                {
-                    GUI.SetNextControlName(controlNameX);
-                    val.x = EditorGUILayout.FloatField(val.x, GUILayout.Width(48), GUILayout.MinWidth(EditorGUIUtility.singleLineHeight));
-                }
-
-                const string controlName = "Vector2Slider";
-                GUI.SetNextControlName(controlName);
-                using (CHANGECHECK)
-                {
-                    EditorGUILayout.MinMaxSlider(ref val.x, ref val.y, min, max, options.Length > 0 ? options : new GUILayoutOption[] { GUILayout.MinWidth(-4) });
-
-                    if (Changed) GUI.FocusControl(controlName);
-                }
-
-                if (ControlLabelScope.HasLabel)
-                {
-                    const string controlNameY = "Vector2SliderY";
-                    GUI.SetNextControlName(controlNameY);
-                    val.y = EditorGUILayout.FloatField(val.y, GUILayout.Width(48), GUILayout.MinWidth(EditorGUIUtility.singleLineHeight));
-
-                    string focusedControl = GUI.GetNameOfFocusedControl();
-                    bool on = focusedControl == controlNameX || focusedControl == controlName || focusedControl == controlNameY;
-                    labelRect.y += 2;
-                    if (ToggleButton(labelRect, ControlLabelScope.Label, on, StlPrefix) && !on) GUI.FocusControl(controlName);
-                }
-            }
-            return val;
-        }
-        protected Vector2 _Vector2Slider(string label, Vector2 val, float min = 0, float max = 1, params GUILayoutOption[] options) { using (ControlLabel(label)) return _Vector2Slider(val, min, max, options); }
-        protected Vector2 Vector2Slider(ref Vector2 val, float min = 0, float max = 1, params GUILayoutOption[] options) => val = _Vector2Slider(val, min, max, options);
-        protected Vector2 Vector2Slider(string label, ref Vector2 val, float min = 0, float max = 1, params GUILayoutOption[] options) => val = _Vector2Slider(label, val, min, max, options);
-        protected Vector2 Vector2SliderNoLabel(string key, Vector2 defaultVal, float min = 0, float max = 1, params GUILayoutOption[] options) => SetVector2(key, _Vector2Slider(GetVector2(key, defaultVal), min, max, options));
-        protected Vector2 Vector2Slider(string key, Vector2 defaultVal, float min = 0, float max = 1, string labelOverride = null, params GUILayoutOption[] options) { using (ControlLabel(key, labelOverride)) return Vector2SliderNoLabel(key, defaultVal, min, max, options); }
-        protected Vector2 Vector2SliderNoLabel(string key, float min = 0, float max = 1, params GUILayoutOption[] options) => SetVector2(key, _Vector2Slider(GetVector2(key), min, max, options));
-        protected Vector2 Vector2Slider(string key, float min = 0, float max = 1, string labelOverride = null, params GUILayoutOption[] options) { using (ControlLabel(key, labelOverride)) return Vector2SliderNoLabel(key, min, max, options); }
-
-        /// <summary>
-        /// 不带预览功能的 Texture2D Field
-        /// </summary>
-        /// <returns>return true on changed</returns>
-        protected bool TextureFieldNoPreview(string label, ref Texture2D tex, params GUILayoutOption[] options)
-        {
-            CheckOptions(ref options);
-            using (CHANGECHECK)
-            {
-                using (ControlLabel(label)) tex = (Texture2D)EditorGUI.ObjectField(EditorGUILayout.GetControlRect(options), label, tex, typeof(Texture2D), false);
-                return Changed;
-            }
-        }
-        /// <summary>
-        /// Texture2D Field
-        /// </summary>
-        /// <returns>return true on changed</returns>
-        protected bool TextureField(string label, ref Texture2D tex, params GUILayoutOption[] options)
-        {
-            CheckOptions(ref options);
-            bool res = false;
-            var previewOn = GetAnimBool($"{label} Preview On");
-            using (HORIZONTAL)
-            {
-                Rect labelRect = GUILayoutUtility.GetRect(GUIContent.none, StlPrefix, GUILayout.Width(EditorGUIUtility.labelWidth - 1));
-
-                const string controlName = "TextureField";
-                GUI.SetNextControlName(controlName);
-                using (CHANGECHECK)
-                {
-                    tex = (Texture2D)EditorGUI.ObjectField(EditorGUILayout.GetControlRect(options), tex, typeof(Texture2D), false);
-                    res = Changed;
-                }
-
-                {
-                    string focusedControl = GUI.GetNameOfFocusedControl();
-                    bool on = focusedControl == controlName;
-                    labelRect.y += 2;
-                    if (ToggleButton(labelRect, label, on, StlPrefix))
-                    {
-                        GUI.FocusControl(controlName);
-                        if (Event.current.button != 0)
-                        {
-                            GenericMenu gm = new GenericMenu();
-                            gm.AddItem(new GUIContent("预览"), previewOn.target, () => previewOn.target = !previewOn.target);
-                            gm.ShowAsContext();
-                        }
-                    }
-                }
-            }
-            if (tex != null) using (var fs = new FolderScope(previewOn)) if (fs.visible) TextureBoxComplex(tex);
-
-            return res;
-        }
-
-        protected EnumType _EnumPopup<EnumType>(EnumType val, params GUILayoutOption[] options) where EnumType : Enum { CheckOptions(ref options); return ControlLabelScope.HasLabel ? (EnumType)EditorGUILayout.EnumPopup(ControlLabelScope.Label, val, options) : (EnumType)EditorGUILayout.EnumPopup(val, options); }
-        protected EnumType _EnumPopup<EnumType>(string label, EnumType val, params GUILayoutOption[] options) where EnumType : Enum { using (ControlLabel(label)) return _EnumPopup(val, options); }
-        protected EnumType EnumPopup<EnumType>(ref EnumType val, params GUILayoutOption[] options) where EnumType : Enum => val = _EnumPopup(val, options);
-        protected EnumType EnumPopup<EnumType>(string label, ref EnumType val, params GUILayoutOption[] options) where EnumType : Enum => val = _EnumPopup(label, val, options);
-
-        protected ObjType _ObjectField<ObjType>(ObjType val, bool allowSceneObjects = false, params GUILayoutOption[] options) where ObjType : UnityEngine.Object { CheckOptions(ref options); return ControlLabelScope.HasLabel ? (ObjType)EditorGUILayout.ObjectField(ControlLabelScope.Label, val, typeof(ObjType), allowSceneObjects, options) : (ObjType)EditorGUILayout.ObjectField(val, typeof(ObjType), allowSceneObjects, options); }
-        protected ObjType _ObjectField<ObjType>(string label, ObjType val, bool allowSceneObjects = false, params GUILayoutOption[] options) where ObjType : UnityEngine.Object { using (ControlLabel(label)) return _ObjectField(val, allowSceneObjects, options); }
-        protected ObjType ObjectField<ObjType>(ref ObjType val, bool allowSceneObjects = false, params GUILayoutOption[] options) where ObjType : UnityEngine.Object => val = _ObjectField(val, allowSceneObjects, options);
-        protected ObjType ObjectField<ObjType>(string label, ref ObjType val, bool allowSceneObjects = false, params GUILayoutOption[] options) where ObjType : UnityEngine.Object => val = _ObjectField(label, val, allowSceneObjects, options);
-
-        protected Color _ColorField(Color val, params GUILayoutOption[] options) { CheckOptions(ref options); return ControlLabelScope.HasLabel ? EditorGUILayout.ColorField(ControlLabelScope.Label, val, options) : EditorGUILayout.ColorField(val, options); }
-        protected Color _ColorField(string label, Color val, params GUILayoutOption[] options) { using (ControlLabel(label)) return _ColorField(val, options); }
-        protected Color ColorField(ref Color val, params GUILayoutOption[] options) => val = _ColorField(val, options);
-        protected Color ColorField(string label, ref Color val, params GUILayoutOption[] options) => val = _ColorField(label, val, options);
-        protected Color ColorFieldNoLabel(string key, Color defaultVal, params GUILayoutOption[] options) => SetColor(key, _ColorField(GetColor(key, defaultVal), options));
-        protected Color ColorField(string key, Color defaultVal, string labelOverride = null, params GUILayoutOption[] options) { using (ControlLabel(key, labelOverride)) return ColorFieldNoLabel(key, defaultVal, options); }
-        protected Color ColorFieldNoLabel(string key, params GUILayoutOption[] options) => SetColor(key, _ColorField(GetColor(key), options));
-        protected Color ColorField(string key, string labelOverride = null, params GUILayoutOption[] options) { using (ControlLabel(key, labelOverride)) return ColorFieldNoLabel(key, options); }
-
-        protected bool IceButton(string text, string tooltip = null, params GUILayoutOption[] options) => GUILayout.Button(new GUIContent(text, tooltip), StlIce, options);
-        protected bool IceButton(string text, bool on, string tooltip = null, params GUILayoutOption[] options) => GUILayout.Button(new GUIContent(on ? $"{text.Color(ThemeColorExp)}" : text, tooltip), StlIce, options);
-        protected bool IceButton(Texture texture, string tooltip = null, params GUILayoutOption[] options) => GUILayout.Button(new GUIContent(texture, tooltip), StlIce, options);
-        protected bool IceButton(GUIContent content, params GUILayoutOption[] options) => GUILayout.Button(content, StlIce, options);
-        protected bool _IceToggle(string text, bool val, string tooltip = null, params GUILayoutOption[] options) => GUILayout.Button(new GUIContent(val ? $"{text.Color(ThemeColorExp)}" : text, tooltip), StlIce) ? !val : val;
-        protected bool IceToggle(string text, ref bool val, string tooltip = null, params GUILayoutOption[] options) => val = _IceToggle(text, val, tooltip, options);
-        protected bool IceToggle(string key, bool defaultVal = false, string textOverride = null, string tooltip = null, params GUILayoutOption[] options) => SetBool(key, _IceToggle(string.IsNullOrEmpty(textOverride) ? key : textOverride, GetBool(key, defaultVal), tooltip, options));
-        protected bool IceToggleAnim(string key, bool defaultVal = false, string textOverride = null, string tooltip = null, params GUILayoutOption[] options) => SetAnimBoolTarget(key, _IceToggle(string.IsNullOrEmpty(textOverride) ? key : textOverride, GetAnimBoolTarget(key, defaultVal), tooltip, options));
-        #endregion
-
         #region Scope
-        /// <summary>
-        /// 可展开的区域
-        /// </summary>
-        protected class FolderScope : IDisposable
-        {
-            /// <summary>
-            /// faded < 1
-            /// </summary>
-            public readonly bool fading;
-            /// <summary>
-            /// faded > 0
-            /// </summary>
-            public readonly bool visible;
-            /// <summary>
-            /// 宽度是否变化
-            /// </summary>
-            public readonly bool changeWidth;
-
-            readonly EventType beginType;
-            public FolderScope(AnimBool ab, bool changeWidth = false)
-            {
-                visible = ab.faded > 0;
-                fading = ab.faded < 1;
-                this.changeWidth = changeWidth;
-                beginType = Event.current.type;
-
-                if (visible)
-                {
-                    if (changeWidth)
-                    {
-                        var width = ab.faded * EditorGUIUtility.currentViewWidth;
-                        EditorGUILayout.BeginVertical(StlEmpty, GUILayout.MaxWidth(width), GUILayout.MinWidth(0));
-                    }
-                    var e = Event.current;
-                    if (fading && e.type != EventType.Used)
-                    {
-                        if (e.type != EventType.Layout && e.type != EventType.Repaint)
-                        {
-                            e.type = EventType.Ignore;
-                        }
-                        try
-                        {
-                            EditorGUILayout.BeginFadeGroup(ab.faded);
-                        }
-                        catch
-                        {
-                            Debug.LogError(ab);
-                        }
-                    }
-                }
-                else
-                {
-                    GUILayout.BeginArea(Rect.zero);
-                }
-            }
-
-            void IDisposable.Dispose()
-            {
-                if (visible)
-                {
-                    var e = Event.current;
-                    if (fading && e.type != EventType.Used)
-                    {
-                        EditorGUILayout.EndFadeGroup();
-                        if (e.type == EventType.Ignore && beginType != EventType.Layout && beginType != EventType.Repaint)
-                        {
-                            e.type = beginType;
-                        }
-                    }
-                    if (changeWidth)
-                    {
-                        EditorGUILayout.EndVertical();
-                    }
-                }
-                else
-                {
-                    GUILayout.EndArea();
-                }
-            }
-        }
-        /// <summary>
-        /// 规定Prefix标签宽度
-        /// </summary>
-        protected class LabelWidthScope : IDisposable
-        {
-            float originWidth;
-            public LabelWidthScope(float width)
-            {
-                originWidth = EditorGUIUtility.labelWidth;
-                EditorGUIUtility.labelWidth = width;
-            }
-            void IDisposable.Dispose()
-            {
-                EditorGUIUtility.labelWidth = originWidth;
-            }
-        }
-        /// <summary>
-        /// condition满足时暂时禁用指定区域（变灰，无法交互）
-        /// </summary>
-        protected class DisableScope : IDisposable
-        {
-            public DisableScope(bool disabled)
-            {
-                EditorGUI.BeginDisabledGroup(disabled);
-            }
-            void IDisposable.Dispose()
-            {
-                EditorGUI.EndDisabledGroup();
-            }
-        }
-        /// <summary>
-        /// 指定区域的Field对用户输入延迟响应，作用于 IntField, FloatField, TextField, Vector2Field
-        /// </summary>
-        protected class DelayedScope : IDisposable
-        {
-            public static bool inScope = false;
-            public DelayedScope()
-            {
-                inScope = true;
-            }
-            void IDisposable.Dispose()
-            {
-                inScope = false;
-            }
-        }
-        /// <summary>
-        /// 用于标记ControlLabel的属性
-        /// </summary>
-        protected class ControlLabelScope : IDisposable
-        {
-            public static bool HasLabel => !string.IsNullOrEmpty(label);
-            public static string Label => label;
-
-            static string label = null;
-            static GUIStyle LabelStyle => _labelStyle != null ? _labelStyle : (_labelStyle = "ControlLabel"); static GUIStyle _labelStyle;
-
-            string originLabel;
-            bool originRichText;
-            Color originFocusColor;
-
-            public ControlLabelScope(string labelVal, Color labelColor)
-            {
-                originLabel = label;
-                originRichText = LabelStyle.richText;
-                originFocusColor = LabelStyle.focused.textColor;
-
-                label = labelVal;
-                LabelStyle.richText = true;
-                LabelStyle.focused.textColor = labelColor;
-            }
-            void IDisposable.Dispose()
-            {
-                label = originLabel;
-                LabelStyle.richText = originRichText;
-                LabelStyle.focused.textColor = originFocusColor;
-            }
-        }
-        /// <summary>
-        /// 用于检测控件是否变化
-        /// </summary>
-        protected class ChangeCheckScope : IDisposable
-        {
-            static Stack<bool> changedStack = new Stack<bool>();
-            public ChangeCheckScope()
-            {
-                changedStack.Push(GUI.changed);
-                GUI.changed = false;
-            }
-            void IDisposable.Dispose()
-            {
-                GUI.changed |= changedStack.Pop();
-            }
-        }
-
-        protected FolderScope Folder(string key, bool defaultVal = false, bool changeWidth = false) => new FolderScope(GetAnimBool(key, defaultVal), changeWidth);
-        /// <summary>显示一个可展开的节</summary>
-        protected FolderScope SectionFolder(string key, bool defaultVal = true, string labelOverride = null)
-        {
-            var ab = GetAnimBool(key, defaultVal);
-            ab.target = GUILayout.Toggle(ab.target, string.IsNullOrEmpty(labelOverride) ? key : labelOverride, StlSectionHeader);
-            return new FolderScope(ab, true);
-        }
-        protected GUILayout.HorizontalScope Horizontal(GUIStyle style, params GUILayoutOption[] options) => new GUILayout.HorizontalScope(style ?? GUIStyle.none, options);
-        protected GUILayout.HorizontalScope Horizontal(params GUILayoutOption[] options) => new GUILayout.HorizontalScope(options);
-        protected GUILayout.VerticalScope Vertical(GUIStyle style, params GUILayoutOption[] options) => new GUILayout.VerticalScope(style ?? GUIStyle.none, options);
-        protected GUILayout.VerticalScope Vertical(params GUILayoutOption[] options) => new GUILayout.VerticalScope(options);
-        /// <summary>
-        /// 在Using语句中使用的Scope，指定一个Scroll View
-        /// </summary>
-        protected GUILayout.ScrollViewScope Scroll(string key, GUIStyle style = null, params GUILayoutOption[] options)
-        {
-            var res = new GUILayout.ScrollViewScope(GetVector2(key), false, false, "horizontalscrollbar", "verticalscrollbar", style ?? GUIStyle.none, options);
-            SetVector2(key, res.scrollPosition);
-            return res;
-        }
-        /// <summary>
-        /// 在Using语句中使用的Scope，指定一个竖直Scroll View
-        /// </summary>
-        protected GUILayout.ScrollViewScope ScrollVertical(string key, GUIStyle style = null, params GUILayoutOption[] options)
-        {
-            var res = new GUILayout.ScrollViewScope(GetVector2(key), false, false, GUIStyle.none, "verticalscrollbar", style ?? GUIStyle.none, options);
-            SetVector2(key, res.scrollPosition);
-            return res;
-        }
-        /// <summary>
-        /// 在Using语句中使用的Scope，指定一个隐藏bar的Scroll View
-        /// </summary>
-        protected GUILayout.ScrollViewScope ScrollInvisible(string key, GUIStyle style = null, params GUILayoutOption[] options)
-        {
-            var res = new GUILayout.ScrollViewScope(GetVector2(key), false, false, GUIStyle.none, GUIStyle.none, style ?? GUIStyle.none, options);
-            SetVector2(key, res.scrollPosition);
-            return res;
-        }
-        /// <summary>
-        /// 在Using语句中使用的Scope，指定一个水平Scroll View
-        /// </summary>
-        protected GUILayout.ScrollViewScope ScrollHorizontal(string key, GUIStyle style = null, params GUILayoutOption[] options)
-        {
-            var res = new GUILayout.ScrollViewScope(GetVector2(key), false, false, "horizontalscrollbar", GUIStyle.none, style ?? GUIStyle.none, options);
-            SetVector2(key, res.scrollPosition);
-            return res;
-        }
-        /// <summary>
-        /// 在Using语句中使用的Scope，指定一个Scroll View
-        /// </summary>
-        protected GUILayout.ScrollViewScope Scroll(int key, GUIStyle style = null, params GUILayoutOption[] options)
-        {
-            var res = new GUILayout.ScrollViewScope(GetVector2(key), false, false, "horizontalscrollbar", "verticalscrollbar", style ?? GUIStyle.none, options);
-            SetVector2(key, res.scrollPosition);
-            return res;
-        }
-        /// <summary>
-        /// 在Using语句中使用的Scope，指定一个竖直Scroll View
-        /// </summary>
-        protected GUILayout.ScrollViewScope ScrollVertical(int key, GUIStyle style = null, params GUILayoutOption[] options)
-        {
-            var res = new GUILayout.ScrollViewScope(GetVector2(key), false, false, GUIStyle.none, "verticalscrollbar", style ?? GUIStyle.none, options);
-            SetVector2(key, res.scrollPosition);
-            return res;
-        }
-        /// <summary>
-        /// 在Using语句中使用的Scope，指定一个隐藏bar的Scroll View
-        /// </summary>
-        protected GUILayout.ScrollViewScope ScrollInvisible(int key, GUIStyle style = null, params GUILayoutOption[] options)
-        {
-            var res = new GUILayout.ScrollViewScope(GetVector2(key), false, false, GUIStyle.none, GUIStyle.none, style ?? GUIStyle.none, options);
-            SetVector2(key, res.scrollPosition);
-            return res;
-        }
-        /// <summary>
-        /// 在Using语句中使用的Scope，指定一个水平Scroll View
-        /// </summary>
-        protected GUILayout.ScrollViewScope ScrollHorizontal(int key, GUIStyle style = null, params GUILayoutOption[] options)
-        {
-            var res = new GUILayout.ScrollViewScope(GetVector2(key), false, false, "horizontalscrollbar", GUIStyle.none, style ?? GUIStyle.none, options);
-            SetVector2(key, res.scrollPosition);
-            return res;
-        }
         /// <summary>
         /// 在Using语句中使用的Scope，指定一个Scroll View
         /// </summary>
@@ -869,9 +237,9 @@ namespace IceEditor
 
             if (checkingControlId) currentControlIdSet.Add(id);
 
-            if (!_intVec2Map.TryGetValue(id, out Vector2 vec))
+            if (!Pack._intVec2Map.TryGetValue(id, out Vector2 vec))
             {
-                _intVec2Map[id] = Vector2.zero;
+                Pack._intVec2Map[id] = Vector2.zero;
 
                 if (id != -1) allControlIdSet.Add(id);
                 needsCheckControlId = true;
@@ -885,70 +253,17 @@ namespace IceEditor
         /// 在Using语句中使用的Scope，指定一个Scroll View
         /// </summary>
         protected GUILayout.ScrollViewScope Scroll(params GUILayoutOption[] options) => Scroll(GUIStyle.none, options);
-        /// <summary>
-        /// 在Using语句中使用的Scope，指定一个Layout Area
-        /// </summary>
-        protected GUILayout.AreaScope Area(Rect rect, GUIStyle style)
-        {
-            var margin = style.margin;
-            return new GUILayout.AreaScope(new Rect(rect.x + margin.left, rect.y + margin.top, rect.width - margin.horizontal, rect.height - margin.vertical), GUIContent.none, style);
-        }
-        /// <summary>
-        /// 在Using语句中使用的Scope，指定一个Layout Area
-        /// </summary>
-        protected GUILayout.AreaScope Area(Rect rect) => Area(rect, StlBackground);
-        /// <summary>
-        /// 在Using语句中使用的Scope，手动添加一个Prefix
-        /// </summary>
-        protected GUILayout.HorizontalScope Prefix(string text) { var res = Horizontal(); using (LabelWidth(EditorGUIUtility.labelWidth + 2)) EditorGUILayout.PrefixLabel(text, "button", StlPrefix); return res; }
-        /// <summary>
-        /// 在Using语句中使用的Scope，调整Label的宽度
-        /// </summary>
-        protected LabelWidthScope LabelWidth(float width) => new LabelWidthScope(width);
-        /// <summary>
-        /// 在Using语句中使用的Scope，condition满足时暂时禁用指定区域（变灰，无法交互）
-        /// </summary>
-        protected DisableScope Disable(bool disabled) => new DisableScope(disabled);
-        /// <summary>
-        /// 在Using语句中使用的Scope，用于标记ControlLabel的属性
-        /// </summary>
-        protected ControlLabelScope ControlLabel(string label) => new ControlLabelScope(label, ThemeColor);
-        /// <summary>
-        /// 在Using语句中使用的Scope，用于标记ControlLabel的属性
-        /// </summary>
-        protected ControlLabelScope ControlLabel(string label, string labelOverride) => new ControlLabelScope(string.IsNullOrEmpty(labelOverride) ? label : labelOverride, ThemeColor);
-        #endregion
 
-        #region Scope Object
-        protected GUILayout.HorizontalScope HORIZONTAL => Horizontal();
-        protected GUILayout.VerticalScope VERTICAL => Vertical();
-        protected GUILayout.VerticalScope BOX => Vertical(StlBox);
-        protected GUILayout.VerticalScope NODE => Vertical(StlNode);
-        protected GUILayout.VerticalScope HIGHLIGHT => Vertical(StlHighlight);
-        protected GUILayout.VerticalScope GROUP => Vertical(StlGroup);
-        protected GUILayout.HorizontalScope DOCK => Horizontal(StlDock);
         /// <summary>
         /// 在Using语句中使用的Scope，指定一个Scroll View
         /// </summary>
         protected GUILayout.ScrollViewScope SCROLL => Scroll();
-        /// <summary>
-        /// 在Using语句中使用的Scope，指定区域的Field对用户输入延迟响应，作用于 IntField, FloatField, TextField, Vector2Field
-        /// </summary>
-        protected DelayedScope DELAYED => new DelayedScope();
-        /// <summary>
-        /// 在Using语句中使用的Scope，检查块中控件是否变化，若有变化，Changed置为true
-        /// </summary>
-        protected ChangeCheckScope CHANGECHECK => new ChangeCheckScope();
-        /// <summary>
-        /// 在CHECK块中控件是否变化
-        /// </summary>
-        protected bool Changed => GUI.changed;
         #endregion
 
         #endregion
 
         #region 【PRIVATE】
-        internal IceGUIIsland Island => _island ??= new IceGUIIsland(DefaultThemeColor, Repaint); [SerializeField] IceGUIIsland _island;
+        internal IceGUIAutoPack Pack => _pack ??= new IceGUIAutoPack(DefaultThemeColor, Repaint); [SerializeField] IceGUIAutoPack _pack;
 
         bool drawingWindowGUI = false;
         bool needsCheckControlId = false;
@@ -962,25 +277,32 @@ namespace IceEditor
             {
                 using (BOX) using (SectionFolder("Color Map"))
                 {
-                    using (CHANGECHECK)
+                    using (GUICHECK)
                     {
                         ColorField("ThemeColor");
 
-                        if (Changed) RefreshThemeColor();
+                        if (GUIChanged) Pack.RefreshThemeColor();
                     }
-                    if (_stringColorMap.Count > 1) foreach (var key in _stringColorMap.Keys) if (key != "ThemeColor") ColorField(key);
+                    if (Pack._stringColorMap.Count > 1) foreach (var key in Pack._stringColorMap.Keys) if (key != "ThemeColor") ColorField(key);
                 }
-                if (_stringIntMap.Count > 0) using (BOX) using (SectionFolder("Int Map")) foreach (var key in _stringIntMap.Keys) IntField(key);
-                if (_stringFloatMap.Count > 0) using (BOX) using (SectionFolder("Float Map")) foreach (var key in _stringFloatMap.Keys) FloatField(key);
-                if (_stringStringMap.Count > 0) using (BOX) using (SectionFolder("String Map")) foreach (var key in _stringStringMap.Keys) TextField(key);
-                if (_stringVec2Map.Count > 0) using (BOX) using (SectionFolder("Vector2 Map")) foreach (var key in _stringVec2Map.Keys) Vector2Field(key);
-                if (_intVec2Map.Count > 0) using (BOX) using (SectionFolder("Int-Vector2 Map")) foreach (var key in _intVec2Map.Keys) _intVec2Map[key] = _Vector2Field(key.ToString(), _intVec2Map[key]);
-                if (_stringBoolMap.Count > 0) using (BOX) using (SectionFolder("Bool Map")) foreach (var key in _stringBoolMap.Keys) Toggle(key);
-                if (_stringAnimBoolMap.Count > 0) using (BOX) using (SectionFolder("Anim Bool Map")) foreach (var key in _stringAnimBoolMap.Keys) using (HORIZONTAL) { SetAnimBoolTarget(key, _Toggle(key.ToString(), GetAnimBoolTarget(key))); _Slider(GetAnimBoolFaded(key)); }
+                if (Pack._stringBoolMap.Count > 0) using (BOX) using (SectionFolder("Bool Map")) foreach (var key in Pack._stringBoolMap.Keys) Toggle(key);
+                if (Pack._stringIntMap.Count > 0) using (BOX) using (SectionFolder("Int Map")) foreach (var key in Pack._stringIntMap.Keys) IntField(key);
+                if (Pack._stringFloatMap.Count > 0) using (BOX) using (SectionFolder("Float Map")) foreach (var key in Pack._stringFloatMap.Keys) FloatField(key);
+                if (Pack._stringStringMap.Count > 0) using (BOX) using (SectionFolder("String Map")) foreach (var key in Pack._stringStringMap.Keys) TextField(key);
+                if (Pack._stringVec2Map.Count > 0) using (BOX) using (SectionFolder("Vector2 Map")) foreach (var key in Pack._stringVec2Map.Keys) Vector2Field(key);
+                if (Pack._stringVec3Map.Count > 0) using (BOX) using (SectionFolder("Vector3 Map")) foreach (var key in Pack._stringVec3Map.Keys) Vector3Field(key);
+                if (Pack._stringVec4Map.Count > 0) using (BOX) using (SectionFolder("Vector4 Map")) foreach (var key in Pack._stringVec4Map.Keys) Vector4Field(key);
+                if (Pack._stringVec2IntMap.Count > 0) using (BOX) using (SectionFolder("Vector2Int Map")) foreach (var key in Pack._stringVec2IntMap.Keys) Vector2IntField(key);
+                if (Pack._stringVec3IntMap.Count > 0) using (BOX) using (SectionFolder("Vector3Int Map")) foreach (var key in Pack._stringVec3IntMap.Keys) Vector3IntField(key);
+                if (Pack._intVec2Map.Count > 0) using (BOX) using (SectionFolder("Int-Vector2 Map")) foreach (var key in Pack._intVec2Map.Keys) Pack._intVec2Map[key] = _Vector2Field(key.ToString(), Pack._intVec2Map[key]);
+                // AnimBool会被SectionFolder影响,必须放在最后面
+                if (Pack._stringAnimBoolMap.Count > 0) using (BOX) using (SectionFolder("Anim Bool Map")) foreach (var key in Pack._stringAnimBoolMap.Keys) using (HORIZONTAL) { SetAnimBoolTarget(key, _Toggle(key.ToString(), GetAnimBoolTarget(key))); _Slider(GetAnimBoolFaded(key)); }
             }
         }
         void OnGUI()
         {
+            using var _ = UsePack(Pack);
+
             const float debugSeparatorWidth = 8; //中间分隔栏的宽
             const string debugScaleKey = "Debug Panel Scale";
             var debugScale = Mathf.Clamp(GetFloat(debugScaleKey), debugSeparatorWidth + 2, ((_debugUIOrientation == UIOrientation.Left || _debugUIOrientation == UIOrientation.Right) ? position.width : position.height) - 2);
@@ -1109,20 +431,20 @@ namespace IceEditor
                 drawingWindowGUI = false;
                 if (checkingControlId)
                 {
-                    string debugStr = "ControlId去重!";
+                    //string debugStr = "ControlId去重!";
 
                     allControlIdSet.ExceptWith(currentControlIdSet);
                     foreach (var id in allControlIdSet)
                     {
-                        _intVec2Map.Remove(id);
-                        debugStr += "\n" + id;
+                        Pack._intVec2Map.Remove(id);
+                        //debugStr += "\n" + id;
                     }
                     allControlIdSet.Clear();
                     allControlIdSet.UnionWith(currentControlIdSet);
 
                     checkingControlId = false;
 
-                    Log(debugStr);
+                    //Log(debugStr);
                 }
             }
             OnExtraGUI(rContent);

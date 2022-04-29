@@ -21,6 +21,8 @@ namespace IceEngine
         }
         #endregion
 
+        #region Config Fields
         public Color themeColor = new Color(1, 0.6f, 0);
+        #endregion
     }
 }

@@ -1,7 +1,8 @@
 ﻿using UnityEditor;
 using UnityEngine;
+using IceEditor.Internal;
 
-namespace IceEngine.Assets.IceEngine.Library.LabelAttribute.Editor
+namespace IceEditor
 {
     /// <summary>
     /// 重载编辑器默认的Inspector行为
@@ -25,16 +26,7 @@ namespace IceEngine.Assets.IceEngine.Library.LabelAttribute.Editor
         public override void OnInspectorGUI()
         {
             {
-                serializedObject.UpdateIfRequiredOrScript();
-                SerializedProperty iterator = serializedObject.GetIterator();
-                iterator.NextVisible(true);
-                // 第一个 property 是 m_Script，直接跳过
-                while (iterator.NextVisible(false))
-                {
-                    // Property Field
-                    EditorGUILayout.PropertyField(iterator, true);
-                }
-                serializedObject.ApplyModifiedProperties();
+                IceGUIUtility.DrawSerializedObject(serializedObject);
             }
 
             var fs = target.GetType().GetFields();
