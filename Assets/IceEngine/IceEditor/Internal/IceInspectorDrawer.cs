@@ -5,10 +5,10 @@ using IceEditor.Internal;
 namespace IceEditor.Internal
 {
     /// <summary>
-    /// 重载编辑器默认的Inspector行为
+    /// 重载编辑器默认的InspectorGUI行为
     /// </summary>
     [CustomEditor(typeof(MonoBehaviour), true)]
-    internal class IceInspectorGUIDrawer : UnityEditor.Editor
+    internal class IceInspectorDrawer : UnityEditor.Editor
     {
         void OnEnable()
         {
