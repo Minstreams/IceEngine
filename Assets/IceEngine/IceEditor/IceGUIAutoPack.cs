@@ -27,27 +27,6 @@ namespace IceEditor
             _onAnimValueChange = onAnimValueChange;
         }
 
-        #region 全局单例
-        /// <summary>
-        /// 当前数据
-        /// </summary>
-        public static IceGUIAutoPack CurrentPack => _currentPack ?? throw new IceGUIException("IceGUIAuto functions must be called inside a GUIPackScope!");
-        static IceGUIAutoPack _currentPack;
-        public class GUIPackScope : IDisposable
-        {
-            IceGUIAutoPack originPack = null;
-            public GUIPackScope(IceGUIAutoPack pack)
-            {
-                originPack = _currentPack;
-                _currentPack = pack;
-            }
-            void IDisposable.Dispose()
-            {
-                _currentPack = originPack;
-            }
-        }
-        #endregion
-
         #region 主题颜色
         /// <summary>
         /// 主题颜色

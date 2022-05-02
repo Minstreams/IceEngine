@@ -258,7 +258,7 @@ namespace IceEditor
         /// 在Using语句中使用的Scope，指定一个Scroll View
         /// </summary>
         protected GUILayout.ScrollViewScope SCROLL => Scroll();
-        protected IceGUIAutoPack.GUIPackScope PACK => new IceGUIAutoPack.GUIPackScope(Pack);
+        protected IceGUIUtility.GUIPackScope PACK => new IceGUIUtility.GUIPackScope(Pack);
         #endregion
 
         #endregion

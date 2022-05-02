@@ -6,9 +6,10 @@ using System.Threading.Tasks;
 using UnityEngine;
 using UnityEditor;
 using IceEngine;
+using IceEditor.Internal;
 using static IceEditor.IceGUI;
 
-namespace IceEditor.Internal
+namespace IceEditor
 {
     public static class IceGUIUtility
     {
@@ -27,7 +28,27 @@ namespace IceEditor.Internal
             while (itr.NextVisible(false));
             so.ApplyModifiedProperties();
         }
-        public static Color CurrentThemeColor => IceGUIAutoPack.CurrentPack?.ThemeColor ?? IcePreference.Config.themeColor;
+        public static Color CurrentThemeColor => HasPack ? CurrentPack.ThemeColor : IcePreference.Config.themeColor;
+        #endregion
+
+        #region GUIAutoPack
+        public static bool HasPack => _currentPack != null;
+        public static IceGUIAutoPack CurrentPack => _currentPack ?? throw new IceGUIException("IceGUIAuto functions must be called inside a GUIPackScope!");
+        static IceGUIAutoPack _currentPack;
+
+        public class GUIPackScope : IDisposable
+        {
+            IceGUIAutoPack originPack = null;
+            public GUIPackScope(IceGUIAutoPack pack)
+            {
+                originPack = _currentPack;
+                _currentPack = pack;
+            }
+            void IDisposable.Dispose()
+            {
+                _currentPack = originPack;
+            }
+        }
         #endregion
 
         #region GUIStyle

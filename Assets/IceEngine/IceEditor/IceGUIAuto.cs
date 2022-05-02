@@ -17,8 +17,8 @@ namespace IceEditor
     /// </summary>
     public static class IceGUIAuto
     {
-        public static IceGUIAutoPack.GUIPackScope UsePack(IceGUIAutoPack pack) => new IceGUIAutoPack.GUIPackScope(pack);
-        static IceGUIAutoPack Pack => IceGUIAutoPack.CurrentPack;
+        public static IceGUIUtility.GUIPackScope UsePack(IceGUIAutoPack pack) => new IceGUIUtility.GUIPackScope(pack);
+        static IceGUIAutoPack Pack => IceGUIUtility.CurrentPack;
 
         #region 临时数据托管
         public static Color GetColor(string key) => Pack.GetColor(key);
