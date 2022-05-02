@@ -10,7 +10,7 @@ using static IceEditor.IceGUI;
 
 namespace IceEditor.Internal
 {
-    internal class IceGUIUtility
+    public static class IceGUIUtility
     {
         #region General Implementation
         public static void DrawSerializedObject(SerializedObject so)
@@ -31,7 +31,8 @@ namespace IceEditor.Internal
         #endregion
 
         #region GUIStyle
-        public static GUIStyle GetStlSectionHeader(Color themeColor) => new GUIStyle("AnimationEventTooltip")
+        public static GUIStyle GetStyle(string key = null, Func<GUIStyle> itor = null) => IceGUIStyleBox.GetStyle(key, itor);
+        internal static GUIStyle GetStlSectionHeader(Color themeColor) => new GUIStyle("AnimationEventTooltip")
         {
             padding = new RectOffset(1, 8, 2, 2),
             overflow = new RectOffset(24, 0, 0, 0),
@@ -50,9 +51,9 @@ namespace IceEditor.Internal
             stl.onHover.textColor = themeColor * 1.2f;
             stl.onHover.background = stl.normal.background;
         });
-        public static GUIStyle GetStlPrefix(Color themeColor) => new GUIStyle("PrefixLabel") { margin = new RectOffset(3, 3, 2, 2), padding = new RectOffset(1, 1, 0, 0), alignment = TextAnchor.MiddleLeft, richText = true, }.Initialize(stl => { stl.focused.textColor = stl.active.textColor = stl.onNormal.textColor = stl.onActive.textColor = themeColor; stl.onNormal.background = stl.active.background; });
-        public static GUIStyle GetStlSeparator(Color themeColor) => new GUIStyle($"flow node {GetThemeColorHueIndex(themeColor)}");
-        public static GUIStyle GetStlSeparatorOn(Color themeColor) => new GUIStyle($"flow node {GetThemeColorHueIndex(themeColor)} on");
+        internal static GUIStyle GetStlPrefix(Color themeColor) => new GUIStyle("PrefixLabel") { margin = new RectOffset(3, 3, 2, 2), padding = new RectOffset(1, 1, 0, 0), alignment = TextAnchor.MiddleLeft, richText = true, }.Initialize(stl => { stl.focused.textColor = stl.active.textColor = stl.onNormal.textColor = stl.onActive.textColor = themeColor; stl.onNormal.background = stl.active.background; });
+        internal static GUIStyle GetStlSeparator(Color themeColor) => new GUIStyle($"flow node {GetThemeColorHueIndex(themeColor)}");
+        internal static GUIStyle GetStlSeparatorOn(Color themeColor) => new GUIStyle($"flow node {GetThemeColorHueIndex(themeColor)} on");
         static int GetThemeColorHueIndex(Color themeColor)
         {
             Color.RGBToHSV(themeColor, out float h, out float s, out _);
@@ -70,7 +71,7 @@ namespace IceEditor.Internal
         #region Preference Setting
         [SettingsProvider] static SettingsProvider GetRuntimeSettingProvider() => GetSettingProvider("Preferences/IceEngine/0", "General", IcePreference.Config, IcePreference.CreateConfig);
         [SettingsProvider] static SettingsProvider GetSettingProvider() => GetSettingProvider("Preferences/IceEngine/1", "Editor", IceEditorConfig.Config, IceEditorConfig.CreateConfig);
-        public static SettingsProvider GetSettingProvider<ConfigType>(string path, string label, ConfigType config, Func<ConfigType> createConfigAction, SettingsScope scope = SettingsScope.User) where ConfigType : ScriptableObject
+        internal static SettingsProvider GetSettingProvider<ConfigType>(string path, string label, ConfigType config, Func<ConfigType> createConfigAction, SettingsScope scope = SettingsScope.User) where ConfigType : ScriptableObject
         {
             SerializedObject so = null;
             return new SettingsProvider(path, scope)

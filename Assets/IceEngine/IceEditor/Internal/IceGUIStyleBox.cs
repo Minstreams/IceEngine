@@ -1,6 +1,4 @@
-﻿// 需要整理，非最终版
-
-using System;
+﻿using System;
 using UnityEditor;
 using UnityEngine;
 using System.Collections.Generic;
@@ -11,12 +9,12 @@ using IceEngine;
 using static IceEditor.IceGUI;
 using static IceEditor.IceGUIAuto;
 
-namespace IceEditor
+namespace IceEditor.Internal
 {
     /// <summary>
     /// GUI Style Box
     /// </summary>
-    public sealed class IceStyleBox : IceEditorWindow
+    internal sealed class IceGUIStyleBox : IceEditorWindow
     {
         #region 【常量】
         /// <summary>
@@ -53,7 +51,7 @@ namespace IceEditor
         /// <summary>
         /// 单例
         /// </summary>
-        public static IceStyleBox Instance => _instance != null ? _instance : (_instance = OpenWindow()); static IceStyleBox _instance;
+        public static IceGUIStyleBox Instance => _instance != null ? _instance : (_instance = OpenWindow()); static IceGUIStyleBox _instance;
         /// <summary>
         /// id = 0: 正在编辑的样式，id > 0: 样式列表中的样式
         /// </summary>
@@ -89,6 +87,8 @@ namespace IceEditor
         /// </summary>
         public void DoFilterStyleList()
         {
+            using var _ = PACK;
+
             /// <summary>
             /// 比较两个char的值，并指定是否区分大小写
             /// </summary>
@@ -255,9 +255,9 @@ namespace IceEditor
         #region 【定制】
 
         [MenuItem("IceSystem/Style Box", false, 20)]
-        static IceStyleBox OpenWindow()
+        static IceGUIStyleBox OpenWindow()
         {
-            var window = GetWindow<IceStyleBox>();
+            var window = GetWindow<IceGUIStyleBox>();
             window.InGameSkin = false;
             return window;
         }

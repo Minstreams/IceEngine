@@ -2,13 +2,13 @@
 using UnityEngine;
 using IceEditor.Internal;
 
-namespace IceEditor
+namespace IceEditor.Internal
 {
     /// <summary>
     /// 重载编辑器默认的Inspector行为
     /// </summary>
     [CustomEditor(typeof(MonoBehaviour), true)]
-    public class OverrideDrawer : UnityEditor.Editor
+    internal class IceInspectorDrawer : UnityEditor.Editor
     {
         void OnEnable()
         {

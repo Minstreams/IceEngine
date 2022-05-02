@@ -6,7 +6,7 @@ namespace IceEditor
     /// <summary>
     /// Global config for IceEditor
     /// </summary>
-    public class IceEditorConfig : ScriptableObject
+    public sealed class IceEditorConfig : ScriptableObject
     {
         #region Sinleton Instance
         const string configPath = "Assets/IceEngine/IceEditor/Internal/IceEditorConfig.asset";

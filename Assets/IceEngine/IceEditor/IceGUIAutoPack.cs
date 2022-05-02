@@ -12,7 +12,7 @@ namespace IceEditor
     /// 序列化的GUI临时数据
     /// </summary>
     [System.Serializable]
-    public class IceGUIAutoPack
+    public sealed class IceGUIAutoPack
     {
         /// <summary>
         /// 默认ThemeColor的GUI临时数据
@@ -31,18 +31,19 @@ namespace IceEditor
         /// <summary>
         /// 当前数据
         /// </summary>
-        public static IceGUIAutoPack CurrentPack { get; protected set; }
+        public static IceGUIAutoPack CurrentPack => _currentPack ?? throw new IceGUIException("IceGUIAuto functions must be called inside a GUIPackScope!");
+        static IceGUIAutoPack _currentPack;
         public class GUIPackScope : IDisposable
         {
             IceGUIAutoPack originPack = null;
             public GUIPackScope(IceGUIAutoPack pack)
             {
-                originPack = CurrentPack;
-                CurrentPack = pack;
+                originPack = _currentPack;
+                _currentPack = pack;
             }
             void IDisposable.Dispose()
             {
-                CurrentPack = originPack;
+                _currentPack = originPack;
             }
         }
         #endregion

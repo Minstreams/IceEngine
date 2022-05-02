@@ -258,6 +258,7 @@ namespace IceEditor
         /// 在Using语句中使用的Scope，指定一个Scroll View
         /// </summary>
         protected GUILayout.ScrollViewScope SCROLL => Scroll();
+        protected IceGUIAutoPack.GUIPackScope PACK => new IceGUIAutoPack.GUIPackScope(Pack);
         #endregion
 
         #endregion
@@ -301,7 +302,7 @@ namespace IceEditor
         }
         void OnGUI()
         {
-            using var _ = UsePack(Pack);
+            using var _ = PACK;
 
             const float debugSeparatorWidth = 8; //中间分隔栏的宽
             const string debugScaleKey = "Debug Panel Scale";
