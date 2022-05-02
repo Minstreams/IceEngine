@@ -8,7 +8,7 @@ namespace IceEditor.Internal
     /// 重载编辑器默认的Inspector行为
     /// </summary>
     [CustomEditor(typeof(MonoBehaviour), true)]
-    internal class IceInspectorDrawer : UnityEditor.Editor
+    internal class IceInspectorGUIDrawer : UnityEditor.Editor
     {
         void OnEnable()
         {

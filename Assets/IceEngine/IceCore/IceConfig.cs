@@ -6,7 +6,7 @@ namespace IceEngine
     /// <summary>
     /// Global config for runtime project
     /// </summary>
-    public class IceConfig : ScriptableObject
+    public sealed class IceConfig : ScriptableObject
     {
         #region Sinleton Instance
         /// <summary>
