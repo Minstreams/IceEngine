@@ -27,7 +27,7 @@ namespace IceEditor.Internal
             while (itr.NextVisible(false));
             so.ApplyModifiedProperties();
         }
-        public static Color CurrentThemeColor => IceGUIAutoPack.CurrentPack?.ThemeColor ?? IceConfig.Config.themeColor;
+        public static Color CurrentThemeColor => IceGUIAutoPack.CurrentPack?.ThemeColor ?? IcePreference.Config.themeColor;
         #endregion
 
         #region GUIStyle
@@ -68,8 +68,8 @@ namespace IceEditor.Internal
         #endregion
 
         #region Preference Setting
-        [SettingsProvider] static SettingsProvider GetRuntimeSettingProvider() => GetSettingProvider("IceEngine/0", "General", IceConfig.Config, IceConfig.CreateConfig);
-        [SettingsProvider] static SettingsProvider GetSettingProvider() => GetSettingProvider("IceEngine/1", "Editor", IceEditorConfig.Config, IceEditorConfig.CreateConfig);
+        [SettingsProvider] static SettingsProvider GetRuntimeSettingProvider() => GetSettingProvider("Preferences/IceEngine/0", "General", IcePreference.Config, IcePreference.CreateConfig);
+        [SettingsProvider] static SettingsProvider GetSettingProvider() => GetSettingProvider("Preferences/IceEngine/1", "Editor", IceEditorConfig.Config, IceEditorConfig.CreateConfig);
         public static SettingsProvider GetSettingProvider<ConfigType>(string path, string label, ConfigType config, Func<ConfigType> createConfigAction, SettingsScope scope = SettingsScope.User) where ConfigType : ScriptableObject
         {
             SerializedObject so = null;
@@ -84,7 +84,8 @@ namespace IceEditor.Internal
                 {
                     if (so == null)
                     {
-
+                        LabelError("Serialized Object is not generated!");
+                        return;
                     }
                     DrawSerializedObject(so);
                 },

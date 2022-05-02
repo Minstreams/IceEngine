@@ -17,7 +17,7 @@ namespace IceEditor
         /// <summary>
         /// 默认ThemeColor的GUI临时数据
         /// </summary>
-        public IceGUIAutoPack(UnityAction onAnimValueChange = null) : this(IceConfig.Config.themeColor, onAnimValueChange) { }
+        public IceGUIAutoPack(UnityAction onAnimValueChange = null) : this(IcePreference.Config.themeColor, onAnimValueChange) { }
         /// <summary>
         /// 序列化的GUI临时数据
         /// </summary>
@@ -34,13 +34,15 @@ namespace IceEditor
         public static IceGUIAutoPack CurrentPack { get; protected set; }
         public class GUIPackScope : IDisposable
         {
+            IceGUIAutoPack originPack = null;
             public GUIPackScope(IceGUIAutoPack pack)
             {
+                originPack = CurrentPack;
                 CurrentPack = pack;
             }
             void IDisposable.Dispose()
             {
-                CurrentPack = null;
+                CurrentPack = originPack;
             }
         }
         #endregion

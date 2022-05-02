@@ -13,7 +13,7 @@ namespace IceEngine.Internal
         /// <summary>
         /// 主题颜色
         /// </summary>
-        internal virtual Color ThemeColor => IceConfig.Config.themeColor;
+        internal virtual Color ThemeColor => IcePreference.Config.themeColor;
     }
 
     /// <summary>

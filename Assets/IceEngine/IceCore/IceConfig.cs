@@ -4,7 +4,7 @@ using UnityEngine;
 namespace IceEngine
 {
     /// <summary>
-    /// Global config for runtime preference
+    /// Global config for runtime project
     /// </summary>
     public class IceConfig : ScriptableObject
     {
@@ -22,7 +22,7 @@ namespace IceEngine
         #endregion
 
         #region Config Fields
-        public Color themeColor = new Color(1, 0.6f, 0);
+
         #endregion
     }
 }

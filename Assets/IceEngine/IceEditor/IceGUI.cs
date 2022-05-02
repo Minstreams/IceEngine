@@ -27,10 +27,10 @@ namespace IceEditor
         public static GUIStyle StlButton => _stlButton?.Check() ?? (_stlButton = new GUIStyle("LargeButton") { richText = true, }); static GUIStyle _stlButton;
         public static GUIStyle StlError => _stlError?.Check() ?? (_stlError = new GUIStyle("Wizard Error") { border = new RectOffset(32, 0, 32, 0), padding = new RectOffset(32, 0, 7, 7), fixedHeight = 0f, }.Initialize(stl => { stl.normal.textColor = new Color(1f, 0.8469602f, 0f); })); static GUIStyle _stlError;
         public static GUIStyle StlIce => _stlIce?.Check() ?? (_stlIce = new GUIStyle("BoldTextField") { padding = new RectOffset(3, 3, 2, 2), fontSize = 11, richText = true, fixedHeight = 0f, stretchWidth = false, imagePosition = ImagePosition.ImageLeft, fontStyle = FontStyle.Normal }); static GUIStyle _stlIce;
-        public static GUIStyle StlSectionHeader => IceGUIAutoPack.CurrentPack?.StlSectionHeader ?? _stlSectionHeader?.Check() ?? (_stlSectionHeader = IceGUIUtility.GetStlSectionHeader(IceConfig.Config.themeColor)); static GUIStyle _stlSectionHeader;
-        public static GUIStyle StlPrefix => IceGUIAutoPack.CurrentPack?.StlPrefix ?? _stlPrefix?.Check() ?? (_stlPrefix = IceGUIUtility.GetStlPrefix(IceConfig.Config.themeColor)); static GUIStyle _stlPrefix;
-        public static GUIStyle StlSeparator => IceGUIAutoPack.CurrentPack?.StlSeparator ?? _stlSeparator?.Check() ?? (_stlSeparator = IceGUIUtility.GetStlSeparator(IceConfig.Config.themeColor)); static GUIStyle _stlSeparator;
-        public static GUIStyle StlSeparatorOn => IceGUIAutoPack.CurrentPack?.StlSeparatorOn ?? _stlSeparatorOn?.Check() ?? (_stlSeparatorOn = IceGUIUtility.GetStlSeparatorOn(IceConfig.Config.themeColor)); static GUIStyle _stlSeparatorOn;
+        public static GUIStyle StlSectionHeader => IceGUIAutoPack.CurrentPack?.StlSectionHeader ?? _stlSectionHeader?.Check() ?? (_stlSectionHeader = IceGUIUtility.GetStlSectionHeader(IcePreference.Config.themeColor)); static GUIStyle _stlSectionHeader;
+        public static GUIStyle StlPrefix => IceGUIAutoPack.CurrentPack?.StlPrefix ?? _stlPrefix?.Check() ?? (_stlPrefix = IceGUIUtility.GetStlPrefix(IcePreference.Config.themeColor)); static GUIStyle _stlPrefix;
+        public static GUIStyle StlSeparator => IceGUIAutoPack.CurrentPack?.StlSeparator ?? _stlSeparator?.Check() ?? (_stlSeparator = IceGUIUtility.GetStlSeparator(IcePreference.Config.themeColor)); static GUIStyle _stlSeparator;
+        public static GUIStyle StlSeparatorOn => IceGUIAutoPack.CurrentPack?.StlSeparatorOn ?? _stlSeparatorOn?.Check() ?? (_stlSeparatorOn = IceGUIUtility.GetStlSeparatorOn(IcePreference.Config.themeColor)); static GUIStyle _stlSeparatorOn;
         #endregion
 
         #region Utility

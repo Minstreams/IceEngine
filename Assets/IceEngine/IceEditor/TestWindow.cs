@@ -20,13 +20,16 @@ namespace IceEditor
         }
         protected override void OnWindowGUI(Rect position)
         {
-            IntField("Play");
-            IntField("Play2");
-            Vector2Field("Play2");
-            Vector3Field("Play2");
-            Vector4Field("Play2");
-            Vector2IntField("Play2");
-            Vector3IntField("Play2");
+            using (GROUP)
+            {
+                IntField("Play");
+                IntField("Play2");
+                Vector2Field("Play2");
+                Vector3Field("Play2");
+                Vector4Field("Play2");
+                Vector2IntField("Play2");
+                Vector3IntField("Play2");
+            }
         }
     }
 }

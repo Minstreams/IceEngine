@@ -150,7 +150,7 @@ namespace IceEngine
             int skipFrames = 3;
             if (string.IsNullOrEmpty(prefix))
             {
-                prefix = $"【{"IceIsland".Color(IceConfig.Config.themeColor)}】";
+                prefix = $"【{"IceIsland".Color(IcePreference.Config.themeColor)}】";
                 skipFrames = 2;
             }
             string log = $"{prefix}{mid}{message}";

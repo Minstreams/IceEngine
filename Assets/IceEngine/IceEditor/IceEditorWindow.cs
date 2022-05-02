@@ -64,7 +64,7 @@ namespace IceEditor
         /// <summary>
         /// 默认主题颜色
         /// </summary>
-        protected virtual Color DefaultThemeColor => IceConfig.Config.themeColor;
+        protected virtual Color DefaultThemeColor => IcePreference.Config.themeColor;
         /// <summary>
         /// 是否在 DebugUI 中显示 StatusUI
         /// </summary>
