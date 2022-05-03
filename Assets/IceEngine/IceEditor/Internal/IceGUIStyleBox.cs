@@ -261,10 +261,10 @@ namespace IceEditor.Internal
             window.InGameSkin = false;
             return window;
         }
-        public override GUIContent TitleContent => new GUIContent(InGameSkin ? "GUIStyle 样例窗口 - InGameSkin" : "GUIStyle 样例窗口");
+        public override GUIContent TitleContent => TempContent(InGameSkin ? "GUIStyle 样例窗口 - InGameSkin" : "GUIStyle 样例窗口");
         public override void AddItemsToMenu(GenericMenu menu)
         {
-            menu.AddItem(new GUIContent("InGameSkin"), InGameSkin, () => InGameSkin = !InGameSkin);
+            menu.AddItem(TempContent("InGameSkin"), InGameSkin, () => InGameSkin = !InGameSkin);
             menu.AddSeparator("");
             base.AddItemsToMenu(menu);
         }
@@ -722,14 +722,14 @@ namespace IceEditor.Internal
                         Vector2 size;
 
                         GUI.color = new Color(0.306f, 0.788f, 0.690f);
-                        size = StlCode.CalcSize(new GUIContent(guiType.ToString()));
+                        size = StlCode.CalcSize(TempContent(guiType.ToString()));
                         guiType = (GUIType)EditorGUI.EnumPopup(GUILayoutUtility.GetRect(size.x + 2, size.y, GUILayout.ExpandWidth(false)), guiType, StlCode);
 
                         GUI.color = Color.white;
                         GUILayout.Label(".", StlCode, GUILayout.ExpandWidth(false));
 
                         GUI.color = new Color(0.863f, 0.863f, 0.667f);
-                        size = StlCode.CalcSize(new GUIContent(displayType.ToString()));
+                        size = StlCode.CalcSize(TempContent(displayType.ToString()));
                         displayType = (DisplayType)EditorGUI.EnumPopup(GUILayoutUtility.GetRect(size.x + 2, size.y, GUILayout.ExpandWidth(false)), displayType, StlCode);
 
                         GUI.color = Color.white;
@@ -753,7 +753,7 @@ namespace IceEditor.Internal
                             if (GUILayout.Button(GUIContent.none, "OL Plus", GUILayout.ExpandWidth(false)))
                             {
                                 GenericMenu gm = new GenericMenu();
-                                void LayoutOptionToggle(string name) { if (!GetBool($"Has Layout {name}")) gm.AddItem(new GUIContent(name), false, () => { SetBool($"Has Layout {name}", true); ConstructLayoutOptions(); }); }
+                                void LayoutOptionToggle(string name) { if (!GetBool($"Has Layout {name}")) gm.AddItem(TempContent(name), false, () => { SetBool($"Has Layout {name}", true); ConstructLayoutOptions(); }); }
                                 foreach (var o in layoutFloatOptions) LayoutOptionToggle(o.name);
                                 foreach (var o in layoutBoolOptions) LayoutOptionToggle(o.name);
                                 gm.ShowAsContext();
@@ -920,18 +920,18 @@ namespace IceEditor.Internal
                                 if (e.button == 1)
                                 {
                                     GenericMenu menu = new GenericMenu();
-                                    menu.AddItem(new GUIContent("记录"), false, () =>
+                                    menu.AddItem(TempContent("记录"), false, () =>
                                     {
                                         stlCacheMap[sc.Key] = new StyleCache(new GUIStyle(stlInspecting), new GUIStyle(stlInspectingOrigin));
                                     });
-                                    menu.AddItem(new GUIContent("取出"), false, () =>
+                                    menu.AddItem(TempContent("取出"), false, () =>
                                     {
                                         stlInspecting = new GUIStyle(sc.Value.stl);
                                         stlInspectingOrigin = new GUIStyle(sc.Value.stlOrigin);
                                         PropertyObj.Update();
                                         SetBool("Property Dirty", false);
                                     });
-                                    menu.AddItem(new GUIContent("删除"), false, () =>
+                                    menu.AddItem(TempContent("删除"), false, () =>
                                     {
                                         if (EditorUtility.DisplayDialog(TitleContent.text, $"确认删除样式：{sc.Key}", "确认", "取消"))
                                         {

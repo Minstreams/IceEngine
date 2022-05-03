@@ -70,9 +70,18 @@ namespace IceEditor
         /// </summary>
         public static FolderScope SectionFolder(string key, bool defaultVal = true, string labelOverride = null)
         {
-            var ab = GetAnimBool(key, defaultVal);
-            ab.target = GUILayout.Toggle(ab.target, string.IsNullOrEmpty(labelOverride) ? key : labelOverride, StlSectionHeader);
-            return new FolderScope(ab, true);
+            var label = string.IsNullOrEmpty(labelOverride) ? key : labelOverride;
+            if (IceGUIUtility.HasPack)
+            {
+                var ab = GetAnimBool(key, defaultVal);
+                ab.target = GUILayout.Toggle(ab.target, label, StlSectionHeader);
+                return new FolderScope(ab, true);
+            }
+            else
+            {
+                IceGUI.SectionHeader(label);
+                return null;
+            }
         }
 
         /// <summary>

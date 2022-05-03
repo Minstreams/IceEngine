@@ -1,6 +1,6 @@
 ﻿using UnityEditor;
 using UnityEngine;
-using IceEditor.Internal;
+using static IceEditor.IceGUIAuto;
 
 namespace IceEditor.Internal
 {
@@ -10,34 +10,21 @@ namespace IceEditor.Internal
     [CustomEditor(typeof(MonoBehaviour), true)]
     internal class IceInspectorDrawer : UnityEditor.Editor
     {
+        IceGUIAutoPack pack;
+        IceAttributesInfo info;
         void OnEnable()
         {
-            // 处理Attributes!
-            //var fs = target.GetType().GetFields();
-            //foreach (var fi in fs)
-            //{
-            //    GUILayout.Label(fi.Name);
-            //    foreach (var a in fi.GetCustomAttributes(true))
-            //    {
-            //        GUILayout.Label($"---\t{a}");
-            //    }
-            //}
+            pack = new IceGUIAutoPack(Repaint);
+            info = IceAttributesInfo.GetInfo(serializedObject);
+        }
+        void OnDisable()
+        {
+            pack = null;
+            info = null;
         }
         public override void OnInspectorGUI()
         {
-            {
-                IceGUIUtility.DrawSerializedObject(serializedObject);
-            }
-
-            var fs = target.GetType().GetFields();
-            foreach (var fi in fs)
-            {
-                GUILayout.Label(fi.Name);
-                foreach (var a in fi.GetCustomAttributes(true))
-                {
-                    GUILayout.Label($"---\t{a}");
-                }
-            }
+            using (UsePack(pack)) IceGUIUtility.DrawSerializedObject(serializedObject, info);
         }
     }
 }

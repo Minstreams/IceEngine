@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using UnityEditor;
+using static IceEditor.IceGUI;
 
 namespace IceEditor.Internal
 {
@@ -65,7 +66,7 @@ namespace IceEditor.Internal
                         outerRect.height = propRect.height + 8;
                         GUI.Button(preRect, GUIContent.none, "Radio");
                         GUI.Box(outerRect, GUIContent.none, "window");
-                        OnItemGUI(propRect, list.GetArrayElementAtIndex(i), new GUIContent(enumNames[i]), i);
+                        OnItemGUI(propRect, list.GetArrayElementAtIndex(i), TempContent(enumNames[i]), i);
                         preRect.y += unitHeight + 14;
                         outerRect.y += unitHeight + 14;
                         propRect.y += unitHeight + 14;

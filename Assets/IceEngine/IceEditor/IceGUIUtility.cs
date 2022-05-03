@@ -8,25 +8,181 @@ using UnityEditor;
 using IceEngine;
 using IceEditor.Internal;
 using static IceEditor.IceGUI;
+using static IceEditor.IceGUIAuto;
+using System.Reflection;
 
 namespace IceEditor
 {
+    /// <summary>
+    /// attributes信息
+    /// </summary>
+    public class IceAttributesInfo
+    {
+        public Dictionary<string, IceAttributesInfo> childrenMap = new();
+
+        public Dictionary<string, string> labelMap = new();
+        public HashSet<string> runtimeConstSet = new();
+
+        public Dictionary<string, string> extraInfo = new();
+        public Dictionary<string, string> errorInfo = new();
+        public static IceAttributesInfo GetInfo(SerializedObject so) => new(so.targetObject.GetType());
+        public IceAttributesInfo(Type type, string root = "")
+        {
+            static bool IsSystemType(Type t)
+            {
+                var end = typeof(object);
+                while (t != end)
+                {
+                    var b = t.BaseType;
+                    if (b == end)
+                    {
+                        var ns = t.Namespace;
+                        return ns != null && (ns.StartsWith("System") || ns.StartsWith("Unity"));
+                    }
+                    t = b;
+                }
+                return true;
+            }
+
+            var fields = type.GetFields();
+            foreach (var f in fields)
+            {
+                var path = root + f.Name;
+
+                // 处理 Label
+                try
+                {
+                    if (f.GetCustomAttribute<LabelAttribute>() is not null and var a) labelMap.Add(path, a.label);
+                }
+                catch
+                {
+                    Debug.LogError(f.Name);
+                }
+
+                // 处理 RuntimeConst
+                {
+                    if (f.GetCustomAttribute<RuntimeConst>() is not null) runtimeConstSet.Add(path);
+                }
+
+                // 生成子结构
+                var tt = f.FieldType;
+                if (!IsSystemType(tt) && tt.GetCustomAttribute<SerializableAttribute>() is not null)
+                {
+                    childrenMap.Add(path, new IceAttributesInfo(tt, path + "."));
+                }
+            }
+        }
+    }
+
     public static class IceGUIUtility
     {
         #region General Implementation
-        public static void DrawSerializedObject(SerializedObject so)
+        //public string bool HasCustomPropertyDrawer(Type type)
+        //{
+        //    foreach (Type item in TypeCache.GetTypesDerivedFrom<GUIDrawer>())
+        //    {
+        //        var attr = item.GetCustomAttribute<CustomPropertyDrawer>(true);
+        //        if (attr != null)
+        //        {
+        //            attr.
+        //        }
+        //    }
+
+        //}
+        public static void DrawSerializedObject(SerializedObject so, IceAttributesInfo info = null)
         {
             so.UpdateIfRequiredOrScript();
             SerializedProperty itr = so.GetIterator();
             itr.NextVisible(true);
+            if (itr.propertyPath == "m_Script") itr.NextVisible(false);
             // m_Script 是 Monobehavior 隐藏字段，没必要显示在面板上
-            do if (itr.propertyPath != "m_Script")
-                {
-                    // Property Field
-                    EditorGUILayout.PropertyField(itr, true);
-                }
-            while (itr.NextVisible(false));
+            DrawSerializedProperty(itr, info);
             so.ApplyModifiedProperties();
+
+            if (Button("Test"))
+            {
+                string log = "";
+                foreach (Type item in TypeCache.GetTypesDerivedFrom<GUIDrawer>())
+                {
+                    var attr = item.GetCustomAttribute<CustomPropertyDrawer>(true);
+                    if (attr != null)
+                    {
+                        log += item.FullName + "\n";
+                    }
+                }
+                Debug.Log(log);
+            }
+        }
+        static void DrawSerializedProperty(SerializedProperty itr, IceAttributesInfo info = null, SerializedProperty end = null)
+        {
+            do
+            {
+                var path = itr.propertyPath;
+
+                // 处理 Label
+                if (info == null || !info.labelMap.TryGetValue(path, out string label)) label = itr.displayName;
+
+                // 处理 RuntimeConst
+                bool disabled = info != null && info.runtimeConstSet.Contains(path) && EditorApplication.isPlayingOrWillChangePlaymode;
+
+                // 处理子结构
+                if (itr.propertyType == SerializedPropertyType.Generic && itr.hasChildren && info != null && info.childrenMap.TryGetValue(path, out var childInfo))
+                {
+                    var iBegin = itr.Copy();
+                    var iEnd = itr.Copy();
+                    iBegin.Next(true);
+                    iEnd.Next(false);
+                    using (BOX) using (SectionFolder(path, true, label)) using (Disable(disabled))
+                    {
+                        DrawSerializedProperty(iBegin, childInfo, iEnd);
+                    }
+                }
+                else using (Disable(disabled))
+                    {
+                        switch (itr.propertyType)
+                        {
+                            case SerializedPropertyType.Boolean: itr.boolValue = _Toggle(label, itr.boolValue); break;
+                            case SerializedPropertyType.Integer: itr.intValue = _IntField(label, itr.intValue); break;
+                            case SerializedPropertyType.Float: itr.floatValue = _FloatField(label, itr.floatValue); break;
+                            case SerializedPropertyType.String: itr.stringValue = _TextField(label, itr.stringValue); break;
+                            case SerializedPropertyType.Color: itr.colorValue = _ColorField(label, itr.colorValue); break;
+                            case SerializedPropertyType.Vector2: itr.vector2Value = _Vector2Field(label, itr.vector2Value); break;
+                            case SerializedPropertyType.Vector3: itr.vector3Value = _Vector3Field(label, itr.vector3Value); break;
+                            case SerializedPropertyType.Vector4: itr.vector4Value = _Vector4Field(label, itr.vector4Value); break;
+                            case SerializedPropertyType.Vector2Int: itr.vector2IntValue = _Vector2IntField(label, itr.vector2IntValue); break;
+                            case SerializedPropertyType.Vector3Int: itr.vector3IntValue = _Vector3IntField(label, itr.vector3IntValue); break;
+                            case SerializedPropertyType.ObjectReference:
+                            case SerializedPropertyType.LayerMask:
+                            case SerializedPropertyType.Enum:
+                            case SerializedPropertyType.Rect:
+                            case SerializedPropertyType.ArraySize:
+                            case SerializedPropertyType.Character:
+                            case SerializedPropertyType.AnimationCurve:
+                            case SerializedPropertyType.Bounds:
+                            case SerializedPropertyType.Gradient:
+                            case SerializedPropertyType.Quaternion:
+                            case SerializedPropertyType.ExposedReference:
+                            case SerializedPropertyType.FixedBufferSize:
+                            case SerializedPropertyType.RectInt:
+                            case SerializedPropertyType.BoundsInt:
+                            case SerializedPropertyType.ManagedReference:
+                            case SerializedPropertyType.Hash128:
+                            default: EditorGUILayout.PropertyField(itr, TempContent(label), true); break;
+                        }
+                    }
+
+                if (info != null)
+                {
+                    if (info.extraInfo.TryGetValue(path, out var extraInfo))
+                    {
+                        using (DOCK) Label(extraInfo);
+                    }
+                    if (info.errorInfo.TryGetValue(path, out var error))
+                    {
+                        using (GROUP) LabelError(error);
+                    }
+                }
+            } while (itr.NextVisible(false) && itr != end);
         }
         public static Color CurrentThemeColor => HasPack ? CurrentPack.ThemeColor : IcePreference.Config.themeColor;
         #endregion

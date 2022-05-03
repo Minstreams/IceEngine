@@ -47,11 +47,11 @@ namespace IceEditor
         /// </summary>
         public virtual void AddItemsToMenu(GenericMenu menu)
         {
-            menu.AddItem(new GUIContent($"{DebugModeName}模式"), DebugMode, () => DebugMode = !DebugMode);
-            menu.AddItem(new GUIContent($"{DebugModeName}面板位置/右"), _debugUIOrientation == UIOrientation.Right, () => { _debugUIOrientation = UIOrientation.Right; });
-            menu.AddItem(new GUIContent($"{DebugModeName}面板位置/左"), _debugUIOrientation == UIOrientation.Left, () => { _debugUIOrientation = UIOrientation.Left; });
-            menu.AddItem(new GUIContent($"{DebugModeName}面板位置/下"), _debugUIOrientation == UIOrientation.Bottom, () => { _debugUIOrientation = UIOrientation.Bottom; });
-            menu.AddItem(new GUIContent($"{DebugModeName}面板位置/上"), _debugUIOrientation == UIOrientation.Top, () => { _debugUIOrientation = UIOrientation.Top; });
+            menu.AddItem(TempContent($"{DebugModeName}模式"), DebugMode, () => DebugMode = !DebugMode);
+            menu.AddItem(TempContent($"{DebugModeName}面板位置/右"), _debugUIOrientation == UIOrientation.Right, () => { _debugUIOrientation = UIOrientation.Right; });
+            menu.AddItem(TempContent($"{DebugModeName}面板位置/左"), _debugUIOrientation == UIOrientation.Left, () => { _debugUIOrientation = UIOrientation.Left; });
+            menu.AddItem(TempContent($"{DebugModeName}面板位置/下"), _debugUIOrientation == UIOrientation.Bottom, () => { _debugUIOrientation = UIOrientation.Bottom; });
+            menu.AddItem(TempContent($"{DebugModeName}面板位置/上"), _debugUIOrientation == UIOrientation.Top, () => { _debugUIOrientation = UIOrientation.Top; });
         }
         protected virtual void OnEnable()
         {

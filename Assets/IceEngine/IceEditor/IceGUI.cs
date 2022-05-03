@@ -34,6 +34,40 @@ namespace IceEditor
         #endregion
 
         #region Utility
+        static readonly GUIContent _tempText = new GUIContent();
+        static readonly GUIContent _tempImage = new GUIContent();
+        static readonly GUIContent _tempTextImage = new GUIContent();
+        public static GUIContent TempContent(string text)
+        {
+            _tempText.text = text;
+            _tempText.tooltip = string.Empty;
+            return _tempText;
+        }
+        public static GUIContent TempContent(string text, string tooltip)
+        {
+            _tempText.text = text;
+            _tempText.tooltip = tooltip;
+            return _tempText;
+        }
+        public static GUIContent TempContent(Texture image)
+        {
+            _tempImage.image = image;
+            _tempImage.tooltip = string.Empty;
+            return _tempImage;
+        }
+        public static GUIContent TempContent(Texture image, string tooltip)
+        {
+            _tempImage.image = image;
+            _tempImage.tooltip = tooltip;
+            return _tempImage;
+        }
+        public static GUIContent TempContent(string text, Texture image)
+        {
+            _tempTextImage.text = text;
+            _tempTextImage.image = image;
+            return _tempTextImage;
+        }
+
         public static Rect GetRect(params GUILayoutOption[] options) => GUILayoutUtility.GetRect(GUIContent.none, null, options);
         public static Rect GetRect(GUIStyle style, params GUILayoutOption[] options) => GUILayoutUtility.GetRect(GUIContent.none, style, options);
         public static Rect GetRect(GUIContent content, GUIStyle style, params GUILayoutOption[] options) => GUILayoutUtility.GetRect(content, style, options);
@@ -283,14 +317,14 @@ namespace IceEditor
         /// <summary>
         /// 用特定Style填充区域
         /// </summary>
-        public static Rect StyleBox(Rect rect, GUIStyle style, bool hasMargin = false, bool hoverable = false, bool isActive = false, bool on = false, bool hasKeyboardFocus = false)
+        public static Rect StyleBox(Rect rect, GUIStyle style, string text = null, bool hasMargin = false, bool hoverable = false, bool isActive = false, bool on = false, bool hasKeyboardFocus = false)
         {
             if (style == null) return rect;
             var margin = style.margin;
             var res = hasMargin ? rect.MoveEdge(margin.left, -margin.right, margin.top, -margin.bottom) : rect;
             if (Event.current.type == EventType.Repaint)
             {
-                style.Draw(res, hoverable && res.Contains(Event.current.mousePosition), isActive, on, hasKeyboardFocus);
+                style.Draw(res, text, hoverable && res.Contains(Event.current.mousePosition), isActive, on, hasKeyboardFocus);
             }
             return res;
         }
@@ -298,6 +332,8 @@ namespace IceEditor
         public static void Header(string text, string colorExp) => GUILayout.Label(text.Color(colorExp), StlHeader);
         public static void Header(string text, Color color) => GUILayout.Label(text.Color(color), StlHeader);
         public static void Header(string text) => GUILayout.Label(text.Color(IceGUIUtility.CurrentThemeColor), StlHeader);
+
+        public static void SectionHeader(string text, params GUILayoutOption[] options) => StyleBox(GetRect(TempContent(text), StlSectionHeader, options), StlSectionHeader, text, on: true);
 
         public static void Label(string text, GUIStyle style, params GUILayoutOption[] options) => GUILayout.Label(text, style, options);
         public static void Label(GUIContent content, GUIStyle style, params GUILayoutOption[] options) => GUILayout.Label(content, style, options);
@@ -398,7 +434,7 @@ namespace IceEditor
             GUI.SetNextControlName(controlName);
             if (!string.IsNullOrEmpty(label))
             {
-                using (LabelWidth(StlPrefix.CalcSize(new GUIContent(label)).x)) using (ControlLabel(label)) FloatField(ref val);
+                using (LabelWidth(StlPrefix.CalcSize(TempContent(label)).x)) using (ControlLabel(label)) FloatField(ref val);
             }
             else
             {
@@ -529,7 +565,7 @@ namespace IceEditor
             controlNameOut = controlName;
             if (!string.IsNullOrEmpty(label))
             {
-                using (LabelWidth(StlPrefix.CalcSize(new GUIContent(label)).x)) using (ControlLabel(label)) return _IntField(val);
+                using (LabelWidth(StlPrefix.CalcSize(TempContent(label)).x)) using (ControlLabel(label)) return _IntField(val);
             }
             else
             {
@@ -615,11 +651,11 @@ namespace IceEditor
             }
         }
 
-        public static bool IceButton(string text, string tooltip = null, params GUILayoutOption[] options) => GUILayout.Button(new GUIContent(text, tooltip), StlIce, options);
-        public static bool IceButton(string text, bool on, string tooltip = null, params GUILayoutOption[] options) => GUILayout.Button(new GUIContent(on ? $"{text.Color(IceGUIUtility.CurrentThemeColor)}" : text, tooltip), StlIce, options);
-        public static bool IceButton(Texture texture, string tooltip = null, params GUILayoutOption[] options) => GUILayout.Button(new GUIContent(texture, tooltip), StlIce, options);
+        public static bool IceButton(string text, string tooltip = null, params GUILayoutOption[] options) => GUILayout.Button(TempContent(text, tooltip), StlIce, options);
+        public static bool IceButton(string text, bool on, string tooltip = null, params GUILayoutOption[] options) => GUILayout.Button(TempContent(on ? $"{text.Color(IceGUIUtility.CurrentThemeColor)}" : text, tooltip), StlIce, options);
+        public static bool IceButton(Texture texture, string tooltip = null, params GUILayoutOption[] options) => GUILayout.Button(TempContent(texture, tooltip), StlIce, options);
         public static bool IceButton(GUIContent content, params GUILayoutOption[] options) => GUILayout.Button(content, StlIce, options);
-        public static bool _IceToggle(string text, bool val, string tooltip = null, params GUILayoutOption[] options) => GUILayout.Button(new GUIContent(val ? $"{text.Color(IceGUIUtility.CurrentThemeColor)}" : text, tooltip), StlIce) ? !val : val;
+        public static bool _IceToggle(string text, bool val, string tooltip = null, params GUILayoutOption[] options) => GUILayout.Button(TempContent(val ? $"{text.Color(IceGUIUtility.CurrentThemeColor)}" : text, tooltip), StlIce) ? !val : val;
         public static bool IceToggle(string text, ref bool val, string tooltip = null, params GUILayoutOption[] options) => val = _IceToggle(text, val, tooltip, options);
         #endregion
     }

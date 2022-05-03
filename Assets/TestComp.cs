@@ -8,17 +8,32 @@ public class TestComp : MonoBehaviour
     [System.Serializable]
     public class IntEvent : UnityEngine.Events.UnityEvent<int> { }
     public UnityEngine.Events.UnityEvent<int> testEvent2;
-    [Label] public IntEvent testEvent;
+    [Header("testHeader")]
+    [Label("标签te")]
+    public IntEvent testEvent;
 
-    [Label] public string testStr;
-    [SerializeField] public float a;
+    public string testStr;
+    public float a;
+    [RuntimeConst]
+    [Label("BBB")] public bool b;
+    public int i;
+    public Vector2 v2;
+    [RuntimeConst]
+    public Vector3 v3;
+    public Vector4 v4;
+
 
     [System.Serializable]
     public class ClassB
     {
+        [Label("标签Bb")]
         public int bb;
+        [Label("标签Bd")]
+        public int bd;
     }
-    public ClassB b;
+    [Label("标签Bs")]
+    [RuntimeConst]
+    public ClassB bs;
     void Awake()
     {
         Debug.Log("AwakeTemp!");
