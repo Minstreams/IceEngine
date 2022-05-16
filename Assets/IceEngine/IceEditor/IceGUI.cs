@@ -68,7 +68,7 @@ namespace IceEditor
             return _tempTextImage;
         }
 
-        public static Rect GetRect(params GUILayoutOption[] options) => GUILayoutUtility.GetRect(GUIContent.none, null, options);
+        public static Rect GetRect(params GUILayoutOption[] options) => GUILayoutUtility.GetRect(GUIContent.none, GUIStyle.none, options);
         public static Rect GetRect(GUIStyle style, params GUILayoutOption[] options) => GUILayoutUtility.GetRect(GUIContent.none, style, options);
         public static Rect GetRect(GUIContent content, GUIStyle style, params GUILayoutOption[] options) => GUILayoutUtility.GetRect(content, style, options);
         public static Rect GetRect(float aspect, params GUILayoutOption[] options) => GUILayoutUtility.GetAspectRect(aspect, options);
@@ -76,6 +76,8 @@ namespace IceEditor
         public static Rect GetRect(float width, float height, params GUILayoutOption[] options) => GUILayoutUtility.GetRect(width, height, options);
         public static Rect GetRect(float width, float height, GUIStyle style, params GUILayoutOption[] options) => GUILayoutUtility.GetRect(width, height, style, options);
         public static Rect GetLastRect() => Event.current.type == EventType.Repaint ? GUILayoutUtility.GetLastRect() : throw new IceGUIException("Can't call GetLastRect() out of Repaint Event");
+
+        public static GUIStyle GetStyle(string key = null, Func<GUIStyle> itor = null) => IceGUIStyleBox.GetStyle(key, itor);
         #endregion
 
         #region Scope
@@ -264,7 +266,7 @@ namespace IceEditor
         public static GUILayout.AreaScope Area(Rect rect, GUIStyle style)
         {
             var margin = style.margin;
-            return new GUILayout.AreaScope(new Rect(rect.x + margin.left, rect.y + margin.top, rect.width - margin.horizontal, rect.height - margin.vertical), GUIContent.none, style);
+            return new GUILayout.AreaScope(rect.MoveEdge(margin.left, -margin.right, margin.top, -margin.bottom), GUIContent.none, style);
         }
         /// <summary>
         /// 在Using语句中使用的Scope，指定一个Layout Area
@@ -317,14 +319,18 @@ namespace IceEditor
         /// <summary>
         /// 用特定Style填充区域
         /// </summary>
-        public static Rect StyleBox(Rect rect, GUIStyle style, string text = null, bool hasMargin = false, bool hoverable = false, bool isActive = false, bool on = false, bool hasKeyboardFocus = false)
+        public static Rect StyleBox(Rect rect, GUIStyle style, string text = null, bool hasMargin = false, bool? isHover = false, bool isActive = false, bool on = false, bool hasKeyboardFocus = false) => StyleBox(rect, style, string.IsNullOrEmpty(text) ? GUIContent.none : new GUIContent(text), hasMargin, isHover, isActive, on, hasKeyboardFocus);
+        /// <summary>
+        /// 用特定Style填充区域
+        /// </summary>
+        public static Rect StyleBox(Rect rect, GUIStyle style, GUIContent content, bool hasMargin = false, bool? isHover = false, bool isActive = false, bool on = false, bool hasKeyboardFocus = false)
         {
             if (style == null) return rect;
             var margin = style.margin;
             var res = hasMargin ? rect.MoveEdge(margin.left, -margin.right, margin.top, -margin.bottom) : rect;
             if (Event.current.type == EventType.Repaint)
             {
-                style.Draw(res, text, hoverable && res.Contains(Event.current.mousePosition), isActive, on, hasKeyboardFocus);
+                style.Draw(res, content, isHover ?? rect.Contains(Event.current.mousePosition), isActive, on, hasKeyboardFocus);
             }
             return res;
         }

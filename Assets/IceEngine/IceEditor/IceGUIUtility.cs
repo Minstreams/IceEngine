@@ -208,7 +208,6 @@ namespace IceEditor
         #endregion
 
         #region GUIStyle
-        public static GUIStyle GetStyle(string key = null, Func<GUIStyle> itor = null) => IceGUIStyleBox.GetStyle(key, itor);
         internal static GUIStyle GetStlSectionHeader(Color themeColor) => new GUIStyle("AnimationEventTooltip")
         {
             padding = new RectOffset(1, 8, 2, 2),
@@ -231,7 +230,7 @@ namespace IceEditor
         internal static GUIStyle GetStlPrefix(Color themeColor) => new GUIStyle("PrefixLabel") { margin = new RectOffset(3, 3, 2, 2), padding = new RectOffset(1, 1, 0, 0), alignment = TextAnchor.MiddleLeft, richText = true, }.Initialize(stl => { stl.focused.textColor = stl.active.textColor = stl.onNormal.textColor = stl.onActive.textColor = themeColor; stl.onNormal.background = stl.active.background; });
         internal static GUIStyle GetStlSeparator(Color themeColor) => new GUIStyle($"flow node {GetThemeColorHueIndex(themeColor)}");
         internal static GUIStyle GetStlSeparatorOn(Color themeColor) => new GUIStyle($"flow node {GetThemeColorHueIndex(themeColor)} on");
-        static int GetThemeColorHueIndex(Color themeColor)
+        internal static int GetThemeColorHueIndex(Color themeColor)
         {
             Color.RGBToHSV(themeColor, out float h, out float s, out _);
             if (s < 0.3f) return 0;

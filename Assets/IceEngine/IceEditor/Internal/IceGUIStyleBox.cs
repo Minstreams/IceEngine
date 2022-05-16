@@ -426,6 +426,7 @@ namespace IceEditor.Internal
         #endregion
 
         #region 样式表
+        [Serializable]
         struct StyleCache
         {
             public GUIStyle stl;
@@ -438,7 +439,7 @@ namespace IceEditor.Internal
             }
         }
 
-        readonly Dictionary<string, StyleCache> stlCacheMap = new Dictionary<string, StyleCache>();
+        IceDictionary<string, StyleCache> stlCacheMap = new IceDictionary<string, StyleCache>();
         #endregion
 
         #endregion
@@ -824,10 +825,12 @@ namespace IceEditor.Internal
                                 }
                             }
 
+                            PropertyObj.UpdateIfRequiredOrScript();
+
                             var pOrigin = PropertyObj.FindProperty("stlInspectingOrigin");
                             var pActive = PropertyObj.FindProperty("stlInspecting");
 
-                            using (Scroll(GUILayout.MaxHeight(512)))
+                            using (ScrollAuto(GUILayout.MaxHeight(512)))
                             {
                                 EditorGUI.BeginChangeCheck();
 
@@ -920,18 +923,18 @@ namespace IceEditor.Internal
                                 if (e.button == 1)
                                 {
                                     GenericMenu menu = new GenericMenu();
-                                    menu.AddItem(TempContent("记录"), false, () =>
+                                    menu.AddItem(new GUIContent("记录"), false, () =>
                                     {
                                         stlCacheMap[sc.Key] = new StyleCache(new GUIStyle(stlInspecting), new GUIStyle(stlInspectingOrigin));
                                     });
-                                    menu.AddItem(TempContent("取出"), false, () =>
+                                    menu.AddItem(new GUIContent("取出"), false, () =>
                                     {
                                         stlInspecting = new GUIStyle(sc.Value.stl);
                                         stlInspectingOrigin = new GUIStyle(sc.Value.stlOrigin);
                                         PropertyObj.Update();
                                         SetBool("Property Dirty", false);
                                     });
-                                    menu.AddItem(TempContent("删除"), false, () =>
+                                    menu.AddItem(new GUIContent("删除"), false, () =>
                                     {
                                         if (EditorUtility.DisplayDialog(TitleContent.text, $"确认删除样式：{sc.Key}", "确认", "取消"))
                                         {

@@ -68,14 +68,14 @@ namespace IceEditor
         /// <summary>
         /// 显示一个可展开的节
         /// </summary>
-        public static FolderScope SectionFolder(string key, bool defaultVal = true, string labelOverride = null)
+        public static FolderScope SectionFolder(string key, bool defaultVal = true, string labelOverride = null, bool changeWidth = true)
         {
             var label = string.IsNullOrEmpty(labelOverride) ? key : labelOverride;
             if (IceGUIUtility.HasPack)
             {
                 var ab = GetAnimBool(key, defaultVal);
                 ab.target = GUILayout.Toggle(ab.target, label, StlSectionHeader);
-                return new FolderScope(ab, true);
+                return new FolderScope(ab, changeWidth);
             }
             else
             {
@@ -163,16 +163,24 @@ namespace IceEditor
         /// <summary>
         /// 画一个自适应Layout的Texture，自带控制项
         /// </summary>
-        public static void TextureBoxComplex(Texture texture)
+        public static void TextureBoxComplex(Texture texture, bool? expand = null, bool? foldout = null, bool showMip = true, string infoOverride = null, GUIStyle bakgroundStyleOverride = null, params (string text, Action callback)[] customBtns)
         {
             var name = texture.name;
             ColorWriteMask cwMask = ColorWriteMask.All;
 
-            using (VERTICAL) using (NODE)
+            using (Vertical(bakgroundStyleOverride ?? StlNode))
             {
                 using (HORIZONTAL)
                 {
-                    IceToggle($"Expanded {name}", false, "Exp", "Is this texture Expanded");
+                    if (foldout != null)
+                    {
+                        SectionHeader(name, foldout.Value);
+                        Space();
+                        GUILayout.Label(infoOverride ?? $"{(texture.width == texture.height ? $"{texture.width}" : $"{texture.width} : {texture.height}")} | {(texture is Texture2D t2 ? t2.format.ToString() : texture is RenderTexture rt ? rt.format.ToString() : texture.GetType().ToString())}");
+                    }
+
+                    if (expand == null) IceToggle($"Expanded {name}", false, "Exp", "Is this texture Expanded");
+                    else SetBool($"Expanded {name}", expand.Value);
                     /*if (!texture.graphicsFormat.ToString().Contains("UNorm"))*/
                     using (HORIZONTAL)
                     {
@@ -183,18 +191,43 @@ namespace IceEditor
                         if (IceToggle($"Color Write Mask A {name}", true, "A")) mask |= ColorWriteMask.Alpha;
                         if (mask != 0) cwMask = mask;
                     }
-                    GUILayout.Label($"{texture.width} : {texture.height} | {(texture is Texture2D t2 ? t2.format.ToString() : texture is RenderTexture rt ? rt.format.ToString() : texture.GetType().ToString())}");
-                    GUILayout.FlexibleSpace();
-                    IntSliderNoLabel($"Mip Level {name}", 0, 0, texture.mipmapCount - 1);
+
+                    if (foldout == null)
+                    {
+                        GUILayout.Label(infoOverride ?? $"{(texture.width == texture.height ? $"{texture.width}" : $"{texture.width} : {texture.height}")} | {(texture is Texture2D t2 ? t2.format.ToString() : texture is RenderTexture rt ? rt.format.ToString() : texture.GetType().ToString())}");
+                        Space();
+                    }
+
+                    if (showMip) IntSliderNoLabel($"Mip Level {name}", 0, 0, texture.mipmapCount - 1);
+                    else SetInt($"Mip Level {name}", 0);
+
+                    foreach (var (text, callback) in customBtns)
+                    {
+                        if (text != null && IceButton(text)) callback?.Invoke();
+                    }
                 }
 
-                using (Horizontal(StlIce))
+                using (foldout != null ? Folder(name) : null) using (Horizontal(StlIce))
                 {
                     bool expanded = GetBool($"Expanded {name}");
-                    if (!expanded) GUILayout.FlexibleSpace();
+                    if (!expanded) Space();
                     var rect = GUILayoutUtility.GetAspectRect(texture.width / (float)texture.height, expanded ? GUILayout.ExpandWidth(true) : GUILayout.MaxWidth(texture.width >> GetInt($"Mip Level {name}")));
-                    if (!expanded) GUILayout.FlexibleSpace();
-                    if (Event.current.type == EventType.Repaint) EditorGUI.DrawPreviewTexture(rect, texture, null, ScaleMode.ScaleToFit, 0, GetInt($"Mip Level {name}"), cwMask);
+                    if (!expanded) Space();
+                    if (Event.current.type == EventType.Repaint)
+                    {
+                        if (cwMask == ColorWriteMask.Alpha)
+                        {
+                            EditorGUI.DrawTextureAlpha(rect, texture, ScaleMode.ScaleToFit, 0, GetInt($"Mip Level {name}"));
+                        }
+                        else if ((cwMask & ColorWriteMask.Alpha) == 0)
+                        {
+                            EditorGUI.DrawPreviewTexture(rect, texture, null, ScaleMode.ScaleToFit, 0, GetInt($"Mip Level {name}"), cwMask);
+                        }
+                        else
+                        {
+                            EditorGUI.DrawTextureTransparent(rect, texture, ScaleMode.ScaleToFit, 0, GetInt($"Mip Level {name}"), cwMask);
+                        }
+                    }
                 }
             }
         }

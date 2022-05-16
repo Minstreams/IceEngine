@@ -17,17 +17,23 @@ namespace IceEditor
         /// <summary>
         /// 默认ThemeColor的GUI临时数据
         /// </summary>
-        public IceGUIAutoPack(UnityAction onAnimValueChange = null) : this(IcePreference.Config.themeColor, onAnimValueChange) { }
+        public IceGUIAutoPack(Action onAnimValueChange = null, Action onThemeColorChange = null) : this(IcePreference.Config.themeColor, onAnimValueChange, onThemeColorChange) { }
         /// <summary>
         /// 序列化的GUI临时数据
         /// </summary>
-        public IceGUIAutoPack(Color themeColor, UnityAction onAnimValueChange = null)
+        public IceGUIAutoPack(Color themeColor, Action onAnimValueChange = null, Action onThemeColorChange = null)
         {
             SetColor("ThemeColor", themeColor);
-            _onAnimValueChange = onAnimValueChange;
+            if (onAnimValueChange != null)
+            {
+                _onAnimValueChangeTarget = (UnityEngine.Object)onAnimValueChange.Target;
+                _onAnimValueChangeMethod = onAnimValueChange.Method.Name;
+            }
+            this._onThemeColorChange = onThemeColorChange;
         }
 
         #region 主题颜色
+        Action _onThemeColorChange;
         /// <summary>
         /// 主题颜色
         /// </summary>
@@ -53,6 +59,7 @@ namespace IceEditor
             _stlPrefix = null;
             _stlSeparator = null;
             _stlSeparatorOn = null;
+            _onThemeColorChange?.Invoke();
         }
         /// <summary>
         /// 主题颜色表达式
@@ -61,7 +68,25 @@ namespace IceEditor
         #endregion
 
         #region 临时数据托管
-        UnityAction _onAnimValueChange;
+        UnityEngine.Object _onAnimValueChangeTarget;
+        string _onAnimValueChangeMethod;
+        UnityAction _onAnimValueChangeCallback;
+        UnityAction OnAnimValueChangeCallback
+        {
+            get
+            {
+                if (_onAnimValueChangeCallback == null)
+                {
+                    if (_onAnimValueChangeTarget != null && _onAnimValueChangeMethod != null)
+                    {
+                        Type t = _onAnimValueChangeTarget.GetType();
+                        var m = t.GetMethod(_onAnimValueChangeMethod);
+                        _onAnimValueChangeCallback = () => { m.Invoke(_onAnimValueChangeTarget, null); };
+                    }
+                }
+                return _onAnimValueChangeCallback;
+            }
+        }
 
         [SerializeField] internal IceDictionary<string, Color> _stringColorMap = new IceDictionary<string, Color>();
         public Color GetColor(string key) => GetColor(key, Color.white);
@@ -75,14 +100,18 @@ namespace IceEditor
 
 
         [SerializeField] internal IceDictionary<string, AnimBool> _stringAnimBoolMap = new IceDictionary<string, AnimBool>();
+        public void OnBeforeSerialize() { }
+        public void OnAfterDeserialize()
+        {
+            if (OnAnimValueChangeCallback != null)
+            {
+                foreach (var ab in _stringAnimBoolMap.Values) ab.valueChanged.AddListener(OnAnimValueChangeCallback);
+            }
+        }
         public AnimBool GetAnimBool(string key, bool defaultVal = false)
         {
-            if (_stringAnimBoolMap.TryGetValue(key, out AnimBool res))
-            {
-                if (_onAnimValueChange != null && res.valueChanged.GetPersistentEventCount() == 0) res.valueChanged.AddListener(_onAnimValueChange);
-                return res;
-            }
-            return _stringAnimBoolMap[key] = _onAnimValueChange != null ? new AnimBool(defaultVal, _onAnimValueChange) : new AnimBool(defaultVal);
+            if (_stringAnimBoolMap.TryGetValue(key, out AnimBool res)) return res;
+            return _stringAnimBoolMap[key] = OnAnimValueChangeCallback != null ? new AnimBool(defaultVal, OnAnimValueChangeCallback) : new AnimBool(defaultVal);
         }
         public bool GetAnimBoolValue(string key, bool defaultVal = false) => GetAnimBool(key, defaultVal).value;
         public bool GetAnimBoolTarget(string key, bool defaultVal = false) => GetAnimBool(key, defaultVal).target;

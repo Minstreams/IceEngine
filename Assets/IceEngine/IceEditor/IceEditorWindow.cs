@@ -27,10 +27,6 @@ namespace IceEditor
         /// GUI界面代码
         /// </summary>
         protected abstract void OnWindowGUI(Rect position);
-        /// <summary>
-        /// Debug界面代码
-        /// </summary>
-        protected abstract void OnDebugGUI(Rect position);
         #endregion
 
         #region 可选配置
@@ -47,20 +43,25 @@ namespace IceEditor
         /// </summary>
         public virtual void AddItemsToMenu(GenericMenu menu)
         {
-            menu.AddItem(TempContent($"{DebugModeName}模式"), DebugMode, () => DebugMode = !DebugMode);
-            menu.AddItem(TempContent($"{DebugModeName}面板位置/右"), _debugUIOrientation == UIOrientation.Right, () => { _debugUIOrientation = UIOrientation.Right; });
-            menu.AddItem(TempContent($"{DebugModeName}面板位置/左"), _debugUIOrientation == UIOrientation.Left, () => { _debugUIOrientation = UIOrientation.Left; });
-            menu.AddItem(TempContent($"{DebugModeName}面板位置/下"), _debugUIOrientation == UIOrientation.Bottom, () => { _debugUIOrientation = UIOrientation.Bottom; });
-            menu.AddItem(TempContent($"{DebugModeName}面板位置/上"), _debugUIOrientation == UIOrientation.Top, () => { _debugUIOrientation = UIOrientation.Top; });
+            menu.AddItem(new GUIContent($"{DebugModeName}模式"), DebugMode, () => DebugMode = !DebugMode);
+            menu.AddItem(new GUIContent($"{DebugModeName}面板位置/右"), _debugUIOrientation == UIOrientation.Right, () => { _debugUIOrientation = UIOrientation.Right; });
+            menu.AddItem(new GUIContent($"{DebugModeName}面板位置/左"), _debugUIOrientation == UIOrientation.Left, () => { _debugUIOrientation = UIOrientation.Left; });
+            menu.AddItem(new GUIContent($"{DebugModeName}面板位置/下"), _debugUIOrientation == UIOrientation.Bottom, () => { _debugUIOrientation = UIOrientation.Bottom; });
+            menu.AddItem(new GUIContent($"{DebugModeName}面板位置/上"), _debugUIOrientation == UIOrientation.Top, () => { _debugUIOrientation = UIOrientation.Top; });
         }
         protected virtual void OnEnable()
         {
+            Input.imeCompositionMode = IMECompositionMode.On;
             RefreshTitleContent();
         }
         /// <summary>
         /// 额外的GUI（无Layout）
         /// </summary>
         protected virtual void OnExtraGUI(Rect position) { }
+        /// <summary>
+        /// Debug界面代码
+        /// </summary>
+        protected virtual void OnDebugGUI(Rect position) { }
         /// <summary>
         /// 默认主题颜色
         /// </summary>
@@ -77,6 +78,10 @@ namespace IceEditor
         /// 序列化事件
         /// </summary>
         public virtual void OnBeforeSerialize() { }
+        /// <summary>
+        /// 主题颜色改变事件
+        /// </summary>
+        protected virtual void OnThemeColorChange() { }
         #endregion
 
         #endregion
@@ -225,7 +230,7 @@ namespace IceEditor
         /// <summary>
         /// 在Using语句中使用的Scope，指定一个Scroll View
         /// </summary>
-        protected GUILayout.ScrollViewScope Scroll(GUIStyle style, params GUILayoutOption[] options)
+        protected GUILayout.ScrollViewScope ScrollAuto(GUIStyle style, params GUILayoutOption[] options)
         {
             if (!drawingWindowGUI)
             {
@@ -252,19 +257,19 @@ namespace IceEditor
         /// <summary>
         /// 在Using语句中使用的Scope，指定一个Scroll View
         /// </summary>
-        protected GUILayout.ScrollViewScope Scroll(params GUILayoutOption[] options) => Scroll(GUIStyle.none, options);
+        protected GUILayout.ScrollViewScope ScrollAuto(params GUILayoutOption[] options) => ScrollAuto(GUIStyle.none, options);
 
         /// <summary>
         /// 在Using语句中使用的Scope，指定一个Scroll View
         /// </summary>
-        protected GUILayout.ScrollViewScope SCROLL => Scroll();
+        protected GUILayout.ScrollViewScope SCROLL => ScrollAuto();
         protected IceGUIUtility.GUIPackScope PACK => new IceGUIUtility.GUIPackScope(Pack);
         #endregion
 
         #endregion
 
         #region 【PRIVATE】
-        internal IceGUIAutoPack Pack => _pack ??= new IceGUIAutoPack(DefaultThemeColor, Repaint); [SerializeField] IceGUIAutoPack _pack;
+        internal IceGUIAutoPack Pack => _pack ??= new IceGUIAutoPack(DefaultThemeColor, Repaint, OnThemeColorChange); [SerializeField] IceGUIAutoPack _pack;
 
         bool drawingWindowGUI = false;
         bool needsCheckControlId = false;

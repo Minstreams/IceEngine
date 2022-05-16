@@ -14,10 +14,6 @@ namespace IceEditor
         static void OpenWindow() => GetWindow<TestWindow>();
         public override GUIContent TitleContent => new GUIContent("测试！");
 
-        protected override void OnDebugGUI(Rect position)
-        {
-
-        }
         protected override void OnWindowGUI(Rect position)
         {
             using (GROUP)
