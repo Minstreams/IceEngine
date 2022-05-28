@@ -44,10 +44,10 @@ namespace IceEditor
         public virtual void AddItemsToMenu(GenericMenu menu)
         {
             menu.AddItem(new GUIContent($"{DebugModeName}模式"), DebugMode, () => DebugMode = !DebugMode);
-            menu.AddItem(new GUIContent($"{DebugModeName}面板位置/右"), _debugUIOrientation == UIOrientation.Right, () => { _debugUIOrientation = UIOrientation.Right; });
-            menu.AddItem(new GUIContent($"{DebugModeName}面板位置/左"), _debugUIOrientation == UIOrientation.Left, () => { _debugUIOrientation = UIOrientation.Left; });
-            menu.AddItem(new GUIContent($"{DebugModeName}面板位置/下"), _debugUIOrientation == UIOrientation.Bottom, () => { _debugUIOrientation = UIOrientation.Bottom; });
-            menu.AddItem(new GUIContent($"{DebugModeName}面板位置/上"), _debugUIOrientation == UIOrientation.Top, () => { _debugUIOrientation = UIOrientation.Top; });
+            menu.AddItem(new GUIContent($"{DebugModeName}面板位置/右"), _debugGUIDirection == IceGUIDirection.Right, () => { _debugGUIDirection = IceGUIDirection.Right; });
+            menu.AddItem(new GUIContent($"{DebugModeName}面板位置/左"), _debugGUIDirection == IceGUIDirection.Left, () => { _debugGUIDirection = IceGUIDirection.Left; });
+            menu.AddItem(new GUIContent($"{DebugModeName}面板位置/下"), _debugGUIDirection == IceGUIDirection.Bottom, () => { _debugGUIDirection = IceGUIDirection.Bottom; });
+            menu.AddItem(new GUIContent($"{DebugModeName}面板位置/上"), _debugGUIDirection == IceGUIDirection.Top, () => { _debugGUIDirection = IceGUIDirection.Top; });
         }
         protected virtual void OnEnable()
         {
@@ -120,18 +120,11 @@ namespace IceEditor
             }
         }
         [SerializeField] bool _debugMode;
-        public enum UIOrientation
-        {
-            Right,
-            Left,
-            Bottom,
-            Top,
-        }
         /// <summary>
         /// DebugUI方向
         /// </summary>
-        public UIOrientation DebugUIOrientation { get => _debugUIOrientation; set => _debugUIOrientation = value; }
-        [SerializeField] UIOrientation _debugUIOrientation = UIOrientation.Right;
+        public IceGUIDirection DebugGUIDirection { get => _debugGUIDirection; set => _debugGUIDirection = value; }
+        [SerializeField] IceGUIDirection _debugGUIDirection = IceGUIDirection.Right;
         #endregion
 
         #region 主题颜色
@@ -309,164 +302,61 @@ namespace IceEditor
         {
             using var _ = PACK;
 
-            const float debugSeparatorWidth = 8; //中间分隔栏的宽
-            const string debugScaleKey = "Debug Panel Scale";
-            var debugScale = Mathf.Clamp(GetFloat(debugScaleKey), debugSeparatorWidth + 2, ((_debugUIOrientation == UIOrientation.Left || _debugUIOrientation == UIOrientation.Right) ? position.width : position.height) - 2);
-            const string draggingSeparatorKey = "Dragging Separator";
-            var draggingSeparator = GetBool(draggingSeparatorKey);
-
             // Rect计算
-            Rect rBack = GUIUtility.ScreenToGUIRect(position);
-            rBack.y = 0;
-            Rect rContent = rBack;
-            Rect rDebug = rBack;
-            Rect rSeparator = rBack;
-
-            // 计算
-            if (DebugMode)
-            {
-                // 计算Rect，鼠标样式
-                switch (_debugUIOrientation)
-                {
-                    case UIOrientation.Right:
-                        rContent.width -= debugScale;
-                        rDebug.width = debugScale - debugSeparatorWidth;
-                        rDebug.x = rBack.width - rDebug.width;
-
-                        rSeparator.width = debugSeparatorWidth;
-                        rSeparator.x = rDebug.x - debugSeparatorWidth;
-
-                        EditorGUIUtility.AddCursorRect(rSeparator, MouseCursor.ResizeHorizontal);
-                        break;
-                    case UIOrientation.Left:
-                        rContent.width -= debugScale;
-                        rDebug.width = debugScale - debugSeparatorWidth;
-                        rContent.x = debugScale;
-
-                        rSeparator.width = debugSeparatorWidth;
-                        rSeparator.x = rContent.x - debugSeparatorWidth;
-
-                        EditorGUIUtility.AddCursorRect(rSeparator, MouseCursor.ResizeHorizontal);
-                        break;
-                    case UIOrientation.Bottom:
-                        rContent.height -= debugScale;
-                        rDebug.height = debugScale - debugSeparatorWidth;
-                        rDebug.y = rBack.height - rDebug.height;
-
-                        rSeparator.height = debugSeparatorWidth;
-                        rSeparator.y = rDebug.y - debugSeparatorWidth;
-
-                        EditorGUIUtility.AddCursorRect(rSeparator, MouseCursor.ResizeVertical);
-                        break;
-                    case UIOrientation.Top:
-                        rContent.height -= debugScale;
-                        rDebug.height = debugScale - debugSeparatorWidth;
-                        rContent.y = debugScale;
-
-                        rSeparator.height = debugSeparatorWidth;
-                        rSeparator.y = rContent.y - debugSeparatorWidth;
-
-                        EditorGUIUtility.AddCursorRect(rSeparator, MouseCursor.ResizeVertical);
-                        break;
-                }
-
-                // 分隔栏
-                int separatorId = GUIUtility.GetControlID(FocusType.Passive);
-                var e = Event.current;
-                switch (e.GetTypeForControl(separatorId))
-                {
-                    case EventType.MouseDown:
-                        if (rSeparator.Contains(e.mousePosition))
-                        {
-                            GUIUtility.hotControl = separatorId;
-
-                            SetBool(draggingSeparatorKey, true);
-                            Repaint();
-                            e.Use();
-                        }
-                        break;
-                    case EventType.MouseUp:
-                        if (draggingSeparator)
-                        {
-                            SetBool(draggingSeparatorKey, false);
-                            Repaint();
-                            e.Use();
-                        }
-                        break;
-                    case EventType.MouseDrag:
-                        if (draggingSeparator)
-                        {
-                            switch (_debugUIOrientation)
-                            {
-                                case UIOrientation.Right:
-                                    SetFloat(debugScaleKey, debugScale - e.delta.x);
-                                    break;
-                                case UIOrientation.Left:
-                                    SetFloat(debugScaleKey, debugScale + e.delta.x);
-                                    break;
-                                case UIOrientation.Bottom:
-                                    SetFloat(debugScaleKey, debugScale - e.delta.y);
-                                    break;
-                                case UIOrientation.Top:
-                                    SetFloat(debugScaleKey, debugScale + e.delta.y);
-                                    break;
-                            }
-                            Repaint();
-                            e.Use();
-                        }
-                        break;
-                }
-            }
+            Rect rBack = new Rect(Vector2.zero, position.size);
 
             // 画内容
-            using (new GUILayout.AreaScope(rContent)) using (ScrollInvisible("Main Content Area", StlBackground))
+            using (SubAreaScope area = DebugMode ? SubArea(rBack, "Debug Area", 0, DebugGUIDirection) : null)
             {
-                // 开始检测controlId重复
-                drawingWindowGUI = true;
-                if (needsCheckControlId)
+                Rect rMain = (area?.mainRect ?? rBack);
+                using (new GUILayout.AreaScope(rMain)) using (ScrollInvisible("Main Content Area", StlBackground))
                 {
-                    currentControlIdSet.Clear();
-
-                    needsCheckControlId = false;
-                    checkingControlId = true;
-                }
-
-                OnWindowGUI(new Rect(Vector2.zero, rContent.size));
-
-                // 结束检测controlId重复
-                drawingWindowGUI = false;
-                if (checkingControlId)
-                {
-                    //string debugStr = "ControlId去重!";
-
-                    allControlIdSet.ExceptWith(currentControlIdSet);
-                    foreach (var id in allControlIdSet)
+                    // 开始检测controlId重复
+                    drawingWindowGUI = true;
+                    if (needsCheckControlId)
                     {
-                        Pack._intVec2Map.Remove(id);
-                        //debugStr += "\n" + id;
+                        currentControlIdSet.Clear();
+
+                        needsCheckControlId = false;
+                        checkingControlId = true;
                     }
-                    allControlIdSet.Clear();
-                    allControlIdSet.UnionWith(currentControlIdSet);
 
-                    checkingControlId = false;
+                    OnWindowGUI(new Rect(Vector2.zero, rMain.size));
 
-                    //Log(debugStr);
+                    // 结束检测controlId重复
+                    drawingWindowGUI = false;
+                    if (checkingControlId)
+                    {
+                        //string debugStr = "ControlId去重!";
+
+                        allControlIdSet.ExceptWith(currentControlIdSet);
+                        foreach (var id in allControlIdSet)
+                        {
+                            Pack._intVec2Map.Remove(id);
+                            //debugStr += "\n" + id;
+                        }
+                        allControlIdSet.Clear();
+                        allControlIdSet.UnionWith(currentControlIdSet);
+
+                        checkingControlId = false;
+
+                        //Log(debugStr);
+                    }
                 }
-            }
-            OnExtraGUI(rContent);
 
-            // 画Debug相关
-            if (DebugMode)
-            {
-                // 画DebugUI
-                using (new GUILayout.AreaScope(rDebug)) using (ScrollInvisible("Debug UI Scroll Area", StlBackground))
+                OnExtraGUI(rMain);
+
+                // 画Debug相关
+                if (DebugMode)
                 {
-                    var debugPos = new Rect(Vector2.zero, rDebug.size);
-                    OnDebugGUI(debugPos);
-                    if (HasStatusUI) OnStatusGUI(debugPos);
+                    // 画DebugUI
+                    using (new GUILayout.AreaScope(area.subRect)) using (ScrollInvisible("Debug UI Scroll Area", StlBackground))
+                    {
+                        var debugPos = new Rect(Vector2.zero, area.subRect.size);
+                        OnDebugGUI(debugPos);
+                        if (HasStatusUI) OnStatusGUI(debugPos);
+                    }
                 }
-                // 画分隔栏
-                GUI.Box(rSeparator, GUIContent.none, draggingSeparator ? StlSeparatorOn : StlSeparator);
             }
         }
         #endregion

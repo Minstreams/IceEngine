@@ -3,8 +3,9 @@ using UnityEngine;
 using System.Collections.Generic;
 using System;
 using System.Linq;
-using UnityEditor.Formats.Fbx.Exporter;
+//using UnityEditor.Formats.Fbx.Exporter;
 
+using IceEngine;
 using static IceEditor.IceGUI;
 using static IceEditor.IceGUIAuto;
 using System.IO;
@@ -1479,7 +1480,7 @@ namespace IceEditor
             //options.SetExportFormat(ExportSettings.ExportFormat.Binary);
             //options.SetRefreshEditor(false);
 
-            ModelExporter.ExportObject(path, outputObj);
+            //ModelExporter.ExportObject(path, outputObj);
             DestroyImmediate(outputObj);
         }
         #endregion

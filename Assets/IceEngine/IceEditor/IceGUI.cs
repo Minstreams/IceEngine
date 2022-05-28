@@ -29,55 +29,7 @@ namespace IceEditor
         public static GUIStyle StlIce => _stlIce?.Check() ?? (_stlIce = new GUIStyle("BoldTextField") { padding = new RectOffset(3, 3, 2, 2), fontSize = 11, richText = true, fixedHeight = 0f, stretchWidth = false, imagePosition = ImagePosition.ImageLeft, fontStyle = FontStyle.Normal }); static GUIStyle _stlIce;
         public static GUIStyle StlSectionHeader => IceGUIUtility.HasPack ? IceGUIUtility.CurrentPack.StlSectionHeader : _stlSectionHeader?.Check() ?? (_stlSectionHeader = IceGUIUtility.GetStlSectionHeader(IcePreference.Config.themeColor)); static GUIStyle _stlSectionHeader;
         public static GUIStyle StlPrefix => IceGUIUtility.HasPack ? IceGUIUtility.CurrentPack.StlPrefix : _stlPrefix?.Check() ?? (_stlPrefix = IceGUIUtility.GetStlPrefix(IcePreference.Config.themeColor)); static GUIStyle _stlPrefix;
-        public static GUIStyle StlSeparator => IceGUIUtility.HasPack ? IceGUIUtility.CurrentPack.StlSeparator : _stlSeparator?.Check() ?? (_stlSeparator = IceGUIUtility.GetStlSeparator(IcePreference.Config.themeColor)); static GUIStyle _stlSeparator;
-        public static GUIStyle StlSeparatorOn => IceGUIUtility.HasPack ? IceGUIUtility.CurrentPack.StlSeparatorOn : _stlSeparatorOn?.Check() ?? (_stlSeparatorOn = IceGUIUtility.GetStlSeparatorOn(IcePreference.Config.themeColor)); static GUIStyle _stlSeparatorOn;
-        #endregion
-
-        #region Utility
-        static readonly GUIContent _tempText = new GUIContent();
-        static readonly GUIContent _tempImage = new GUIContent();
-        static readonly GUIContent _tempTextImage = new GUIContent();
-        public static GUIContent TempContent(string text)
-        {
-            _tempText.text = text;
-            _tempText.tooltip = string.Empty;
-            return _tempText;
-        }
-        public static GUIContent TempContent(string text, string tooltip)
-        {
-            _tempText.text = text;
-            _tempText.tooltip = tooltip;
-            return _tempText;
-        }
-        public static GUIContent TempContent(Texture image)
-        {
-            _tempImage.image = image;
-            _tempImage.tooltip = string.Empty;
-            return _tempImage;
-        }
-        public static GUIContent TempContent(Texture image, string tooltip)
-        {
-            _tempImage.image = image;
-            _tempImage.tooltip = tooltip;
-            return _tempImage;
-        }
-        public static GUIContent TempContent(string text, Texture image)
-        {
-            _tempTextImage.text = text;
-            _tempTextImage.image = image;
-            return _tempTextImage;
-        }
-
-        public static Rect GetRect(params GUILayoutOption[] options) => GUILayoutUtility.GetRect(GUIContent.none, GUIStyle.none, options);
-        public static Rect GetRect(GUIStyle style, params GUILayoutOption[] options) => GUILayoutUtility.GetRect(GUIContent.none, style, options);
-        public static Rect GetRect(GUIContent content, GUIStyle style, params GUILayoutOption[] options) => GUILayoutUtility.GetRect(content, style, options);
-        public static Rect GetRect(float aspect, params GUILayoutOption[] options) => GUILayoutUtility.GetAspectRect(aspect, options);
-        public static Rect GetRect(float aspect, GUIStyle style, params GUILayoutOption[] options) => GUILayoutUtility.GetAspectRect(aspect, style, options);
-        public static Rect GetRect(float width, float height, params GUILayoutOption[] options) => GUILayoutUtility.GetRect(width, height, options);
-        public static Rect GetRect(float width, float height, GUIStyle style, params GUILayoutOption[] options) => GUILayoutUtility.GetRect(width, height, style, options);
-        public static Rect GetLastRect() => Event.current.type == EventType.Repaint ? GUILayoutUtility.GetLastRect() : throw new IceGUIException("Can't call GetLastRect() out of Repaint Event");
-
-        public static GUIStyle GetStyle(string key = null, Func<GUIStyle> itor = null) => IceGUIStyleBox.GetStyle(key, itor);
+        public static GUIStyle StlSubAreaSeparator => IceGUIUtility.HasPack ? IceGUIUtility.CurrentPack.StlSubAreaSeparator : _stlSubAreaSeparator?.Check() ?? (_stlSubAreaSeparator = IceGUIUtility.GetStlSubAreaSeparator(IcePreference.Config.themeColor)); static GUIStyle _stlSubAreaSeparator;
         #endregion
 
         #region Scope
@@ -209,7 +161,7 @@ namespace IceEditor
         /// <summary>
         /// 用于标记ControlLabel的属性
         /// </summary>
-        public class ControlLabelScope : IDisposable
+        internal class ControlLabelScope : IDisposable
         {
             public static bool HasLabel => !string.IsNullOrEmpty(label);
             public static string Label => label;
@@ -254,6 +206,134 @@ namespace IceEditor
                 GUI.changed |= changedStack.Pop();
             }
         }
+        /// <summary>
+        /// 用于将一个区域拆分为可调整大小的两个区域
+        /// </summary>
+        public class SubAreaScope : IDisposable
+        {
+            /// <summary>
+            /// 主区域的Rect
+            /// </summary>
+            public Rect mainRect;
+            /// <summary>
+            /// 副区域的Rect
+            /// </summary>
+            public Rect subRect;
+
+            Rect originRect;
+            Rect sepRect;
+            Action<float> onPosChange;
+            IceGUIDirection direction;
+            GUIStyle separatorStyle;
+            float pos;
+
+            static float posOffset;
+
+            public SubAreaScope(Rect rect, float pos, Action<float> onPosChange, IceGUIDirection direction, GUIStyle separatorStyle, float width, float border)
+            {
+                float rWidth = direction switch
+                {
+                    IceGUIDirection.Top or IceGUIDirection.Bottom => rect.height,
+                    _ => rect.width,
+                };
+
+                this.pos = pos = Mathf.Clamp(pos, width + border, rWidth - border);
+                this.onPosChange = onPosChange;
+                this.direction = direction;
+                this.separatorStyle = separatorStyle;
+
+                originRect = rect;
+
+                mainRect = direction switch
+                {
+                    IceGUIDirection.Right => rect.MoveEdge(right: -pos),
+                    IceGUIDirection.Left => rect.MoveEdge(left: pos),
+                    IceGUIDirection.Bottom => rect.MoveEdge(bottom: -pos),
+                    IceGUIDirection.Top => rect.MoveEdge(top: pos),
+                    _ => rect,
+                };
+
+                subRect = direction switch
+                {
+                    IceGUIDirection.Right => rect.MoveEdge(left: rWidth - pos + width),
+                    IceGUIDirection.Left => rect.MoveEdge(right: -(rWidth - pos + width)),
+                    IceGUIDirection.Bottom => rect.MoveEdge(top: rWidth - pos + width),
+                    IceGUIDirection.Top => rect.MoveEdge(bottom: -(rWidth - pos + width)),
+                    _ => Rect.zero,
+                };
+
+                sepRect = direction switch
+                {
+                    IceGUIDirection.Right => rect.MoveEdge(left: rWidth - pos - border, right: border - pos + width),
+                    IceGUIDirection.Left => rect.MoveEdge(left: pos - width - border, right: pos + border - rWidth),
+                    IceGUIDirection.Bottom => rect.MoveEdge(top: rWidth - pos - border, bottom: border - pos + width),
+                    IceGUIDirection.Top => rect.MoveEdge(top: pos - width - border, bottom: pos + border - rWidth),
+                    _ => Rect.zero,
+                };
+            }
+            void IDisposable.Dispose()
+            {
+                // 画Separator
+                var id = GUIUtility.GetControlID(FocusType.Passive);
+                bool focusing = GUIUtility.hotControl == id;
+                EditorGUIUtility.AddCursorRect(focusing ? originRect : sepRect, direction switch
+                {
+                    IceGUIDirection.Top or IceGUIDirection.Bottom => MouseCursor.ResizeVertical,
+                    _ => MouseCursor.ResizeHorizontal,
+                });
+
+                switch (E.type)
+                {
+                    case EventType.MouseDown:
+                        if (Event.current.button == 0 && sepRect.Contains(Event.current.mousePosition))
+                        {
+                            GUIUtility.hotControl = id;
+
+                            float mp = direction switch
+                            {
+                                IceGUIDirection.Top or IceGUIDirection.Bottom => E.mousePosition.y,
+                                _ => E.mousePosition.x,
+                            };
+
+                            posOffset = direction switch
+                            {
+                                IceGUIDirection.Right or IceGUIDirection.Bottom => pos + mp,
+                                _ => pos - mp,
+                            };
+                            E.Use();
+                        }
+                        break;
+                    case EventType.MouseUp:
+                        if (focusing)
+                        {
+                            GUIUtility.hotControl = 0;
+                            E.Use();
+                        }
+                        break;
+                    case EventType.MouseDrag:
+                        if (focusing)
+                        {
+                            float mp = direction switch
+                            {
+                                IceGUIDirection.Top or IceGUIDirection.Bottom => E.mousePosition.y,
+                                _ => E.mousePosition.x,
+                            };
+
+                            onPosChange?.Invoke(pos = direction switch
+                            {
+                                IceGUIDirection.Right or IceGUIDirection.Bottom => posOffset - mp,
+                                _ => posOffset + mp,
+                            });
+                            E.Use();
+                        }
+                        break;
+                    case EventType.Repaint:
+                        StyleBox(sepRect, separatorStyle, isHover: null, on: focusing);
+                        break;
+                }
+            }
+        }
+
 
         public static GUILayout.HorizontalScope Horizontal(GUIStyle style, params GUILayoutOption[] options) => new GUILayout.HorizontalScope(style ?? GUIStyle.none, options);
         public static GUILayout.HorizontalScope Horizontal(params GUILayoutOption[] options) => new GUILayout.HorizontalScope(options);
@@ -265,6 +345,7 @@ namespace IceEditor
         /// </summary>
         public static GUILayout.AreaScope Area(Rect rect, GUIStyle style)
         {
+            if (style == null) return new GUILayout.AreaScope(rect);
             var margin = style.margin;
             return new GUILayout.AreaScope(rect.MoveEdge(margin.left, -margin.right, margin.top, -margin.bottom), GUIContent.none, style);
         }
@@ -272,6 +353,10 @@ namespace IceEditor
         /// 在Using语句中使用的Scope，指定一个Layout Area
         /// </summary>
         public static GUILayout.AreaScope Area(Rect rect) => Area(rect, StlBackground);
+        /// <summary>
+        /// 在Using语句中使用的Scope，指定一个Layout Area
+        /// </summary>
+        public static GUILayout.AreaScope AreaRaw(Rect rect) => Area(rect, null);
         /// <summary>
         /// 在Using语句中使用的Scope，手动添加一个Prefix
         /// </summary>
@@ -287,11 +372,15 @@ namespace IceEditor
         /// <summary>
         /// 在Using语句中使用的Scope，用于标记ControlLabel的属性
         /// </summary>
-        public static ControlLabelScope ControlLabel(string label) => new ControlLabelScope(label, IceGUIUtility.CurrentThemeColor);
+        internal static ControlLabelScope ControlLabel(string label) => new ControlLabelScope(label, IceGUIUtility.CurrentThemeColor);
         /// <summary>
         /// 在Using语句中使用的Scope，用于标记ControlLabel的属性
         /// </summary>
-        public static ControlLabelScope ControlLabel(string label, string labelOverride) => new ControlLabelScope(string.IsNullOrEmpty(labelOverride) ? label : labelOverride, IceGUIUtility.CurrentThemeColor);
+        internal static ControlLabelScope ControlLabel(string label, string labelOverride) => new ControlLabelScope(string.IsNullOrEmpty(labelOverride) ? label : labelOverride, IceGUIUtility.CurrentThemeColor);
+        /// <summary>
+        /// 用于将一个区域拆分为可调整大小的两个区域
+        /// </summary>
+        public static SubAreaScope SubArea(Rect rect, float pos, Action<float> onPosChange, IceGUIDirection direction = IceGUIDirection.Right, GUIStyle separatorStyleOverride = null, float width = 4, float border = 2) => new SubAreaScope(rect, pos, onPosChange, direction, separatorStyleOverride ?? StlSubAreaSeparator, width, border);
 
         public static GUILayout.HorizontalScope HORIZONTAL => Horizontal();
         public static GUILayout.VerticalScope VERTICAL => Vertical();
@@ -308,11 +397,60 @@ namespace IceEditor
         /// 在Using语句中使用的Scope，检查块中控件是否变化，若有变化，Changed置为true
         /// </summary>
         public static ChangeCheckScope GUICHECK => new ChangeCheckScope();
+        #endregion
+
+        #region Utility
         /// <summary>
         /// 在CHECK块中控件是否变化
         /// </summary>
         public static bool GUIChanged => GUI.changed;
 
+        static readonly GUIContent _tempText = new GUIContent();
+        static readonly GUIContent _tempImage = new GUIContent();
+        static readonly GUIContent _tempTextImage = new GUIContent();
+        public static GUIContent TempContent(string text)
+        {
+            _tempText.text = text;
+            _tempText.tooltip = string.Empty;
+            return _tempText;
+        }
+        public static GUIContent TempContent(string text, string tooltip)
+        {
+            _tempText.text = text;
+            _tempText.tooltip = tooltip;
+            return _tempText;
+        }
+        public static GUIContent TempContent(Texture image)
+        {
+            _tempImage.image = image;
+            _tempImage.tooltip = string.Empty;
+            return _tempImage;
+        }
+        public static GUIContent TempContent(Texture image, string tooltip)
+        {
+            _tempImage.image = image;
+            _tempImage.tooltip = tooltip;
+            return _tempImage;
+        }
+        public static GUIContent TempContent(string text, Texture image)
+        {
+            _tempTextImage.text = text;
+            _tempTextImage.image = image;
+            return _tempTextImage;
+        }
+
+        public static Rect GetRect(params GUILayoutOption[] options) => GUILayoutUtility.GetRect(GUIContent.none, GUIStyle.none, options);
+        public static Rect GetRect(GUIStyle style, params GUILayoutOption[] options) => GUILayoutUtility.GetRect(GUIContent.none, style, options);
+        public static Rect GetRect(GUIContent content, GUIStyle style, params GUILayoutOption[] options) => GUILayoutUtility.GetRect(content, style, options);
+        public static Rect GetRect(float aspect, params GUILayoutOption[] options) => GUILayoutUtility.GetAspectRect(aspect, options);
+        public static Rect GetRect(float aspect, GUIStyle style, params GUILayoutOption[] options) => GUILayoutUtility.GetAspectRect(aspect, style, options);
+        public static Rect GetRect(float width, float height, params GUILayoutOption[] options) => GUILayoutUtility.GetRect(width, height, options);
+        public static Rect GetRect(float width, float height, GUIStyle style, params GUILayoutOption[] options) => GUILayoutUtility.GetRect(width, height, style, options);
+        public static Rect GetLastRect() => Event.current.type == EventType.Repaint ? GUILayoutUtility.GetLastRect() : throw new IceGUIException("Can't call GetLastRect() out of Repaint Event");
+
+        public static GUIStyle GetStyle(string key = null, Func<GUIStyle> itor = null) => IceGUIStyleBox.GetStyle(key, itor);
+
+        public static Event E => Event.current;
         #endregion
 
         #region Drawing Elements
@@ -330,7 +468,7 @@ namespace IceEditor
             var res = hasMargin ? rect.MoveEdge(margin.left, -margin.right, margin.top, -margin.bottom) : rect;
             if (Event.current.type == EventType.Repaint)
             {
-                style.Draw(res, content, isHover ?? rect.Contains(Event.current.mousePosition), isActive, on, hasKeyboardFocus);
+                style.Draw(res, content, isHover ?? rect.Contains(E.mousePosition), isActive, on, hasKeyboardFocus);
             }
             return res;
         }

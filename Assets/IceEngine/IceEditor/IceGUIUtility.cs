@@ -28,35 +28,14 @@ namespace IceEditor
         public static IceAttributesInfo GetInfo(SerializedObject so) => new(so.targetObject.GetType());
         public IceAttributesInfo(Type type, string root = "")
         {
-            static bool IsSystemType(Type t)
-            {
-                var end = typeof(object);
-                while (t != end)
-                {
-                    var b = t.BaseType;
-                    if (b == end)
-                    {
-                        var ns = t.Namespace;
-                        return ns != null && (ns.StartsWith("System") || ns.StartsWith("Unity"));
-                    }
-                    t = b;
-                }
-                return true;
-            }
-
             var fields = type.GetFields();
             foreach (var f in fields)
             {
                 var path = root + f.Name;
 
                 // 处理 Label
-                try
                 {
                     if (f.GetCustomAttribute<LabelAttribute>() is not null and var a) labelMap.Add(path, a.label);
-                }
-                catch
-                {
-                    Debug.LogError(f.Name);
                 }
 
                 // 处理 RuntimeConst
@@ -64,7 +43,26 @@ namespace IceEditor
                     if (f.GetCustomAttribute<RuntimeConst>() is not null) runtimeConstSet.Add(path);
                 }
 
+                {
+                    if (f.GetCustomAttribute<MinAttribute>() is not null and var a) extraInfo.Add(path, a.min.ToString());
+                }
+
                 // 生成子结构
+                static bool IsSystemType(Type t)
+                {
+                    var end = typeof(object);
+                    while (t != end)
+                    {
+                        var b = t.BaseType;
+                        if (b == end)
+                        {
+                            var ns = t.Namespace;
+                            return ns != null && (ns.StartsWith("System") || ns.StartsWith("Unity"));
+                        }
+                        t = b;
+                    }
+                    return true;
+                }
                 var tt = f.FieldType;
                 if (!IsSystemType(tt) && tt.GetCustomAttribute<SerializableAttribute>() is not null)
                 {
@@ -77,18 +75,6 @@ namespace IceEditor
     public static class IceGUIUtility
     {
         #region General Implementation
-        //public string bool HasCustomPropertyDrawer(Type type)
-        //{
-        //    foreach (Type item in TypeCache.GetTypesDerivedFrom<GUIDrawer>())
-        //    {
-        //        var attr = item.GetCustomAttribute<CustomPropertyDrawer>(true);
-        //        if (attr != null)
-        //        {
-        //            attr.
-        //        }
-        //    }
-
-        //}
         public static void DrawSerializedObject(SerializedObject so, IceAttributesInfo info = null)
         {
             so.UpdateIfRequiredOrScript();
@@ -99,19 +85,19 @@ namespace IceEditor
             DrawSerializedProperty(itr, info);
             so.ApplyModifiedProperties();
 
-            if (Button("Test"))
-            {
-                string log = "";
-                foreach (Type item in TypeCache.GetTypesDerivedFrom<GUIDrawer>())
-                {
-                    var attr = item.GetCustomAttribute<CustomPropertyDrawer>(true);
-                    if (attr != null)
-                    {
-                        log += item.FullName + "\n";
-                    }
-                }
-                Debug.Log(log);
-            }
+            //if (Button("Test"))
+            //{
+            //    string log = "";
+            //    foreach (Type item in TypeCache.GetTypesDerivedFrom<GUIDrawer>())
+            //    {
+            //        var attr = item.GetCustomAttribute<CustomPropertyDrawer>(true);
+            //        if (attr != null)
+            //        {
+            //            log += item.FullName + "\n";
+            //        }
+            //    }
+            //    Debug.Log(log);
+            //}
         }
         static void DrawSerializedProperty(SerializedProperty itr, IceAttributesInfo info = null, SerializedProperty end = null)
         {
@@ -208,6 +194,7 @@ namespace IceEditor
         #endregion
 
         #region GUIStyle
+        public static GUIStyle GetStyle(string key = null, Func<GUIStyle> itor = null) => IceGUIStyleBox.GetStyle(key, itor);
         internal static GUIStyle GetStlSectionHeader(Color themeColor) => new GUIStyle("AnimationEventTooltip")
         {
             padding = new RectOffset(1, 8, 2, 2),
@@ -228,9 +215,15 @@ namespace IceEditor
             stl.onHover.background = stl.normal.background;
         });
         internal static GUIStyle GetStlPrefix(Color themeColor) => new GUIStyle("PrefixLabel") { margin = new RectOffset(3, 3, 2, 2), padding = new RectOffset(1, 1, 0, 0), alignment = TextAnchor.MiddleLeft, richText = true, }.Initialize(stl => { stl.focused.textColor = stl.active.textColor = stl.onNormal.textColor = stl.onActive.textColor = themeColor; stl.onNormal.background = stl.active.background; });
-        internal static GUIStyle GetStlSeparator(Color themeColor) => new GUIStyle($"flow node {GetThemeColorHueIndex(themeColor)}");
-        internal static GUIStyle GetStlSeparatorOn(Color themeColor) => new GUIStyle($"flow node {GetThemeColorHueIndex(themeColor)} on");
-        internal static int GetThemeColorHueIndex(Color themeColor)
+        internal static GUIStyle GetStlSubAreaSeparator(Color themeColor)
+        {
+            GUIStyle on = $"flow node {GetThemeColorHueIndex(themeColor)}";
+            var stl = new GUIStyle("flow node 0") { padding = new RectOffset(0, 0, 0, 0), contentOffset = new Vector2(0f, 0f), };
+            stl.onNormal.background = on.normal.background;
+            stl.onNormal.scaledBackgrounds = on.normal.scaledBackgrounds.ToArray();
+            return stl;
+        }
+        public static int GetThemeColorHueIndex(Color themeColor)
         {
             Color.RGBToHSV(themeColor, out float h, out float s, out _);
             if (s < 0.3f) return 0;

@@ -157,6 +157,10 @@ namespace IceEditor
             SetVector2(key, res.scrollPosition);
             return res;
         }
+        /// <summary>
+        /// 用于将一个区域拆分为可调整大小的两个区域
+        /// </summary>
+        public static SubAreaScope SubArea(Rect rect, string key, float defaultVal = 0, IceGUIDirection direction = IceGUIDirection.Right, GUIStyle separatorStyleOverride = null, float width = 4, float border = 2) => IceGUI.SubArea(rect, GetFloat(key, defaultVal), val => SetFloat(key, val), direction, separatorStyleOverride, width, border);
         #endregion
 
         #region GUI Elements

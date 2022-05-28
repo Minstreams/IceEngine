@@ -57,8 +57,7 @@ namespace IceEditor
             _themeColorExp = null;
             _stlSectionHeader = null;
             _stlPrefix = null;
-            _stlSeparator = null;
-            _stlSeparatorOn = null;
+            _stlSubAreaSeparator = null;
             _onThemeColorChange?.Invoke();
         }
         /// <summary>
@@ -168,8 +167,7 @@ namespace IceEditor
         #region 用到的样式
         public GUIStyle StlSectionHeader => _stlSectionHeader?.Check() ?? (_stlSectionHeader = IceGUIUtility.GetStlSectionHeader(ThemeColor)); GUIStyle _stlSectionHeader;
         public GUIStyle StlPrefix => _stlPrefix?.Check() ?? (_stlPrefix = IceGUIUtility.GetStlPrefix(ThemeColor)); GUIStyle _stlPrefix;
-        public GUIStyle StlSeparator => _stlSeparator?.Check() ?? (_stlSeparator = IceGUIUtility.GetStlSeparator(ThemeColor)); GUIStyle _stlSeparator;
-        public GUIStyle StlSeparatorOn => _stlSeparatorOn?.Check() ?? (_stlSeparatorOn = IceGUIUtility.GetStlSeparatorOn(ThemeColor)); GUIStyle _stlSeparatorOn;
+        public GUIStyle StlSubAreaSeparator => _stlSubAreaSeparator?.Check() ?? (_stlSubAreaSeparator = IceGUIUtility.GetStlSubAreaSeparator(ThemeColor)); GUIStyle _stlSubAreaSeparator;
         #endregion
     }
 }

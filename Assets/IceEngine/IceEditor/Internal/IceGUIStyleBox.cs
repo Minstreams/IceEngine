@@ -261,10 +261,10 @@ namespace IceEditor.Internal
             window.InGameSkin = false;
             return window;
         }
-        public override GUIContent TitleContent => TempContent(InGameSkin ? "GUIStyle 样例窗口 - InGameSkin" : "GUIStyle 样例窗口");
+        public override GUIContent TitleContent => new GUIContent(InGameSkin ? "GUIStyle 样例窗口 - InGameSkin" : "GUIStyle 样例窗口");
         public override void AddItemsToMenu(GenericMenu menu)
         {
-            menu.AddItem(TempContent("InGameSkin"), InGameSkin, () => InGameSkin = !InGameSkin);
+            menu.AddItem(new GUIContent("InGameSkin"), InGameSkin, () => InGameSkin = !InGameSkin);
             menu.AddSeparator("");
             base.AddItemsToMenu(menu);
         }
@@ -593,467 +593,388 @@ namespace IceEditor.Internal
         Rect sideRect;
         protected override void OnWindowGUI(Rect position)
         {
-            const float mWidth = 8; //中间分隔栏的宽
             const string useRegexKey = "正则表达式";
             const string continuousMatchingKey = "连续匹配";
             const string caseSensitiveKey = "区分大小写";
 
-            const string leftPanelWidthKey = "Left Panel Width";
-
-            var lpWidth = Mathf.Clamp(GetFloat(leftPanelWidthKey, Mathf.Min(512, position.width - 2)), mWidth + 2, position.width - 2);
-
-            // 左侧区域
-            Rect rL = new Rect(0, 0, lpWidth - mWidth, position.height);
-            using (Area(rL)) using (BOX)
+            using (var area = SubArea(position, "HierachyArea", 512, IceGUIDirection.Left))
             {
-                // 搜索框
-                using (BOX) using (HORIZONTAL)
+                // 左侧区域
+                using (Area(area.subRect)) using (BOX)
                 {
-                    EditorGUI.BeginChangeCheck();
-
-                    //GUILayout.Label((GetBool(useRegexKey) ? $"<color={activeColorStr}>表达式</color>" : "关键字"), StlLabel, GUILayout.ExpandWidth(false));
-                    filterStr = EditorGUILayout.TextField(filterStr, StlSearchTextField);
-                    if (!GetBool(useRegexKey))
+                    // 搜索框
+                    using (BOX) using (HORIZONTAL)
                     {
-                        IceToggle(continuousMatchingKey, false, "连", "连续匹配");
-                    }
-                    IceToggle(caseSensitiveKey, false, "Aa", "区分大小写");
-                    IceToggle(useRegexKey, false, ".*".Bold(), "使用正则表达式");
-
-                    if (EditorGUI.EndChangeCheck()) DoFilterStyleList();
-                }
-
-                // 在这显示.
-                using (SCROLL)
-                {
-                    // 显示样式列表
-                    for (int i = 0; i < stlListFiltered.Count; ++i)
-                    {
-                        using (Horizontal(GUILayout.Height(32)))
-                        {
-                            var stl = stlListFiltered[i];
-                            using (Vertical(GUILayout.Width(160)))
-                            {
-                                // 标签
-                                if (GUILayout.Button(stl.Key, StlLabelBtn))
-                                {
-                                    // 复制样式名
-                                    GUIUtility.systemCopyBuffer = stl.Value.name;
-
-                                    // 刷新监控对象
-                                    stlInspectingOrigin = new GUIStyle(stl.Value);
-                                    stlInspecting = new GUIStyle(stl.Value);
-                                    PropertyObj.Update();
-                                    SetBool("Property Dirty", false);
-                                }
-                                // 自定义按钮
-                                //if (CustomButton("B"))
-                                //{
-                                //    Debug.Log("B!");
-                                //}
-                            }
-
-                            // 显示
-                            if (guiType == GUIType.GUILayout)
-                            {
-                                DisplayStyle(stl.Value);
-                            }
-                            else
-                            {
-                                // GUI
-                                GUILayout.Box(GUIContent.none, GetBool("显示边框") ? StlGUIBorder : GUIStyle.none, GUILayout.Width(GetFloat("Val GUIRect width", 64)), GUILayout.Height(GetFloat("Val GUIRect height", 64)));
-                                var rect = GUILayoutUtility.GetLastRect();
-                                DisplayStyle(rect, stl.Value);
-                            }
-                        }
-
-                    }
-                }
-
-                // 显示选项
-                using (GROUP)
-                {
-                    if (guiType == GUIType.GUILayout)
-                    {
-                        void LayoutOptionFloatField(string name)
-                        {
-                            if (GetBool($"Has Layout {name}"))
-                            {
-                                using (BOX) using (HORIZONTAL)
-                                {
-                                    FloatField($"Val Layout {name}", 0, name);
-                                    if (GUILayout.Button(GUIContent.none, "OL Minus", GUILayout.ExpandWidth(false)))
-                                    {
-                                        SetBool($"Has Layout {name}", false);
-                                    }
-                                }
-                            }
-                        }
-                        void LayoutOptionBoolField(string name)
-                        {
-                            if (GetBool($"Has Layout {name}"))
-                            {
-                                using (BOX) using (HORIZONTAL)
-                                {
-                                    Toggle($"Val Layout {name}", false, name);
-                                    if (GUILayout.Button(GUIContent.none, "OL Minus", GUILayout.ExpandWidth(false)))
-                                    {
-                                        SetBool($"Has Layout {name}", false);
-                                    }
-                                }
-                            }
-                        }
                         EditorGUI.BeginChangeCheck();
-                        foreach (var o in layoutFloatOptions) LayoutOptionFloatField(o.name);
-                        foreach (var o in layoutBoolOptions) LayoutOptionBoolField(o.name);
-                        if (EditorGUI.EndChangeCheck()) ConstructLayoutOptions();
+
+                        //GUILayout.Label((GetBool(useRegexKey) ? $"<color={activeColorStr}>表达式</color>" : "关键字"), StlLabel, GUILayout.ExpandWidth(false));
+                        filterStr = EditorGUILayout.TextField(filterStr, StlSearchTextField);
+                        if (!GetBool(useRegexKey))
+                        {
+                            IceToggle(continuousMatchingKey, false, "连", "连续匹配");
+                        }
+                        IceToggle(caseSensitiveKey, false, "Aa", "区分大小写");
+                        IceToggle(useRegexKey, false, ".*".Bold(), "使用正则表达式");
+
+                        if (EditorGUI.EndChangeCheck()) DoFilterStyleList();
                     }
-                    else if (guiType == GUIType.GUI)
+
+                    // 在这显示.
+                    using (SCROLL)
                     {
-                        using (BOX) FloatField("Val GUIRect x", 0, "x");
-                        using (BOX) FloatField("Val GUIRect y", 0, "y");
-                        using (BOX) FloatField("Val GUIRect width", 64, "width");
-                        using (BOX) FloatField("Val GUIRect height", 64, "height");
-                        using (BOX) Toggle("显示边框");
+                        // 显示样式列表
+                        for (int i = 0; i < stlListFiltered.Count; ++i)
+                        {
+                            using (Horizontal(GUILayout.Height(32)))
+                            {
+                                var stl = stlListFiltered[i];
+                                using (Vertical(GUILayout.Width(160)))
+                                {
+                                    // 标签
+                                    if (GUILayout.Button(stl.Key, StlLabelBtn))
+                                    {
+                                        // 复制样式名
+                                        GUIUtility.systemCopyBuffer = stl.Value.name;
+
+                                        // 刷新监控对象
+                                        stlInspectingOrigin = new GUIStyle(stl.Value);
+                                        stlInspecting = new GUIStyle(stl.Value);
+                                        PropertyObj.Update();
+                                        SetBool("Property Dirty", false);
+                                    }
+                                    // 自定义按钮
+                                    //if (CustomButton("B"))
+                                    //{
+                                    //    Debug.Log("B!");
+                                    //}
+                                }
+
+                                // 显示
+                                if (guiType == GUIType.GUILayout)
+                                {
+                                    DisplayStyle(stl.Value);
+                                }
+                                else
+                                {
+                                    // GUI
+                                    GUILayout.Box(GUIContent.none, GetBool("显示边框") ? StlGUIBorder : GUIStyle.none, GUILayout.Width(GetFloat("Val GUIRect width", 64)), GUILayout.Height(GetFloat("Val GUIRect height", 64)));
+                                    var rect = GUILayoutUtility.GetLastRect();
+                                    DisplayStyle(rect, stl.Value);
+                                }
+                            }
+
+                        }
                     }
 
-                    using (HORIZONTAL)
+                    // 显示选项
+                    using (GROUP)
                     {
-                        // TODO!
-                        Vector2 size;
-
-                        GUI.color = new Color(0.306f, 0.788f, 0.690f);
-                        size = StlCode.CalcSize(TempContent(guiType.ToString()));
-                        guiType = (GUIType)EditorGUI.EnumPopup(GUILayoutUtility.GetRect(size.x + 2, size.y, GUILayout.ExpandWidth(false)), guiType, StlCode);
-
-                        GUI.color = Color.white;
-                        GUILayout.Label(".", StlCode, GUILayout.ExpandWidth(false));
-
-                        GUI.color = new Color(0.863f, 0.863f, 0.667f);
-                        size = StlCode.CalcSize(TempContent(displayType.ToString()));
-                        displayType = (DisplayType)EditorGUI.EnumPopup(GUILayoutUtility.GetRect(size.x + 2, size.y, GUILayout.ExpandWidth(false)), displayType, StlCode);
-
-                        GUI.color = Color.white;
-                        GUILayout.Label("(", StlCode, GUILayout.ExpandWidth(false));
-
-                        GUI.color = new Color(0.839f, 0.616f, 0.522f);
-                        GUILayout.Label("\"", StlCode, GUILayout.ExpandWidth(false));
-
-                        GUI.color = new Color(1, 0.66f, 0.56f);
-                        displayText = GUILayout.TextField(displayText);
-
-                        GUI.color = new Color(0.839f, 0.616f, 0.522f);
-                        GUILayout.Label("\"", StlCode, GUILayout.ExpandWidth(false));
-
-                        GUI.color = Color.white;
-
                         if (guiType == GUIType.GUILayout)
                         {
-                            GUILayout.Label(",", StlCode, GUILayout.ExpandWidth(false));
-
-                            if (GUILayout.Button(GUIContent.none, "OL Plus", GUILayout.ExpandWidth(false)))
+                            void LayoutOptionFloatField(string name)
                             {
-                                GenericMenu gm = new GenericMenu();
-                                void LayoutOptionToggle(string name) { if (!GetBool($"Has Layout {name}")) gm.AddItem(TempContent(name), false, () => { SetBool($"Has Layout {name}", true); ConstructLayoutOptions(); }); }
-                                foreach (var o in layoutFloatOptions) LayoutOptionToggle(o.name);
-                                foreach (var o in layoutBoolOptions) LayoutOptionToggle(o.name);
-                                gm.ShowAsContext();
-                            }
-                        }
-
-                        GUILayout.Label(");", StlCode, GUILayout.ExpandWidth(false));
-                    }
-                }
-            }
-
-            // 右侧区域
-            Rect rR = new Rect(lpWidth, 0, position.width - lpWidth, position.height);
-            using (Area(rR))
-            {
-                using (Vertical(StlGroup, GUILayout.ExpandHeight(true), GUILayout.ExpandWidth(true)))
-                {
-                    // 预览
-                    if (guiType == GUIType.GUILayout)
-                    {
-                        DisplayStyle(stlInspecting);
-                    }
-                    else
-                    {
-                        var rect = new Rect(
-                            GetFloat("Val GUIRect x"),
-                            GetFloat("Val GUIRect y"),
-                            GetFloat("Val GUIRect width", 64),
-                            GetFloat("Val GUIRect height", 64));
-                        if (GetBool("显示边框"))
-                        {
-                            GUI.Box(rect, GUIContent.none, StlGUIBorder);
-                            GUI.Box(rect, GUIContent.none, StlGUIBorderHighlight);
-                        }
-                        DisplayStyle(rect, stlInspecting);
-                    }
-                }
-
-                using (GROUP) using (SectionFolder("Inspector"))
-                {
-                    // 显示属性
-                    using (BOX)
-                    {
-                        if (GetAnimBoolFaded("GUIStyle属性", false) > 0.27f) GUI.Label(sideRect, GUIContent.none, GetBool("Property Dirty") ? "flow node 5" : "IN EditColliderButton");
-
-                        using (SectionFolder("GUIStyle属性", false))
-                        {
-                            void PropertyField(SerializedProperty pActive, SerializedProperty pOrigin)
-                            {
-                                using (HORIZONTAL)
+                                if (GetBool($"Has Layout {name}"))
                                 {
-                                    EditorGUILayout.PropertyField(pActive, GUILayout.ExpandWidth(true), GUILayout.MinWidth(208));
-
-                                    GUILayout.Space(2);
-                                    if (!SerializedProperty.DataEquals(pActive, pOrigin))
+                                    using (BOX) using (HORIZONTAL)
                                     {
-                                        SetBool("Property Dirty", true);
-                                        if (IceButton("<color=#FA0>↺</color>", "重置数据"))
+                                        FloatField($"Val Layout {name}", 0, name);
+                                        if (GUILayout.Button(GUIContent.none, "OL Minus", GUILayout.ExpandWidth(false)))
                                         {
-                                            GUIUtility.keyboardControl = 0;
-                                            Reset(pActive, pOrigin);
+                                            SetBool($"Has Layout {name}", false);
                                         }
                                     }
-                                    else GUILayout.Space(20);
-                                    //if (pActive.hasVisibleChildren) CustomButton("<color=#0FF>></color>");
-                                    //CustomButton(pActive.propertyType.ToString());
-                                    //CustomButton(pActive.type);
+                                }
+                            }
+                            void LayoutOptionBoolField(string name)
+                            {
+                                if (GetBool($"Has Layout {name}"))
+                                {
+                                    using (BOX) using (HORIZONTAL)
+                                    {
+                                        Toggle($"Val Layout {name}", false, name);
+                                        if (GUILayout.Button(GUIContent.none, "OL Minus", GUILayout.ExpandWidth(false)))
+                                        {
+                                            SetBool($"Has Layout {name}", false);
+                                        }
+                                    }
+                                }
+                            }
+                            EditorGUI.BeginChangeCheck();
+                            foreach (var o in layoutFloatOptions) LayoutOptionFloatField(o.name);
+                            foreach (var o in layoutBoolOptions) LayoutOptionBoolField(o.name);
+                            if (EditorGUI.EndChangeCheck()) ConstructLayoutOptions();
+                        }
+                        else if (guiType == GUIType.GUI)
+                        {
+                            using (BOX) FloatField("Val GUIRect x", 0, "x");
+                            using (BOX) FloatField("Val GUIRect y", 0, "y");
+                            using (BOX) FloatField("Val GUIRect width", 64, "width");
+                            using (BOX) FloatField("Val GUIRect height", 64, "height");
+                            using (BOX) Toggle("显示边框");
+                        }
+
+                        using (HORIZONTAL)
+                        {
+                            // TODO!
+                            Vector2 size;
+
+                            GUI.color = new Color(0.306f, 0.788f, 0.690f);
+                            size = StlCode.CalcSize(TempContent(guiType.ToString()));
+                            guiType = (GUIType)EditorGUI.EnumPopup(GUILayoutUtility.GetRect(size.x + 2, size.y, GUILayout.ExpandWidth(false)), guiType, StlCode);
+
+                            GUI.color = Color.white;
+                            GUILayout.Label(".", StlCode, GUILayout.ExpandWidth(false));
+
+                            GUI.color = new Color(0.863f, 0.863f, 0.667f);
+                            size = StlCode.CalcSize(TempContent(displayType.ToString()));
+                            displayType = (DisplayType)EditorGUI.EnumPopup(GUILayoutUtility.GetRect(size.x + 2, size.y, GUILayout.ExpandWidth(false)), displayType, StlCode);
+
+                            GUI.color = Color.white;
+                            GUILayout.Label("(", StlCode, GUILayout.ExpandWidth(false));
+
+                            GUI.color = new Color(0.839f, 0.616f, 0.522f);
+                            GUILayout.Label("\"", StlCode, GUILayout.ExpandWidth(false));
+
+                            GUI.color = new Color(1, 0.66f, 0.56f);
+                            displayText = GUILayout.TextField(displayText);
+
+                            GUI.color = new Color(0.839f, 0.616f, 0.522f);
+                            GUILayout.Label("\"", StlCode, GUILayout.ExpandWidth(false));
+
+                            GUI.color = Color.white;
+
+                            if (guiType == GUIType.GUILayout)
+                            {
+                                GUILayout.Label(",", StlCode, GUILayout.ExpandWidth(false));
+
+                                if (GUILayout.Button(GUIContent.none, "OL Plus", GUILayout.ExpandWidth(false)))
+                                {
+                                    GenericMenu gm = new GenericMenu();
+                                    void LayoutOptionToggle(string name) { if (!GetBool($"Has Layout {name}")) gm.AddItem(TempContent(name), false, () => { SetBool($"Has Layout {name}", true); ConstructLayoutOptions(); }); }
+                                    foreach (var o in layoutFloatOptions) LayoutOptionToggle(o.name);
+                                    foreach (var o in layoutBoolOptions) LayoutOptionToggle(o.name);
+                                    gm.ShowAsContext();
                                 }
                             }
 
-                            PropertyObj.UpdateIfRequiredOrScript();
+                            GUILayout.Label(");", StlCode, GUILayout.ExpandWidth(false));
+                        }
+                    }
+                }
 
-                            var pOrigin = PropertyObj.FindProperty("stlInspectingOrigin");
-                            var pActive = PropertyObj.FindProperty("stlInspecting");
-
-                            using (ScrollAuto(GUILayout.MaxHeight(512)))
+                // 右侧区域
+                using (Area(area.mainRect))
+                {
+                    using (Vertical(StlGroup, GUILayout.ExpandHeight(true), GUILayout.ExpandWidth(true)))
+                    {
+                        // 预览
+                        if (guiType == GUIType.GUILayout)
+                        {
+                            DisplayStyle(stlInspecting);
+                        }
+                        else
+                        {
+                            var rect = new Rect(
+                                GetFloat("Val GUIRect x"),
+                                GetFloat("Val GUIRect y"),
+                                GetFloat("Val GUIRect width", 64),
+                                GetFloat("Val GUIRect height", 64));
+                            if (GetBool("显示边框"))
                             {
-                                EditorGUI.BeginChangeCheck();
-
-                                pOrigin.NextVisible(true);
-                                pActive.NextVisible(true);
-
-                                do
-                                {
-                                    if (pActive.type == "GUIStyleState")
-                                    {
-                                        // 展开GUIStyleState
-                                        var foldoutKey = "StyleProperty_" + pActive.name;
-                                        var foldout = false;
-
-                                        using (HORIZONTAL)
-                                        {
-                                            foldout = SetBool(foldoutKey, EditorGUILayout.Foldout(GetBool(foldoutKey), pActive.displayName));
-
-                                            GUILayout.Space(2);
-                                            if (SerializedProperty.DataEquals(pActive, pOrigin)) GUILayout.Space(20);
-                                            else
-                                            {
-                                                SetBool("Property Dirty", true);
-                                                if (IceButton($"<color=#FA0>※</color>", "有更改", GUILayout.Width(17))) SetBool(foldoutKey, true);
-                                            }
-                                        }
-
-                                        if (foldout)
-                                        {
-                                            ++EditorGUI.indentLevel;
-                                            var subOrigin = pOrigin.Copy();
-                                            var subActive = pActive.Copy();
-                                            subOrigin.NextVisible(true);
-                                            subActive.NextVisible(true);
-
-
-                                            for (int i = 0; i < 3; ++i)
-                                            {
-                                                PropertyField(subActive, subOrigin);
-                                                subActive.NextVisible(false);
-                                                subOrigin.NextVisible(false);
-                                            }
-                                            --EditorGUI.indentLevel;
-                                        }
-                                    }
-                                    else PropertyField(pActive, pOrigin);
-                                } while (pActive.NextVisible(false) && pOrigin.NextVisible(false));
-
-                                if (EditorGUI.EndChangeCheck())
-                                {
-                                    SetBool("Property Dirty", false);
-                                    try
-                                    {
-                                        PropertyObj.ApplyModifiedPropertiesWithoutUndo();
-                                    }
-                                    catch (UnityException) { /* do nothing */}
-                                }
+                                GUI.Box(rect, GUIContent.none, StlGUIBorder);
+                                GUI.Box(rect, GUIContent.none, StlGUIBorderHighlight);
                             }
-
-                        }
-                        if (Event.current.type == EventType.Repaint)
-                        {
-                            sideRect = GUILayoutUtility.GetLastRect();
-                            sideRect.x = sideRect.xMax - 23;
-                            sideRect.width = 23;
+                            DisplayStyle(rect, stlInspecting);
                         }
                     }
-                    // 生成代码
-                    using (BOX) using (HORIZONTAL)
-                    {
-                        TextWithLabel("名字", ref styleName);
-                        if (IceButton("生成代码"))
-                        {
-                            GUIUtility.systemCopyBuffer = GetStyleCode(styleName);
-                            LogImportant("样式代码已生成！");
-                        }
-                    }
-                    // 样式列表
-                    using (BOX) using (HORIZONTAL)
-                    {
-                        Action tempAction = null;
-                        foreach (var sc in stlCacheMap)
-                        {
-                            GUILayout.Box(GUIContent.none, StlGUIBorder, GUILayout.Width(64), GUILayout.Height(64));
-                            var rect = GUILayoutUtility.GetLastRect();
 
-                            if (GUI.Button(rect, displayText, sc.Value.stl))
+                    using (GROUP) using (SectionFolder("Inspector"))
+                    {
+                        // 显示属性
+                        using (BOX)
+                        {
+                            if (GetAnimBoolFaded("GUIStyle属性", false) > 0.27f) GUI.Label(sideRect, GUIContent.none, GetBool("Property Dirty") ? "flow node 5" : "IN EditColliderButton");
+
+                            using (SectionFolder("GUIStyle属性", false))
                             {
-                                var e = Event.current;
-                                if (e.button == 1)
+                                void PropertyField(SerializedProperty pActive, SerializedProperty pOrigin)
                                 {
-                                    GenericMenu menu = new GenericMenu();
-                                    menu.AddItem(new GUIContent("记录"), false, () =>
+                                    using (HORIZONTAL)
                                     {
-                                        stlCacheMap[sc.Key] = new StyleCache(new GUIStyle(stlInspecting), new GUIStyle(stlInspectingOrigin));
-                                    });
-                                    menu.AddItem(new GUIContent("取出"), false, () =>
+                                        EditorGUILayout.PropertyField(pActive, GUILayout.ExpandWidth(true), GUILayout.MinWidth(208));
+
+                                        GUILayout.Space(2);
+                                        if (!SerializedProperty.DataEquals(pActive, pOrigin))
+                                        {
+                                            SetBool("Property Dirty", true);
+                                            if (IceButton("<color=#FA0>↺</color>", "重置数据"))
+                                            {
+                                                GUIUtility.keyboardControl = 0;
+                                                Reset(pActive, pOrigin);
+                                            }
+                                        }
+                                        else GUILayout.Space(20);
+                                        //if (pActive.hasVisibleChildren) CustomButton("<color=#0FF>></color>");
+                                        //CustomButton(pActive.propertyType.ToString());
+                                        //CustomButton(pActive.type);
+                                    }
+                                }
+
+                                PropertyObj.UpdateIfRequiredOrScript();
+
+                                var pOrigin = PropertyObj.FindProperty("stlInspectingOrigin");
+                                var pActive = PropertyObj.FindProperty("stlInspecting");
+
+                                using (ScrollAuto(GUILayout.MaxHeight(512)))
+                                {
+                                    EditorGUI.BeginChangeCheck();
+
+                                    pOrigin.NextVisible(true);
+                                    pActive.NextVisible(true);
+
+                                    do
                                     {
-                                        stlInspecting = new GUIStyle(sc.Value.stl);
-                                        stlInspectingOrigin = new GUIStyle(sc.Value.stlOrigin);
-                                        PropertyObj.Update();
+                                        if (pActive.type == "GUIStyleState")
+                                        {
+                                            // 展开GUIStyleState
+                                            var foldoutKey = "StyleProperty_" + pActive.name;
+                                            var foldout = false;
+
+                                            using (HORIZONTAL)
+                                            {
+                                                foldout = SetBool(foldoutKey, EditorGUILayout.Foldout(GetBool(foldoutKey), pActive.displayName));
+
+                                                GUILayout.Space(2);
+                                                if (SerializedProperty.DataEquals(pActive, pOrigin)) GUILayout.Space(20);
+                                                else
+                                                {
+                                                    SetBool("Property Dirty", true);
+                                                    if (IceButton($"<color=#FA0>※</color>", "有更改", GUILayout.Width(17))) SetBool(foldoutKey, true);
+                                                }
+                                            }
+
+                                            if (foldout)
+                                            {
+                                                ++EditorGUI.indentLevel;
+                                                var subOrigin = pOrigin.Copy();
+                                                var subActive = pActive.Copy();
+                                                subOrigin.NextVisible(true);
+                                                subActive.NextVisible(true);
+
+
+                                                for (int i = 0; i < 3; ++i)
+                                                {
+                                                    PropertyField(subActive, subOrigin);
+                                                    subActive.NextVisible(false);
+                                                    subOrigin.NextVisible(false);
+                                                }
+                                                --EditorGUI.indentLevel;
+                                            }
+                                        }
+                                        else PropertyField(pActive, pOrigin);
+                                    } while (pActive.NextVisible(false) && pOrigin.NextVisible(false));
+
+                                    if (EditorGUI.EndChangeCheck())
+                                    {
                                         SetBool("Property Dirty", false);
-                                    });
-                                    menu.AddItem(new GUIContent("删除"), false, () =>
-                                    {
-                                        if (EditorUtility.DisplayDialog(TitleContent.text, $"确认删除样式：{sc.Key}", "确认", "取消"))
+                                        try
                                         {
-                                            stlCacheMap.Remove(sc.Key);
+                                            PropertyObj.ApplyModifiedPropertiesWithoutUndo();
                                         }
-                                    });
-                                    menu.ShowAsContext();
+                                        catch (UnityException) { /* do nothing */}
+                                    }
                                 }
-                                else
+
+                            }
+                            if (Event.current.type == EventType.Repaint)
+                            {
+                                sideRect = GUILayoutUtility.GetLastRect();
+                                sideRect.x = sideRect.xMax - 23;
+                                sideRect.width = 23;
+                            }
+                        }
+                        // 生成代码
+                        using (BOX) using (HORIZONTAL)
+                        {
+                            TextWithLabel("名字", ref styleName);
+                            if (IceButton("生成代码"))
+                            {
+                                GUIUtility.systemCopyBuffer = GetStyleCode(styleName);
+                                LogImportant("样式代码已生成！");
+                            }
+                        }
+                        // 样式列表
+                        using (BOX) using (HORIZONTAL)
+                        {
+                            Action tempAction = null;
+                            foreach (var sc in stlCacheMap)
+                            {
+                                GUILayout.Box(GUIContent.none, StlGUIBorder, GUILayout.Width(64), GUILayout.Height(64));
+                                var rect = GUILayoutUtility.GetLastRect();
+
+                                if (GUI.Button(rect, displayText, sc.Value.stl))
                                 {
-                                    // 左键点击
-                                    if (e.shift || e.control)
+                                    var e = Event.current;
+                                    if (e.button == 1)
                                     {
-                                        // 记录
-                                        tempAction = () =>
+                                        GenericMenu menu = new GenericMenu();
+                                        menu.AddItem(new GUIContent("记录"), false, () =>
                                         {
                                             stlCacheMap[sc.Key] = new StyleCache(new GUIStyle(stlInspecting), new GUIStyle(stlInspectingOrigin));
-                                        };
+                                        });
+                                        menu.AddItem(new GUIContent("取出"), false, () =>
+                                        {
+                                            stlInspecting = new GUIStyle(sc.Value.stl);
+                                            stlInspectingOrigin = new GUIStyle(sc.Value.stlOrigin);
+                                            PropertyObj.Update();
+                                            SetBool("Property Dirty", false);
+                                        });
+                                        menu.AddItem(new GUIContent("删除"), false, () =>
+                                        {
+                                            if (EditorUtility.DisplayDialog(TitleContent.text, $"确认删除样式：{sc.Key}", "确认", "取消"))
+                                            {
+                                                stlCacheMap.Remove(sc.Key);
+                                            }
+                                        });
+                                        menu.ShowAsContext();
                                     }
                                     else
                                     {
-                                        // 取出
-                                        stlInspecting = new GUIStyle(sc.Value.stl);
-                                        stlInspectingOrigin = new GUIStyle(sc.Value.stlOrigin);
-                                        PropertyObj.Update();
-                                        SetBool("Property Dirty", false);
+                                        // 左键点击
+                                        if (e.shift || e.control)
+                                        {
+                                            // 记录
+                                            tempAction = () =>
+                                            {
+                                                stlCacheMap[sc.Key] = new StyleCache(new GUIStyle(stlInspecting), new GUIStyle(stlInspectingOrigin));
+                                            };
+                                        }
+                                        else
+                                        {
+                                            // 取出
+                                            stlInspecting = new GUIStyle(sc.Value.stl);
+                                            stlInspectingOrigin = new GUIStyle(sc.Value.stlOrigin);
+                                            PropertyObj.Update();
+                                            SetBool("Property Dirty", false);
+                                        }
                                     }
                                 }
-                            }
 
-                            GUI.Box(rect, sc.Key, StlGUIBorderHighlight);
-                        }
-                        tempAction?.Invoke();
-                        using (Vertical(GUILayout.ExpandWidth(false), GUILayout.MinHeight(17), GUILayout.MaxHeight(64)))
-                        {
-                            GUILayout.FlexibleSpace();
-                            if (GUILayout.Button(GUIContent.none, "OL Plus", GUILayout.ExpandWidth(false)))
-                            {
-                                stlCacheMap[string.IsNullOrWhiteSpace(stlInspectingOrigin.name) ? "None" : stlInspectingOrigin.name] = new StyleCache(new GUIStyle(stlInspecting), new GUIStyle(stlInspectingOrigin));
+                                GUI.Box(rect, sc.Key, StlGUIBorderHighlight);
                             }
-                            GUILayout.FlexibleSpace();
+                            tempAction?.Invoke();
+                            using (Vertical(GUILayout.ExpandWidth(false), GUILayout.MinHeight(17), GUILayout.MaxHeight(64)))
+                            {
+                                GUILayout.FlexibleSpace();
+                                if (GUILayout.Button(GUIContent.none, "OL Plus", GUILayout.ExpandWidth(false)))
+                                {
+                                    stlCacheMap[string.IsNullOrWhiteSpace(stlInspectingOrigin.name) ? "None" : stlInspectingOrigin.name] = new StyleCache(new GUIStyle(stlInspecting), new GUIStyle(stlInspectingOrigin));
+                                }
+                                GUILayout.FlexibleSpace();
+                            }
                         }
                     }
                 }
-            }
-
-            // 分隔栏
-            Rect rM = new Rect(lpWidth - mWidth, 0, mWidth, position.height);
-            {
-                int id = GUIUtility.GetControlID(FocusType.Passive);
-                const string draggingSeparatorKey = "Dragging Separator In Window";
-                var draggingSeparator = GetBool(draggingSeparatorKey);
-
-                var e = Event.current;
-                switch (e.GetTypeForControl(id))
-                {
-                    case EventType.MouseDown:
-                        if (rM.Contains(e.mousePosition))
-                        {
-                            GUIUtility.hotControl = id;
-
-                            SetBool(draggingSeparatorKey, true);
-                            Repaint();
-                            e.Use();
-                        }
-                        break;
-                    case EventType.MouseUp:
-                        if (draggingSeparator)
-                        {
-                            SetBool(draggingSeparatorKey, false);
-                            Repaint();
-
-                            if (!docked)
-                            {
-                                float tLast = GetFloat("Last MouseUp Time");
-                                float t = (float)EditorApplication.timeSinceStartup;
-                                if (t - tLast < 0.4f)
-                                {
-                                    // 双击
-                                    float w = GetFloat(leftPanelWidthKey);
-                                    float wp = position.width - mWidth - 2;
-                                    if (wp <= w)
-                                    {
-                                        // 展开
-                                        w = wp;
-                                        SetFloat(leftPanelWidthKey, w);
-                                        var pos = this.position;
-                                        pos.width += 384;
-                                        this.position = pos;
-                                    }
-                                    else
-                                    {
-                                        // 缩放
-                                        var pos = this.position;
-                                        pos.width += w + mWidth + 2 - position.width;
-                                        this.position = pos;
-                                    }
-                                    SetFloat("Last MouseUp Time", -1);
-                                }
-                                else
-                                {
-                                    SetFloat("Last MouseUp Time", (float)EditorApplication.timeSinceStartup);
-                                }
-                            }
-                            e.Use();
-                        }
-                        break;
-                    case EventType.MouseDrag:
-                        if (draggingSeparator)
-                        {
-                            SetFloat(leftPanelWidthKey, lpWidth + e.delta.x);
-                            Repaint();
-                            e.Use();
-                        }
-                        break;
-                }
-                GUI.Box(rM, GUIContent.none, draggingSeparator ? StlSeparatorOn : StlSeparator);
-
-                EditorGUIUtility.AddCursorRect(rM, MouseCursor.ResizeHorizontal);
             }
         }
         protected override void OnDebugGUI(Rect position)
