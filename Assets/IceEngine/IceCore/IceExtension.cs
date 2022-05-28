@@ -30,26 +30,26 @@ namespace IceEngine
 
         #region String
         /// <summary>
-        /// 等价于&lt;color=<paramref name="colorExp"/>&gt;<paramref name="self"/>&lt;/color&gt;
+        /// 等价于 <c><![CDATA[<color=]]><paramref name="colorExp"/>><paramref name="self"/><![CDATA[</color>]]></c>
         /// </summary>
         /// <param name="self">原字符串</param>
         /// <param name="colorExp">颜色表达式</param>
         /// <returns>结果表达式</returns>
         public static string Color(this string self, string colorExp) => $"<color={colorExp}>{self}</color>";
         /// <summary>
-        /// 等价于&lt;color=#<paramref name="color"/>&gt;<paramref name="self"/>&lt;/color&gt;
+        /// 等价于 <c><![CDATA[<color=#]]><paramref name="color"/>><paramref name="self"/><![CDATA[</color>]]></c>
         /// </summary>
         /// <param name="self">原字符串</param>
         /// <param name="color">颜色</param>
         /// <returns>结果表达式</returns>
         public static string Color(this string self, Color color) => $"<color=#{ColorUtility.ToHtmlStringRGB(color)}>{self}</color>";
         /// <summary>
-        /// 等价于&lt;b&gt;<paramref name="self"/>&lt;/b&gt;
+        /// 等价于 <c><![CDATA[<b>]]><paramref name="self"/><![CDATA[</b>]]></c>
         /// </summary>
         /// <returns>结果表达式</returns>
         public static string Bold(this string self) => $"<b>{self}</b>";
         /// <summary>
-        /// 等价于&lt;size=<paramref name="size"/>&gt;<paramref name="self"/>&lt;/size&gt;
+        /// 等价于 <c><![CDATA[<size=]]><paramref name="size"/>><paramref name="self"/><![CDATA[</size>]]></c>
         /// </summary>
         /// <returns>结果表达式</returns>
         public static string Size(this string self, int size) => $"<size={size}>{self}</size>";

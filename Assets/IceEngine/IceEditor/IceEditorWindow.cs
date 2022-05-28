@@ -256,6 +256,11 @@ namespace IceEditor
         /// 在Using语句中使用的Scope，指定一个Scroll View
         /// </summary>
         protected GUILayout.ScrollViewScope SCROLL => ScrollAuto();
+        /// <summary>
+        /// <example>PACK</example>
+        /// 用于手动引用IceGUIAutoPack,这样用：
+        /// <c>using var _ = <paramref name="PACK"/>;</c>
+        /// </summary>
         protected IceGUIUtility.GUIPackScope PACK => new IceGUIUtility.GUIPackScope(Pack);
         #endregion
 
