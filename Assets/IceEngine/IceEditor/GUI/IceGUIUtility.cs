@@ -79,9 +79,11 @@ namespace IceEditor
         {
             so.UpdateIfRequiredOrScript();
             SerializedProperty itr = so.GetIterator();
-            itr.NextVisible(true);
-            if (itr.propertyPath == "m_Script") itr.NextVisible(false);
+            if (!itr.NextVisible(true)) return;
             // m_Script 是 Monobehavior 隐藏字段，没必要显示在面板上
+            if (itr.propertyPath == "m_Script" && !itr.NextVisible(false)) return;
+
+            // 正式绘制
             DrawSerializedProperty(itr, info);
             so.ApplyModifiedProperties();
 
@@ -239,8 +241,7 @@ namespace IceEditor
 
         #region Preference Setting
         [SettingsProvider] static SettingsProvider GetRuntimeSettingProvider() => GetSettingProvider("Preferences/IceEngine/0", "General", IcePreference.Config, IcePreference.CreateConfig);
-        [SettingsProvider] static SettingsProvider GetSettingProvider() => GetSettingProvider("Preferences/IceEngine/1", "Editor", IceEditorConfig.Config, IceEditorConfig.CreateConfig);
-        internal static SettingsProvider GetSettingProvider<ConfigType>(string path, string label, ConfigType config, Func<ConfigType> createConfigAction, SettingsScope scope = SettingsScope.User) where ConfigType : ScriptableObject
+        public static SettingsProvider GetSettingProvider<ConfigType>(string path, string label, ConfigType config, Func<ConfigType> createConfigAction, SettingsScope scope = SettingsScope.User) where ConfigType : ScriptableObject
         {
             SerializedObject so = null;
             return new SettingsProvider(path, scope)

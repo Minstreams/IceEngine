@@ -3,12 +3,13 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using IceEngine;
 using UnityEngine;
 using UnityEditor;
 using UnityEditor.AnimatedValues;
-using static IceEditor.IceGUI;
 using UnityEngine.Rendering;
+
+using IceEngine;
+using static IceEditor.IceGUI;
 
 namespace IceEditor
 {

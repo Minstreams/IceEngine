@@ -4,7 +4,6 @@ using UnityEditor;
 using UnityEditor.AnimatedValues;
 using IceEngine;
 using System;
-using IceEditor.Internal;
 
 namespace IceEditor
 {
