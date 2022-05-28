@@ -160,7 +160,7 @@ namespace IceEditor
         /// <summary>
         /// 用于将一个区域拆分为可调整大小的两个区域
         /// </summary>
-        public static SubAreaScope SubArea(Rect rect, string key, float defaultVal = 0, IceGUIDirection direction = IceGUIDirection.Right, GUIStyle separatorStyleOverride = null, float width = 4, float border = 2) => IceGUI.SubArea(rect, GetFloat(key, defaultVal), val => SetFloat(key, val), direction, separatorStyleOverride, width, border);
+        public static SubAreaScope SubArea(Rect rect, out Rect mainRect, out Rect subRect, string key, float defaultVal = 0, IceGUIDirection direction = IceGUIDirection.Right, GUIStyle separatorStyleOverride = null, float width = 4, float border = 2) => IceGUI.SubArea(rect, out mainRect, out subRect, GetFloat(key, defaultVal), val => SetFloat(key, val), direction, separatorStyleOverride, width, border);
         #endregion
 
         #region GUI Elements

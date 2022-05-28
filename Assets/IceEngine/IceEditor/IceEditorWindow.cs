@@ -272,7 +272,7 @@ namespace IceEditor
 
         void OnStatusGUI(Rect position)
         {
-            using (GROUP) using (var sf = SectionFolder("临时数据监控", false)) using (LabelWidth(Mathf.Max(64, position.width - 256)))
+            using (GROUP) using (var sf = SectionFolder("临时数据监控")) using (LabelWidth(Mathf.Max(64, position.width - 256)))
             {
                 using (BOX) using (SectionFolder("Color Map"))
                 {
@@ -306,7 +306,7 @@ namespace IceEditor
             Rect rBack = new Rect(Vector2.zero, position.size);
 
             // 画内容
-            using (SubAreaScope area = DebugMode ? SubArea(rBack, "Debug Area", 0, DebugGUIDirection) : null)
+            using (SubAreaScope area = DebugMode ? SubArea(rBack, out var _, out var _, "Debug Area", 432, DebugGUIDirection) : null)
             {
                 Rect rMain = (area?.mainRect ?? rBack);
                 using (new GUILayout.AreaScope(rMain)) using (ScrollInvisible("Main Content Area", StlBackground))

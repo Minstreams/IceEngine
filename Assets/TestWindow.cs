@@ -14,18 +14,25 @@ namespace IceEditor
         static void OpenWindow() => GetWindow<TestWindow>();
         public override GUIContent TitleContent => new GUIContent("测试！");
 
+        IceGUIDirection dir;
         protected override void OnWindowGUI(Rect position)
         {
-            using (GROUP)
+            using (SubArea(position, out var mainRect, out var subRect, "TTT", 64, dir))
             {
-                IntField("Play");
-                IntField("Play2");
-                Vector2Field("Play2");
-                Vector3Field("Play2");
-                Vector4Field("Play2");
-                Vector2IntField("Play2");
-                Vector3IntField("Play2");
+                using (Area(mainRect))
+                {
+                    Button("Main");
+                }
+                using (Area(subRect))
+                {
+                    Button("Sub");
+                }
             }
+        }
+        protected override void OnDebugGUI(Rect position)
+        {
+            EnumPopup(ref dir);
+            base.OnDebugGUI(position);
         }
     }
 }

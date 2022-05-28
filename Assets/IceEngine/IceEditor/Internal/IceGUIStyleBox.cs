@@ -597,10 +597,10 @@ namespace IceEditor.Internal
             const string continuousMatchingKey = "连续匹配";
             const string caseSensitiveKey = "区分大小写";
 
-            using (var area = SubArea(position, "HierachyArea", 512, IceGUIDirection.Left))
+            using (SubArea(position, out var mainRect, out var subRect, "HierachyArea", 512, IceGUIDirection.Left))
             {
                 // 左侧区域
-                using (Area(area.subRect)) using (BOX)
+                using (Area(subRect)) using (BOX)
                 {
                     // 搜索框
                     using (BOX) using (HORIZONTAL)
@@ -763,7 +763,7 @@ namespace IceEditor.Internal
                 }
 
                 // 右侧区域
-                using (Area(area.mainRect))
+                using (Area(mainRect))
                 {
                     using (Vertical(StlGroup, GUILayout.ExpandHeight(true), GUILayout.ExpandWidth(true)))
                     {

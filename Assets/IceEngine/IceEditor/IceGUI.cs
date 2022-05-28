@@ -380,7 +380,13 @@ namespace IceEditor
         /// <summary>
         /// 用于将一个区域拆分为可调整大小的两个区域
         /// </summary>
-        public static SubAreaScope SubArea(Rect rect, float pos, Action<float> onPosChange, IceGUIDirection direction = IceGUIDirection.Right, GUIStyle separatorStyleOverride = null, float width = 4, float border = 2) => new SubAreaScope(rect, pos, onPosChange, direction, separatorStyleOverride ?? StlSubAreaSeparator, width, border);
+        public static SubAreaScope SubArea(Rect rect, out Rect mainRect, out Rect subRect, float pos, Action<float> onPosChange, IceGUIDirection direction = IceGUIDirection.Right, GUIStyle separatorStyleOverride = null, float width = 4, float border = 2)
+        {
+            var scope = new SubAreaScope(rect, pos, onPosChange, direction, separatorStyleOverride ?? StlSubAreaSeparator, width, border);
+            mainRect = scope.mainRect;
+            subRect = scope.subRect;
+            return scope;
+        }
 
         public static GUILayout.HorizontalScope HORIZONTAL => Horizontal();
         public static GUILayout.VerticalScope VERTICAL => Vertical();
