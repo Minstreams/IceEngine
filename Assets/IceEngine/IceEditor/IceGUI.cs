@@ -161,7 +161,7 @@ namespace IceEditor
         /// <summary>
         /// 用于标记ControlLabel的属性
         /// </summary>
-        internal class ControlLabelScope : IDisposable
+        public class ControlLabelScope : IDisposable
         {
             public static bool HasLabel => !string.IsNullOrEmpty(label);
             public static string Label => label;
@@ -173,7 +173,7 @@ namespace IceEditor
             bool originRichText;
             Color originFocusColor;
 
-            public ControlLabelScope(string labelVal, Color labelColor)
+            public ControlLabelScope(string labelVal, Color focusColor)
             {
                 originLabel = label;
                 originRichText = LabelStyle.richText;
@@ -181,7 +181,7 @@ namespace IceEditor
 
                 label = labelVal;
                 LabelStyle.richText = true;
-                LabelStyle.focused.textColor = labelColor;
+                LabelStyle.focused.textColor = focusColor;
             }
             void IDisposable.Dispose()
             {
@@ -372,11 +372,15 @@ namespace IceEditor
         /// <summary>
         /// 在Using语句中使用的Scope，用于标记ControlLabel的属性
         /// </summary>
-        internal static ControlLabelScope ControlLabel(string label) => new ControlLabelScope(label, IceGUIUtility.CurrentThemeColor);
+        public static ControlLabelScope ControlLabel(string label) => new ControlLabelScope(label, IceGUIUtility.CurrentThemeColor);
         /// <summary>
         /// 在Using语句中使用的Scope，用于标记ControlLabel的属性
         /// </summary>
-        internal static ControlLabelScope ControlLabel(string label, string labelOverride) => new ControlLabelScope(string.IsNullOrEmpty(labelOverride) ? label : labelOverride, IceGUIUtility.CurrentThemeColor);
+        public static ControlLabelScope ControlLabel(string label, Color focusColor) => new ControlLabelScope(label, focusColor);
+        /// <summary>
+        /// 在Using语句中使用的Scope，用于标记ControlLabel的属性
+        /// </summary>
+        public static ControlLabelScope ControlLabel(string label, string labelOverride) => new ControlLabelScope(string.IsNullOrEmpty(labelOverride) ? label : labelOverride, IceGUIUtility.CurrentThemeColor);
         /// <summary>
         /// 用于将一个区域拆分为可调整大小的两个区域
         /// </summary>
