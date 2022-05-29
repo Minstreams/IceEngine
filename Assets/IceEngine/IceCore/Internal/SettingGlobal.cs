@@ -1,11 +1,11 @@
-using System.Collections;
+锘縰sing System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
 namespace IceEngine.Internal
 {
     /// <summary>
-    /// 全局系统设置
+    /// 鍏ㄥ眬绯荤粺璁剧疆
     /// </summary>
     [IceConfigPath("IceEngine/IceCore")]
     public class SettingGlobal : IceSetting<SettingGlobal>
