@@ -1,12 +1,9 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using UnityEngine;
-using System.Linq;
-#if UNITY_EDITOR
-using UnityEditor;
-#endif
 using IceEngine.Internal;
 
 namespace IceEngine
@@ -18,6 +15,7 @@ namespace IceEngine
     /// </summary>
     public static class IceIsland
     {
+        #region 全局实例对象
         /// <summary>
         /// 场景中的组件实例
         /// </summary>
@@ -26,7 +24,7 @@ namespace IceEngine
             get
             {
 #if UNITY_EDITOR
-                if (!EditorApplication.isPlayingOrWillChangePlaymode)
+                if (!UnityEditor.EditorApplication.isPlayingOrWillChangePlaymode)
                 {
                     LogError("编辑时非法调用运行时代码！");
                     return null;
@@ -40,6 +38,12 @@ namespace IceEngine
             }
         }
         static IceIslandComponent _instance = null;
+
+        /// <summary>
+        /// 系统配置
+        /// </summary>
+        public static SettingGlobal Setting => SettingGlobal.Setting;
+        #endregion
 
         #region 子系统控制
         /// <summary>
@@ -168,7 +172,7 @@ namespace IceEngine
             int skipFrames = 3;
             if (string.IsNullOrEmpty(prefix))
             {
-                prefix = $"【{"IceIsland".Color(IcePreference.Config.themeColor)}】";
+                prefix = $"【{"IceIsland".Color(Setting.themeColor)}】";
                 skipFrames = 2;
             }
             string log = $"{prefix}{mid}{message}";

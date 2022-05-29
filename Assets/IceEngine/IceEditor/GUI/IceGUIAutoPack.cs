@@ -16,7 +16,7 @@ namespace IceEditor
         /// <summary>
         /// 默认ThemeColor的GUI临时数据
         /// </summary>
-        public IceGUIAutoPack(Action onAnimValueChange = null, Action onThemeColorChange = null) : this(IcePreference.Config.themeColor, onAnimValueChange, onThemeColorChange) { }
+        public IceGUIAutoPack(Action onAnimValueChange = null, Action onThemeColorChange = null) : this(IceGUIUtility.DefaultThemeColor, onAnimValueChange, onThemeColorChange) { }
         /// <summary>
         /// 序列化的GUI临时数据
         /// </summary>

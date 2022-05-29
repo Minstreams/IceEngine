@@ -5,24 +5,12 @@ using UnityEngine;
 namespace IceEngine.Internal
 {
     /// <summary>
-    /// 冰屿系统配置基类<br/>
-    /// 子系统命名必须以Setting开头！参考<see cref="IceSystem{SubSetting}.TypeName"/>
-    /// </summary>
-    public abstract class IceSetting : ScriptableObject
-    {
-        /// <summary>
-        /// 主题颜色
-        /// </summary>
-        internal virtual Color ThemeColor => IcePreference.Config.themeColor;
-    }
-
-    /// <summary>
     /// 冰屿系统的子系统基类，此类用于计算反射
     /// </summary>.
     public abstract class IceSystem { }
 
     /// <summary>
-    /// 所有冰屿系统的子系统的父类。<br/>
+    /// 冰屿系统的子系统基类<br/>
     /// 子系统的特殊静态方法会被特定生命周期调用：
     /// <list type="bullet">
     /// <item><c>Awake()</c> 进入游戏调用，用于初始化系统</item>
@@ -31,7 +19,7 @@ namespace IceEngine.Internal
     /// </list>
     /// </summary>
     /// <typeparam name="SubSetting">子系统配置类，必须继承自IceSetting</typeparam>
-    public abstract class IceSystem<SubSetting> : IceSystem where SubSetting : IceSetting
+    public abstract class IceSystem<SubSetting> : IceSystem where SubSetting : IceSetting<SubSetting>
     {
         #region Config & Setting
         /// <summary>
@@ -59,7 +47,7 @@ namespace IceEngine.Internal
 
         #region Log & Dialog
         static string TypeName => _typeName ??= typeof(SubSetting).Name.Substring(7/*Setting的长度为7个字母*/); static string _typeName = null;
-        static string DebugPrefix => $"【{TypeName.Color(Setting.ThemeColor)}】";
+        static string DebugPrefix => $"【{TypeName.Color(Setting.themeColor)}】";
         [System.Diagnostics.Conditional("DEBUG")]
         public static void Log(object message, Object context = null) => IceIsland.Log(message, context, DebugPrefix);
         public static void LogImportant(object message, Object context = null) => IceIsland.LogImportant(message, context, DebugPrefix);

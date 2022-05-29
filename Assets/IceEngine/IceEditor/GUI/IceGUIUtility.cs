@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using UnityEngine;
 using UnityEditor;
 using IceEngine;
+using IceEngine.Internal;
 using IceEditor.Internal;
 using static IceEditor.IceGUI;
 using static IceEditor.IceGUIAuto;
@@ -172,7 +173,8 @@ namespace IceEditor
                 }
             } while (itr.NextVisible(false) && itr != end);
         }
-        public static Color CurrentThemeColor => HasPack ? CurrentPack.ThemeColor : IcePreference.Config.themeColor;
+        public static Color DefaultThemeColor => IceIsland.Setting.themeColor;
+        public static Color CurrentThemeColor => HasPack ? CurrentPack.ThemeColor : DefaultThemeColor;
         #endregion
 
         #region GUIAutoPack
@@ -240,7 +242,6 @@ namespace IceEditor
         #endregion
 
         #region Preference Setting
-        [SettingsProvider] static SettingsProvider GetRuntimeSettingProvider() => GetSettingProvider("Preferences/IceEngine/0", "General", IcePreference.Config, IcePreference.CreateConfig);
         public static SettingsProvider GetSettingProvider<ConfigType>(string path, string label, ConfigType config, Func<ConfigType> createConfigAction, SettingsScope scope = SettingsScope.User) where ConfigType : ScriptableObject
         {
             SerializedObject so = null;
@@ -261,6 +262,57 @@ namespace IceEditor
                     DrawSerializedObject(so);
                 },
                 label = label,
+            };
+        }
+
+        static Dictionary<string, SerializedObject> iceConfigSOMap = new Dictionary<string, SerializedObject>();
+
+        /// <summary>
+        /// 在这里渲染所有的运行时系统配置
+        /// </summary>
+        [SettingsProvider]
+        static SettingsProvider GetIceConfigSettingProvider()
+        {
+            // 获取所有需要的配置对象
+            if (iceConfigSOMap.Count == 0)
+            {
+                static void CollectSubSystemFromAssembly(Assembly a)
+                {
+                    var cs = a.GetTypes().Where(t => !t.IsGenericType && t.IsSubclassOf(typeof(IceSetting)));
+                    foreach (var c in cs)
+                    {
+                        // TODO: Name获取方式改为SubString(7)
+                        iceConfigSOMap.Add(c.Name.Replace("Setting", ""), new SerializedObject((UnityEngine.Object)c.BaseType.GetProperty("Setting", c).GetValue(null)));
+                    }
+                }
+
+                var iceAssembly = typeof(IceSetting).Assembly;
+                CollectSubSystemFromAssembly(iceAssembly);
+
+                var iceName = iceAssembly.GetName().Name;
+                foreach (var a in AppDomain.CurrentDomain.GetAssemblies().Where(a => a.GetReferencedAssemblies().Select(a => a.Name).Contains(iceName))) CollectSubSystemFromAssembly(a);
+            }
+
+            string selectedSetting = iceConfigSOMap.First().Key;
+
+            return new SettingsProvider("Project/IceEngine", SettingsScope.Project)
+            {
+                guiHandler = filter =>
+                {
+                    var so = iceConfigSOMap[selectedSetting];
+                    using (GROUP)
+                    {
+                        Header(selectedSetting);
+                        DrawSerializedObject(so);
+                    }
+                },
+                titleBarGuiHandler = () =>
+                {
+                    foreach (var so in iceConfigSOMap)
+                    {
+                        if (IceButton(so.Key, so.Key == selectedSetting)) selectedSetting = so.Key;
+                    }
+                },
             };
         }
         #endregion

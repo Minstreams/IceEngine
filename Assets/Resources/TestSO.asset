@@ -9,7 +9,17 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: c8f10d34597432b4fbbe4d6ec369b52c, type: 3}
-  m_Name: IcePreference
+  m_Script: {fileID: 11500000, guid: dec80645eeea1304a8396c5ca4b026e4, type: 3}
+  m_Name: TestSO
   m_EditorClassIdentifier: 
-  themeColor: {r: 1, g: 0.6, b: 0, a: 1}
+  comps:
+    m_Keys: []
+    m_Values: []
+  map:
+    _: 0
+    list:
+    - 
+    - 
+    - 
+  a: dwdwd
+  b: 123123
