@@ -20,4 +20,10 @@ namespace IceEngine
     /// 运行时不可更改
     /// </summary>
     public class RuntimeConst : Attribute { }
+
+    /// <summary>
+    /// 应用主题颜色
+    /// </summary>
+    [AttributeUsage(AttributeTargets.Class, AllowMultiple = false)]
+    public class ThemeColorAttribute : Attribute { }
 }
