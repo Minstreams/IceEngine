@@ -166,7 +166,7 @@ namespace IceEngine
         /// <summary>
         /// 全局Log事件
         /// </summary>
-        public static event System.Action<string> LogAction;
+        public static event Action<string> LogAction;
         static string _ProcessLog(object message, string mid, string prefix)
         {
             int skipFrames = 3;
