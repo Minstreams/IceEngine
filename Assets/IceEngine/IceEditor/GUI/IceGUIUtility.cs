@@ -265,33 +265,30 @@ namespace IceEditor
             };
         }
 
-        static Dictionary<string, SerializedObject> iceConfigSOMap = new Dictionary<string, SerializedObject>();
-
         /// <summary>
         /// 在这里渲染所有的运行时系统配置
         /// </summary>
         [SettingsProvider]
         static SettingsProvider GetIceConfigSettingProvider()
         {
+            Dictionary<string, SerializedObject> iceConfigSOMap = new Dictionary<string, SerializedObject>();
+
             // 获取所有需要的配置对象
-            if (iceConfigSOMap.Count == 0)
+            void CollectSubSystemFromAssembly(Assembly a)
             {
-                static void CollectSubSystemFromAssembly(Assembly a)
+                var cs = a.GetTypes().Where(t => !t.IsGenericType && t.IsSubclassOf(typeof(IceSetting)));
+                foreach (var c in cs)
                 {
-                    var cs = a.GetTypes().Where(t => !t.IsGenericType && t.IsSubclassOf(typeof(IceSetting)));
-                    foreach (var c in cs)
-                    {
-                        // TODO: Name获取方式改为SubString(7)
-                        iceConfigSOMap.Add(c.Name.Replace("Setting", ""), new SerializedObject((UnityEngine.Object)c.BaseType.GetProperty("Setting", c).GetValue(null)));
-                    }
+                    // TODO: Name获取方式改为SubString(7)
+                    iceConfigSOMap.Add(c.Name.Replace("Setting", ""), new SerializedObject((UnityEngine.Object)c.BaseType.GetProperty("Setting", c).GetValue(null)));
                 }
-
-                var iceAssembly = typeof(IceSetting).Assembly;
-                CollectSubSystemFromAssembly(iceAssembly);
-
-                var iceName = iceAssembly.GetName().Name;
-                foreach (var a in AppDomain.CurrentDomain.GetAssemblies().Where(a => a.GetReferencedAssemblies().Select(a => a.Name).Contains(iceName))) CollectSubSystemFromAssembly(a);
             }
+
+            var iceAssembly = typeof(IceSetting).Assembly;
+            CollectSubSystemFromAssembly(iceAssembly);
+
+            var iceName = iceAssembly.GetName().Name;
+            foreach (var a in AppDomain.CurrentDomain.GetAssemblies().Where(a => a.GetReferencedAssemblies().Select(a => a.Name).Contains(iceName))) CollectSubSystemFromAssembly(a);
 
             string selectedSetting = iceConfigSOMap.First().Key;
 
