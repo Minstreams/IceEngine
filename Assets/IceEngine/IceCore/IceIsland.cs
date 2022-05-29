@@ -45,7 +45,25 @@ namespace IceEngine
         /// <summary>
         /// 子系统表
         /// </summary>
-        public static List<Type> SubSystemList => _subsystemList ??= Assembly.GetAssembly(typeof(IceIsland)).GetTypes().Where(t => !t.IsGenericType && t.IsSubclassOf(typeof(IceSystem))).ToList(); static List<Type> _subsystemList;
+        public static List<Type> SubSystemList
+        {
+            get
+            {
+                if (_subsystemList == null)
+                {
+                    _subsystemList = new List<Type>();
+                    static void CollectSubSystemFromAssembly(Assembly a) => _subsystemList.AddRange(a.GetTypes().Where(t => !t.IsGenericType && t.IsSubclassOf(typeof(IceSystem))));
+
+                    var iceAssembly = typeof(IceSystem).Assembly;
+                    CollectSubSystemFromAssembly(iceAssembly);
+
+                    var iceName = iceAssembly.GetName().Name;
+                    foreach (var a in AppDomain.CurrentDomain.GetAssemblies().Where(a => a.GetReferencedAssemblies().Select(a => a.Name).Contains(iceName))) CollectSubSystemFromAssembly(a);
+                }
+                return _subsystemList;
+            }
+        }
+        static List<Type> _subsystemList;
         /// <summary>
         /// 调用所有子系统上存在的同名静态方法
         /// </summary>
