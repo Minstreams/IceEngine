@@ -11,7 +11,7 @@ namespace IceEditor
     /// 序列化的GUI临时数据
     /// </summary>
     [System.Serializable]
-    public sealed class IceGUIAutoPack
+    public sealed class IceGUIAutoPack : ISerializationCallbackReceiver
     {
         /// <summary>
         /// 默认ThemeColor的GUI临时数据
@@ -98,8 +98,8 @@ namespace IceEditor
 
 
         [SerializeField] internal IceDictionary<string, AnimBool> _stringAnimBoolMap = new IceDictionary<string, AnimBool>();
-        public void OnBeforeSerialize() { }
-        public void OnAfterDeserialize()
+        void ISerializationCallbackReceiver.OnBeforeSerialize() { }
+        void ISerializationCallbackReceiver.OnAfterDeserialize()
         {
             if (OnAnimValueChangeCallback != null)
             {
