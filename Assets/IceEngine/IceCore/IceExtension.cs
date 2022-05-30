@@ -2,8 +2,6 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-// 这应该是一个项目，功能分为若干文件
-
 namespace IceEngine
 {
     /// <summary>

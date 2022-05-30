@@ -241,62 +241,57 @@ namespace IceEditor
         }
         #endregion
 
-        #region Preference Setting
-        public static SettingsProvider GetSettingProvider<ConfigType>(string path, string label, ConfigType config, Func<ConfigType> createConfigAction, SettingsScope scope = SettingsScope.User) where ConfigType : ScriptableObject
-        {
-            SerializedObject so = null;
-            return new SettingsProvider(path, scope)
-            {
-                activateHandler = (filter, rootElement) =>
-                {
-                    if (config == null) config = createConfigAction?.Invoke();
-                    if (config != null) so = new SerializedObject(config);
-                },
-                guiHandler = (filter) =>
-                {
-                    if (so == null)
-                    {
-                        LabelError("Serialized Object is not generated!");
-                        return;
-                    }
-                    DrawSerializedObject(so);
-                },
-                label = label,
-            };
-        }
-
+        #region SettingProvider
         /// <summary>
-        /// 在这里渲染所有的运行时系统配置
+        /// 所有的运行时系统配置
         /// </summary>
         [SettingsProvider]
-        static SettingsProvider GetIceConfigSettingProvider()
+        static SettingsProvider GetIceSettingProvider() => GetIceSettingProvider<IceSetting>("IceEngine", "Setting");
+        /// <summary>
+        /// 所有的编辑时系统配置
+        /// </summary>
+        [SettingsProvider]
+        static SettingsProvider GetIceEditorSettingProvider() => GetIceSettingProvider<IceEditorSetting>("IceEditor", "EditorSetting");
+        /// <summary>
+        /// 在Project窗口部署某一配置类所有的子类实例
+        /// </summary>
+        /// <param name="path">配置路径</param>
+        /// <param name="baseSettingType">配置类</param>
+        /// <param name="prefix">子类名称统一前缀</param>
+        internal static SettingsProvider GetIceSettingProvider<TSetting>(string path, string prefix) where TSetting : ScriptableObject
         {
-            Dictionary<string, SerializedObject> iceConfigSOMap = new Dictionary<string, SerializedObject>();
+            Type baseSettingType = typeof(TSetting);
 
-            // 获取所有需要的配置对象
-            void CollectSubSystemFromAssembly(Assembly a)
+            // soMap
+            Dictionary<string, SerializedObject> iceSettingSOMap = new Dictionary<string, SerializedObject>();
+
+            // 获取所有需要的配置对象方法
+            void CollectSOFromAssembly(Assembly a)
             {
-                var cs = a.GetTypes().Where(t => !t.IsGenericType && t.IsSubclassOf(typeof(IceSetting)));
+                var cs = a.GetTypes().Where(t => !t.IsGenericType && t.IsSubclassOf(baseSettingType));
                 foreach (var c in cs)
                 {
-                    // TODO: Name获取方式改为SubString(7)
-                    iceConfigSOMap.Add(c.Name.Replace("Setting", ""), new SerializedObject((UnityEngine.Object)c.BaseType.GetProperty("Setting", c).GetValue(null)));
+                    // 显示Title删掉开头的Setting
+                    var title = c.Name.StartsWith(prefix) ? c.Name[prefix.Length..] : c.Name;
+                    var so = new SerializedObject((UnityEngine.Object)c.BaseType.GetProperty("Setting", c).GetValue(null));
+                    iceSettingSOMap.Add(title, so);
                 }
             }
 
-            var iceAssembly = typeof(IceSetting).Assembly;
-            CollectSubSystemFromAssembly(iceAssembly);
-
+            // 从所有相关的Assembly中收集数据
+            var iceAssembly = baseSettingType.Assembly;
             var iceName = iceAssembly.GetName().Name;
-            foreach (var a in AppDomain.CurrentDomain.GetAssemblies().Where(a => a.GetReferencedAssemblies().Select(a => a.Name).Contains(iceName))) CollectSubSystemFromAssembly(a);
+            foreach (var a in AppDomain.CurrentDomain.GetAssemblies().Where(a => a == iceAssembly || a.GetReferencedAssemblies().Select(a => a.Name).Contains(iceName))) CollectSOFromAssembly(a);
 
-            string selectedSetting = iceConfigSOMap.First().Key;
+            // 选择的项目字段
+            string selectedSetting = iceSettingSOMap.First().Key;
 
-            return new SettingsProvider("Project/IceEngine", SettingsScope.Project)
+            // GUI
+            return new SettingsProvider("Project/" + path, SettingsScope.Project)
             {
                 guiHandler = filter =>
                 {
-                    var so = iceConfigSOMap[selectedSetting];
+                    var so = iceSettingSOMap[selectedSetting];
                     using (GROUP)
                     {
                         Header(selectedSetting);
@@ -305,7 +300,7 @@ namespace IceEditor
                 },
                 titleBarGuiHandler = () =>
                 {
-                    foreach (var so in iceConfigSOMap)
+                    foreach (var so in iceSettingSOMap)
                     {
                         if (IceButton(so.Key, so.Key == selectedSetting)) selectedSetting = so.Key;
                     }

@@ -2,12 +2,15 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace IceEngine.Internal
+namespace IceEngine
 {
-    /// <summary>
-    /// 冰屿系统的子系统基类，此类用于计算反射
-    /// </summary>.
-    public abstract class IceSystem { }
+    namespace Internal
+    {
+        /// <summary>
+        /// 冰屿系统的子系统基类，此类用于计算反射
+        /// </summary>.
+        public abstract class IceSystem { }
+    }
 
     /// <summary>
     /// 冰屿系统的子系统基类<br/>
@@ -19,7 +22,7 @@ namespace IceEngine.Internal
     /// </list>
     /// </summary>
     /// <typeparam name="SubSetting">子系统配置类，必须继承自IceSetting</typeparam>
-    public abstract class IceSystem<SubSetting> : IceSystem where SubSetting : IceSetting<SubSetting>
+    public abstract class IceSystem<SubSetting> : Internal.IceSystem where SubSetting : IceSetting<SubSetting>
     {
         #region Config & Setting
         /// <summary>
@@ -27,7 +30,6 @@ namespace IceEngine.Internal
         /// </summary>
         public static SubSetting Setting => _Setting != null ? _Setting : (_Setting = Resources.Load<SubSetting>(TypeName)); static SubSetting _Setting;
         #endregion
-
 
         #region 协程控制
         /// <summary>
@@ -43,7 +45,6 @@ namespace IceEngine.Internal
         /// </summary>
         public static void StopCoroutine(LinkedListNode<Coroutine> routine) => IceIsland.StopCoroutine(routine);
         #endregion
-
 
         #region Log & Dialog
         static string TypeName => _typeName ??= typeof(SubSetting).Name.Substring(7/*Setting的长度为7个字母*/); static string _typeName = null;

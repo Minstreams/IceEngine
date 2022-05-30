@@ -5,9 +5,9 @@ using UnityEngine;
 namespace IceEngine.Internal
 {
     /// <summary>
-    /// 全局系统设置
+    /// 全局系统配置
     /// </summary>
-    [IceConfigPath("IceEngine/IceCore")]
+    [IceSettingPath("IceEngine/IceCore")]
     public class SettingGlobal : IceSetting<SettingGlobal>
     {
 

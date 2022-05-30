@@ -6,13 +6,13 @@ namespace IceEngine
     /// 标记运行时系统配置的路径
     /// </summary>
     [AttributeUsage(AttributeTargets.Class, AllowMultiple = false)]
-    public sealed class IceConfigPathAttribute : Attribute
+    public sealed class IceSettingPathAttribute : Attribute
     {
         /// <summary>
         /// 标记运行时系统配置的路径
         /// </summary>
         /// <param name="path">资源父目录相对Assets的路径</param>
-        public IceConfigPathAttribute(string path)
+        public IceSettingPathAttribute(string path)
         {
             Path = path;
         }

@@ -1,7 +1,9 @@
 ﻿using System.Collections;
 using UnityEngine;
+using IceEngine;
+using IceEngine.Internal;
+using IceEditor;
 
-[CreateAssetMenu(menuName = "Test/asdasd")]
 public class TestSO : ScriptableObject
 {
     [System.Serializable]
@@ -16,4 +18,5 @@ public class TestSO : ScriptableObject
         qwee
     }
     public EnumMap<EE, string> map = new EnumMap<EE, string>();
+    public float a;
 }
