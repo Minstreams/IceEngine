@@ -19,4 +19,9 @@ public class TestSO : ScriptableObject
     }
     public EnumMap<EE, string> map = new EnumMap<EE, string>();
     public float a;
+
+    public void SDASD()
+    {
+
+    }
 }

@@ -1,5 +1,8 @@
 ﻿using UnityEditor;
 using UnityEngine;
+
+using IceEngine;
+using static IceEditor.IceGUI;
 using static IceEditor.IceGUIAuto;
 
 namespace IceEditor.Internal
@@ -11,20 +14,30 @@ namespace IceEditor.Internal
     internal class IceInspectorDrawer : UnityEditor.Editor
     {
         IceGUIAutoPack pack;
-        IceAttributesInfo info;
+        float labelWidth;
         void OnEnable()
         {
             pack = new IceGUIAutoPack(Repaint);
-            info = IceAttributesInfo.GetInfo(serializedObject);
+            labelWidth = EditorGUIUtility.labelWidth;
+            foreach (var a in target.GetType().GetCustomAttributes(true))
+            {
+                if (a is ThemeColorAttribute tc)
+                {
+                    pack.ThemeColor = tc.Color;
+                }
+                else if (a is LabelWidthAttribute lw)
+                {
+                    labelWidth = lw.Width;
+                }
+            }
         }
         void OnDisable()
         {
             pack = null;
-            info = null;
         }
         public override void OnInspectorGUI()
         {
-            using (UsePack(pack)) IceGUIUtility.DrawSerializedObject(serializedObject, info);
+            using (UsePack(pack)) using (LabelWidth(labelWidth)) IceGUIUtility.DrawSerializedObject(serializedObject);
         }
     }
 }

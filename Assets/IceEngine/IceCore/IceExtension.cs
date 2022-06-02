@@ -198,5 +198,19 @@ namespace IceEngine
             };
         }
         #endregion
+
+        #region Type
+        public static System.Type GetRoot(this System.Type self)
+        {
+            var end = typeof(object);
+            while (self != end)
+            {
+                var b = self.BaseType;
+                if (b == end) break;
+                self = b;
+            }
+            return self;
+        }
+        #endregion
     }
 }

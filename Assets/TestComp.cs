@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using IceEngine;
 
+[ThemeColor(1, 0, 1)]
 public class TestComp : MonoBehaviour
 {
     [System.Serializable]
@@ -37,5 +38,11 @@ public class TestComp : MonoBehaviour
     void Awake()
     {
         Debug.Log("AwakeTemp!");
+    }
+
+    [Button]
+    public void DoSomething()
+    {
+        Debug.Log("Fff" + bs.bb);
     }
 }
