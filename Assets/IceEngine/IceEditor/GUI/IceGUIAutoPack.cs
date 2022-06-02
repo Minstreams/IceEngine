@@ -1,16 +1,16 @@
-﻿using UnityEngine;
+﻿using System;
+using UnityEngine;
 using UnityEngine.Events;
 using UnityEditor;
 using UnityEditor.AnimatedValues;
 using IceEngine;
-using System;
 
 namespace IceEditor
 {
     /// <summary>
     /// 序列化的GUI临时数据
     /// </summary>
-    [System.Serializable]
+    [Serializable]
     public sealed class IceGUIAutoPack : ISerializationCallbackReceiver
     {
         /// <summary>
@@ -23,16 +23,12 @@ namespace IceEditor
         public IceGUIAutoPack(Color themeColor, Action onAnimValueChange = null, Action onThemeColorChange = null)
         {
             SetColor("ThemeColor", themeColor);
-            if (onAnimValueChange != null)
-            {
-                _onAnimValueChangeTarget = (UnityEngine.Object)onAnimValueChange.Target;
-                _onAnimValueChangeMethod = onAnimValueChange.Method.Name;
-            }
-            this._onThemeColorChange = onThemeColorChange;
+            _onAnimValueChange = onAnimValueChange;
+            _onThemeColorChange = onThemeColorChange;
         }
 
         #region 主题颜色
-        Action _onThemeColorChange;
+        [SerializeField] IceGUIAction _onThemeColorChange;
         /// <summary>
         /// 主题颜色
         /// </summary>
@@ -66,25 +62,9 @@ namespace IceEditor
         #endregion
 
         #region 临时数据托管
-        UnityEngine.Object _onAnimValueChangeTarget;
-        string _onAnimValueChangeMethod;
-        UnityAction _onAnimValueChangeCallback;
-        UnityAction OnAnimValueChangeCallback
-        {
-            get
-            {
-                if (_onAnimValueChangeCallback == null)
-                {
-                    if (_onAnimValueChangeTarget != null && _onAnimValueChangeMethod != null)
-                    {
-                        Type t = _onAnimValueChangeTarget.GetType();
-                        var m = t.GetMethod(_onAnimValueChangeMethod);
-                        _onAnimValueChangeCallback = () => { m.Invoke(_onAnimValueChangeTarget, null); };
-                    }
-                }
-                return _onAnimValueChangeCallback;
-            }
-        }
+        [SerializeField] IceGUIAction _onAnimValueChange;
+        UnityAction OnAnimValueChange => _onAnimValueChange?.UnityAction;
+
 
         [SerializeField] internal IceDictionary<string, Color> _stringColorMap = new IceDictionary<string, Color>();
         public Color GetColor(string key) => GetColor(key, Color.white);
@@ -101,15 +81,15 @@ namespace IceEditor
         void ISerializationCallbackReceiver.OnBeforeSerialize() { }
         void ISerializationCallbackReceiver.OnAfterDeserialize()
         {
-            if (OnAnimValueChangeCallback != null)
+            if (OnAnimValueChange != null)
             {
-                foreach (var ab in _stringAnimBoolMap.Values) ab.valueChanged.AddListener(OnAnimValueChangeCallback);
+                foreach (var ab in _stringAnimBoolMap.Values) ab.valueChanged.AddListener(OnAnimValueChange);
             }
         }
         public AnimBool GetAnimBool(string key, bool defaultVal = false)
         {
             if (_stringAnimBoolMap.TryGetValue(key, out AnimBool res)) return res;
-            return _stringAnimBoolMap[key] = OnAnimValueChangeCallback != null ? new AnimBool(defaultVal, OnAnimValueChangeCallback) : new AnimBool(defaultVal);
+            return _stringAnimBoolMap[key] = OnAnimValueChange != null ? new AnimBool(defaultVal, OnAnimValueChange) : new AnimBool(defaultVal);
         }
         public bool GetAnimBoolValue(string key, bool defaultVal = false) => GetAnimBool(key, defaultVal).value;
         public bool GetAnimBoolTarget(string key, bool defaultVal = false) => GetAnimBool(key, defaultVal).target;

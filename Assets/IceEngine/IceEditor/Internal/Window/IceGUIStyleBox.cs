@@ -255,13 +255,8 @@ namespace IceEditor.Internal
         #region 【定制】
 
         [MenuItem("IceSystem/Style Box", false, 20)]
-        static IceGUIStyleBox OpenWindow()
-        {
-            var window = GetWindow<IceGUIStyleBox>();
-            window.InGameSkin = false;
-            return window;
-        }
-        public override GUIContent TitleContent => new GUIContent(InGameSkin ? "GUIStyle 样例窗口 - InGameSkin" : "GUIStyle 样例窗口");
+        static IceGUIStyleBox OpenWindow() => GetWindow<IceGUIStyleBox>();
+        protected override string Title => InGameSkin ? "GUIStyle 样例窗口 - InGameSkin" : "GUIStyle 样例窗口";
         public override void AddItemsToMenu(GenericMenu menu)
         {
             menu.AddItem(new GUIContent("InGameSkin"), InGameSkin, () => InGameSkin = !InGameSkin);

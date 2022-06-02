@@ -1,24 +1,23 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEditor;
 using IceEngine;
 using static IceEditor.IceGUI;
 using static IceEditor.IceGUIAuto;
+using System.Runtime.CompilerServices;
 
 namespace IceEditor
 {
     /// <summary>
     /// 包含基础功能的窗口类
     /// </summary>
-    public abstract class IceEditorWindow : EditorWindow, IHasCustomMenu, ISerializationCallbackReceiver
+    public abstract class IceEditorWindow : EditorWindow, IHasCustomMenu
     {
         #region 【配置】
 
         #region 核心配置
-        /// <summary>
-        /// 默认标题
-        /// </summary>
-        public abstract GUIContent TitleContent { get; }
+
         /// <summary>
         /// GUI界面代码
         /// </summary>
@@ -27,13 +26,29 @@ namespace IceEditor
 
         #region 可选配置
         /// <summary>
+        /// 默认标题文本
+        /// </summary>
+        protected virtual string Title => GetType().Name;
+        /// <summary>
+        /// 标题Icon
+        /// </summary>
+        protected virtual Texture Icon => null;
+        /// <summary>
         /// 重载此字符串来改变上下文菜单中“Debug模式”
         /// </summary>
         protected virtual string DebugModeName => "Debug";
         /// <summary>
+        /// 默认标题，重载此项将使Tile和Icon失效
+        /// </summary>
+        public virtual GUIContent TitleContent => Icon == null ? new GUIContent(Title) : new GUIContent(Title, Icon);
+        /// <summary>
         ///  Debug模式的默认标题
         /// </summary>
         public virtual GUIContent TitleContentDebug => new GUIContent(TitleContent) { text = TitleContent.text + $" - {DebugModeName}" };
+        /// <summary>
+        /// 默认主题颜色
+        /// </summary>
+        protected virtual Color DefaultThemeColor => IceGUIUtility.DefaultThemeColor;
         /// <summary>
         /// 重载此方法来添加自定义上下文菜单
         /// </summary>
@@ -59,21 +74,9 @@ namespace IceEditor
         /// </summary>
         protected virtual void OnDebugGUI(Rect position) { }
         /// <summary>
-        /// 默认主题颜色
-        /// </summary>
-        protected virtual Color DefaultThemeColor => IceGUIUtility.DefaultThemeColor;
-        /// <summary>
         /// 是否在 DebugUI 中显示 StatusUI
         /// </summary>
         protected virtual bool HasStatusUI => true;
-        /// <summary>
-        /// 反序列化事件
-        /// </summary>
-        public virtual void OnAfterDeserialize() { }
-        /// <summary>
-        /// 序列化事件
-        /// </summary>
-        public virtual void OnBeforeSerialize() { }
         /// <summary>
         /// 主题颜色改变事件
         /// </summary>
@@ -132,6 +135,18 @@ namespace IceEditor
         /// 主题颜色表达式
         /// </summary>
         public string ThemeColorExp => Pack.ThemeColorExp;
+        #endregion
+
+        #region GUIStyle
+        /// <summary>
+        /// 获取特定自定义样式
+        /// </summary>
+        protected GUIStyle GetStyle(string name, [CallerFilePath] string callerFilePath = null)
+        {
+            if (currentFilePath == null) currentFilePath = callerFilePath;
+            return IceGUI.GetStyle(name);
+        }
+        protected GUIStyle GetStyle() => IceGUI.GetStyle();
         #endregion
 
         #region Log & Dialog
@@ -271,32 +286,42 @@ namespace IceEditor
         readonly HashSet<int> allControlIdSet = new HashSet<int>();
         readonly HashSet<int> currentControlIdSet = new HashSet<int>();
 
+        string currentFilePath = null;
+
         void OnStatusGUI(Rect position)
         {
-            using (GROUP) using (var sf = SectionFolder("临时数据监控")) using (LabelWidth(Mathf.Max(64, position.width - 256)))
+            using (GROUP)
             {
-                using (BOX) using (SectionFolder("Color Map"))
+                using (HORIZONTAL)
                 {
-                    using (GUICHECK)
-                    {
-                        ColorField("ThemeColor");
-
-                        if (GUIChanged) Pack.RefreshThemeColor();
-                    }
-                    if (Pack._stringColorMap.Count > 1) foreach (var key in Pack._stringColorMap.Keys) if (key != "ThemeColor") ColorField(key);
+                    IceGUIAuto.SectionHeader("临时数据监控");
+                    using (Disable(true)) _TextField(currentFilePath ?? "null");
                 }
-                if (Pack._stringBoolMap.Count > 0) using (BOX) using (SectionFolder("Bool Map")) foreach (var key in Pack._stringBoolMap.Keys) Toggle(key);
-                if (Pack._stringIntMap.Count > 0) using (BOX) using (SectionFolder("Int Map")) foreach (var key in Pack._stringIntMap.Keys) IntField(key);
-                if (Pack._stringFloatMap.Count > 0) using (BOX) using (SectionFolder("Float Map")) foreach (var key in Pack._stringFloatMap.Keys) FloatField(key);
-                if (Pack._stringStringMap.Count > 0) using (BOX) using (SectionFolder("String Map")) foreach (var key in Pack._stringStringMap.Keys) TextField(key);
-                if (Pack._stringVec2Map.Count > 0) using (BOX) using (SectionFolder("Vector2 Map")) foreach (var key in Pack._stringVec2Map.Keys) Vector2Field(key);
-                if (Pack._stringVec3Map.Count > 0) using (BOX) using (SectionFolder("Vector3 Map")) foreach (var key in Pack._stringVec3Map.Keys) Vector3Field(key);
-                if (Pack._stringVec4Map.Count > 0) using (BOX) using (SectionFolder("Vector4 Map")) foreach (var key in Pack._stringVec4Map.Keys) Vector4Field(key);
-                if (Pack._stringVec2IntMap.Count > 0) using (BOX) using (SectionFolder("Vector2Int Map")) foreach (var key in Pack._stringVec2IntMap.Keys) Vector2IntField(key);
-                if (Pack._stringVec3IntMap.Count > 0) using (BOX) using (SectionFolder("Vector3Int Map")) foreach (var key in Pack._stringVec3IntMap.Keys) Vector3IntField(key);
-                if (Pack._intVec2Map.Count > 0) using (BOX) using (SectionFolder("Int-Vector2 Map")) foreach (var key in Pack._intVec2Map.Keys) Pack._intVec2Map[key] = _Vector2Field(key.ToString(), Pack._intVec2Map[key]);
-                // AnimBool会被SectionFolder影响,必须放在最后面
-                if (Pack._stringAnimBoolMap.Count > 0) using (BOX) using (SectionFolder("Anim Bool Map")) foreach (var key in Pack._stringAnimBoolMap.Keys) using (HORIZONTAL) { SetAnimBoolTarget(key, _Toggle(key.ToString(), GetAnimBoolTarget(key))); _Slider(GetAnimBoolFaded(key)); }
+                using (Folder("临时数据监控")) using (LabelWidth(Mathf.Max(64, position.width - 256)))
+                {
+                    using (BOX) using (SectionFolder("Color Map"))
+                    {
+                        using (GUICHECK)
+                        {
+                            ColorField("ThemeColor");
+
+                            if (GUIChanged) Pack.RefreshThemeColor();
+                        }
+                        if (Pack._stringColorMap.Count > 1) foreach (var key in Pack._stringColorMap.Keys) if (key != "ThemeColor") ColorField(key);
+                    }
+                    if (Pack._stringBoolMap.Count > 0) using (BOX) using (SectionFolder("Bool Map")) foreach (var key in Pack._stringBoolMap.Keys) Toggle(key);
+                    if (Pack._stringIntMap.Count > 0) using (BOX) using (SectionFolder("Int Map")) foreach (var key in Pack._stringIntMap.Keys) IntField(key);
+                    if (Pack._stringFloatMap.Count > 0) using (BOX) using (SectionFolder("Float Map")) foreach (var key in Pack._stringFloatMap.Keys) FloatField(key);
+                    if (Pack._stringStringMap.Count > 0) using (BOX) using (SectionFolder("String Map")) foreach (var key in Pack._stringStringMap.Keys) TextField(key);
+                    if (Pack._stringVec2Map.Count > 0) using (BOX) using (SectionFolder("Vector2 Map")) foreach (var key in Pack._stringVec2Map.Keys) Vector2Field(key);
+                    if (Pack._stringVec3Map.Count > 0) using (BOX) using (SectionFolder("Vector3 Map")) foreach (var key in Pack._stringVec3Map.Keys) Vector3Field(key);
+                    if (Pack._stringVec4Map.Count > 0) using (BOX) using (SectionFolder("Vector4 Map")) foreach (var key in Pack._stringVec4Map.Keys) Vector4Field(key);
+                    if (Pack._stringVec2IntMap.Count > 0) using (BOX) using (SectionFolder("Vector2Int Map")) foreach (var key in Pack._stringVec2IntMap.Keys) Vector2IntField(key);
+                    if (Pack._stringVec3IntMap.Count > 0) using (BOX) using (SectionFolder("Vector3Int Map")) foreach (var key in Pack._stringVec3IntMap.Keys) Vector3IntField(key);
+                    if (Pack._intVec2Map.Count > 0) using (BOX) using (SectionFolder("Int-Vector2 Map")) foreach (var key in Pack._intVec2Map.Keys) Pack._intVec2Map[key] = _Vector2Field(key.ToString(), Pack._intVec2Map[key]);
+                    // AnimBool会被SectionFolder影响,必须放在最后面
+                    if (Pack._stringAnimBoolMap.Count > 0) using (BOX) using (SectionFolder("Anim Bool Map")) foreach (var key in Pack._stringAnimBoolMap.Keys) using (HORIZONTAL) { SetAnimBoolTarget(key, _Toggle(key.ToString(), GetAnimBoolTarget(key))); _Slider(GetAnimBoolFaded(key)); }
+                }
             }
         }
         void OnGUI()
