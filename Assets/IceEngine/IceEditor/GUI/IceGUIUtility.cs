@@ -37,9 +37,9 @@ namespace IceEditor
             so.ApplyModifiedProperties();
 
             // 处理 Button
-            foreach (var b in info.buttonList)
+            foreach (var (text, action) in info.buttonList)
             {
-                if (Button(b.text)) b.action.Invoke(so.targetObject);
+                if (Button(text)) action.Invoke(so.targetObject);
             }
         }
 

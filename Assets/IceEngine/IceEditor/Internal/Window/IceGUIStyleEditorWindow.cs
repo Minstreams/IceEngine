@@ -1,4 +1,4 @@
-using System.Collections;
+ï»¿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEditor;
@@ -16,7 +16,7 @@ namespace IceEditor
         #endregion
 
 
-        #region ¶¨ÖÆ
+        #region å®šåˆ¶
         [MenuItem("IceEngine/GUIStyle Box")]
         static void OpenWindow() => GetWindow<IceGUIStyleEditorWindow>();
         protected override string Title => "GUIStyle Box";
@@ -36,14 +36,14 @@ namespace IceEditor
                 // StyleList
                 using (Area(rSub))
                 {
-                    // ËÑË÷¿ò
+                    // æœç´¢æ¡†
                     using (DOCK) using (HORIZONTAL) using (GUICHECK)
                     {
-                        var keyword = TextFieldNoLabel("ËÑË÷¹Ø¼ü×Ö", styleOverride: StlSearchTextField);
+                        var keyword = TextFieldNoLabel("æœç´¢å…³é”®å­—", styleOverride: StlSearchTextField);
 
-                        if (!GetBool("ÕýÔòÆ¥Åä")) IceToggle("Á¬ÐøÆ¥Åä", false, "Á¬", "Á¬ÐøÆ¥Åä");
-                        IceToggle("Çø·Ö´óÐ¡Ð´", false, "Aa", "Çø·Ö´óÐ¡Ð´");
-                        IceToggle("ÕýÔòÆ¥Åä", false, ".*".Bold(), "Ê¹ÓÃÕýÔò±í´ïÊ½");
+                        if (!GetBool("æ­£åˆ™åŒ¹é…")) IceToggle("è¿žç»­åŒ¹é…", false, "è¿ž", "è¿žç»­åŒ¹é…");
+                        IceToggle("åŒºåˆ†å¤§å°å†™", false, "Aa", "åŒºåˆ†å¤§å°å†™");
+                        IceToggle("æ­£åˆ™åŒ¹é…", false, ".*".Bold(), "ä½¿ç”¨æ­£åˆ™è¡¨è¾¾å¼");
 
                         if (GUIChanged) DoFilterStyleList(keyword);
                     }
@@ -54,7 +54,7 @@ namespace IceEditor
                         {
                             var r = GetRect(GUILayout.ExpandWidth(true), GUILayout.Height(100));
 
-                            // ÔÚÊÓÒ°·¶Î§ÄÚ
+                            // åœ¨è§†é‡ŽèŒƒå›´å†…
                             var scrollY = GetVector2("StyleList Scroll").y;
                             if (r.yMax > scrollY && r.yMin < scrollY + rSub.height)
                             {
