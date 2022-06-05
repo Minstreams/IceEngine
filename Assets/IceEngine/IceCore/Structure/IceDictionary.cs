@@ -4,6 +4,7 @@ using UnityEngine;
 
 namespace IceEngine
 {
+    [HasPropertyDrawer]
     public class IceDictionary { }
     /// <summary>
     /// 可序列化的Dictionary

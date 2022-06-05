@@ -18,11 +18,20 @@ public class TestComp : MonoBehaviour
     [RuntimeConst]
     [Label("BBB")] public bool b;
     public int i;
+    public Color c;
     public Vector2 v2;
     [RuntimeConst]
     public Vector3 v3;
     public Vector4 v4;
 
+    public IceEngine.IceDictionary<string, GameObject> comps = new IceEngine.IceDictionary<string, GameObject>();
+    public enum EE
+    {
+        asdas,
+        dq,
+        qwee
+    }
+    public EnumMap<EE, string> map = new EnumMap<EE, string>();
 
     [System.Serializable]
     public class ClassB

@@ -1,10 +1,12 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using IceEngine;
 
 /// <summary>
 /// 与枚举挂钩的Map基类，用于反射
 /// </summary>
+[HasPropertyDrawer]
 public class EnumMap { }
 
 /// <summary>

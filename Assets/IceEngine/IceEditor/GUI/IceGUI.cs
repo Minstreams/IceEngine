@@ -168,27 +168,17 @@ namespace IceEditor
             public static string Label => label;
 
             static string label = null;
-            static GUIStyle LabelStyle => _labelStyle != null ? _labelStyle : (_labelStyle = "ControlLabel"); static GUIStyle _labelStyle;
 
             string originLabel;
-            bool originRichText;
-            Color originFocusColor;
 
-            public ControlLabelScope(string labelVal, Color focusColor)
+            public ControlLabelScope(string labelVal)
             {
                 originLabel = label;
-                originRichText = LabelStyle.richText;
-                originFocusColor = LabelStyle.focused.textColor;
-
                 label = labelVal;
-                LabelStyle.richText = true;
-                LabelStyle.focused.textColor = focusColor;
             }
             void IDisposable.Dispose()
             {
                 label = originLabel;
-                LabelStyle.richText = originRichText;
-                LabelStyle.focused.textColor = originFocusColor;
             }
         }
         /// <summary>
@@ -373,15 +363,11 @@ namespace IceEditor
         /// <summary>
         /// 在Using语句中使用的Scope，用于标记ControlLabel的属性
         /// </summary>
-        public static ControlLabelScope ControlLabel(string label) => new ControlLabelScope(label, IceGUIUtility.CurrentThemeColor);
+        public static ControlLabelScope ControlLabel(string label) => new ControlLabelScope(label);
         /// <summary>
         /// 在Using语句中使用的Scope，用于标记ControlLabel的属性
         /// </summary>
-        public static ControlLabelScope ControlLabel(string label, Color focusColor) => new ControlLabelScope(label, focusColor);
-        /// <summary>
-        /// 在Using语句中使用的Scope，用于标记ControlLabel的属性
-        /// </summary>
-        public static ControlLabelScope ControlLabel(string label, string labelOverride) => new ControlLabelScope(string.IsNullOrEmpty(labelOverride) ? label : labelOverride, IceGUIUtility.CurrentThemeColor);
+        public static ControlLabelScope ControlLabel(string label, string labelOverride) => new ControlLabelScope(string.IsNullOrEmpty(labelOverride) ? label : labelOverride);
         /// <summary>
         /// 用于将一个区域拆分为可调整大小的两个区域
         /// </summary>
@@ -578,10 +564,12 @@ namespace IceEditor
         public static float Slider(ref float val, float min = 0, float max = 1, params GUILayoutOption[] options) => val = _Slider(val, min, max, options);
         public static float Slider(string label, ref float val, float min = 0, float max = 1, params GUILayoutOption[] options) => val = _Slider(label, val, min, max, options);
 
-        public static string _TextField(string val, params GUILayoutOption[] options) { CheckOptions(ref options); return DelayedScope.inScope ? (ControlLabelScope.HasLabel ? EditorGUILayout.DelayedTextField(ControlLabelScope.Label, val, options) : EditorGUILayout.DelayedTextField(val, options)) : (ControlLabelScope.HasLabel ? EditorGUILayout.TextField(ControlLabelScope.Label, val, options) : EditorGUILayout.TextField(val, options)); }
-        public static string _TextField(string label, string val, params GUILayoutOption[] options) { using (ControlLabel(label)) return _TextField(val, options); }
-        public static string TextField(ref string val, params GUILayoutOption[] options) => val = _TextField(val, options);
-        public static string TextField(string label, ref string val, params GUILayoutOption[] options) => val = _TextField(label, val, options);
+        public static string _TextField(string val, GUIStyle style, params GUILayoutOption[] options) { CheckOptions(ref options); return DelayedScope.inScope ? (ControlLabelScope.HasLabel ? EditorGUILayout.DelayedTextField(ControlLabelScope.Label, val, style ?? EditorStyles.textField, options) : EditorGUILayout.DelayedTextField(val, style ?? EditorStyles.textField, options)) : (ControlLabelScope.HasLabel ? EditorGUILayout.TextField(ControlLabelScope.Label, val, style ?? EditorStyles.textField, options) : EditorGUILayout.TextField(val, style ?? EditorStyles.textField, options)); }
+        public static string _TextField(string val, params GUILayoutOption[] options) => _TextField(val, null, options);
+        public static string _TextField(string label, string val, GUIStyle style, params GUILayoutOption[] options) { using (ControlLabel(label)) return _TextField(val, style, options); }
+        public static string _TextField(string label, string val, params GUILayoutOption[] options) => _TextField(label, val, null, options);
+        public static string TextField(ref string val, GUIStyle styleOverride = null, params GUILayoutOption[] options) => val = _TextField(val, styleOverride, options);
+        public static string TextField(string label, ref string val, GUIStyle styleOverride = null, params GUILayoutOption[] options) => val = _TextField(label, val, styleOverride, options);
 
         public static void MinMaxSlider(ref float l, ref float r, float min = 0, float max = 1, params GUILayoutOption[] options) { CheckOptions(ref options); EditorGUILayout.MinMaxSlider(ref l, ref r, min, max, options); }
         static string DoVectorUnitField(ref float val, string label, string controlName)

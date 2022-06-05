@@ -18,7 +18,9 @@ public class TestSO : ScriptableObject
         qwee
     }
     public EnumMap<EE, string> map = new EnumMap<EE, string>();
+    [Label("ASS")]
     public float a;
+
 
     public void SDASD()
     {

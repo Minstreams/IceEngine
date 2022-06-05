@@ -63,6 +63,9 @@ namespace IceEditor
 
             // Cache
             static readonly Dictionary<Type, IceAttributesInfo> cacheMap = new Dictionary<Type, IceAttributesInfo>();
+
+            // 统计所有已有CustomDrawer的类
+            static List<Type> HasCustomDrawerList => _hasCustomDrawerList ??= new List<Type>(TypeCache.GetTypesWithAttribute<HasPropertyDrawerAttribute>()); [System.NonSerialized] static List<Type> _hasCustomDrawerList;
             public static IceAttributesInfo GetInfo(Type t) => cacheMap.TryGetValue(t, out var info) ? info : cacheMap[t] = new IceAttributesInfo(t);
             public static void ClearCache() => cacheMap.Clear();
 
@@ -90,7 +93,7 @@ namespace IceEditor
 
                     // 生成子结构
                     var tt = f.FieldType;
-                    if (!IsSystemType(tt) && tt.GetCustomAttribute<SerializableAttribute>() is not null)
+                    if (!IsSystemType(tt) && tt.GetCustomAttribute<SerializableAttribute>() is not null && !HasCustomDrawer(tt))
                     {
                         childrenMap.Add(path, GetInfo(tt));
                     }
@@ -99,6 +102,14 @@ namespace IceEditor
                 {
                     var ns = t.GetRoot().Namespace;
                     return ns != null && (ns.StartsWith("System") || ns.StartsWith("Unity"));
+                }
+                static bool HasCustomDrawer(Type t)
+                {
+                    foreach (var d in HasCustomDrawerList)
+                    {
+                        if (t == d || t.IsSubclassOf(d)) return true;
+                    }
+                    return false;
                 }
 
                 // 只对根类型处理Methods
@@ -141,40 +152,7 @@ namespace IceEditor
                 else
                 {
                     // 绘制
-                    using (Disable(disabled))
-                    {
-                        switch (itr.propertyType)
-                        {
-                            case SerializedPropertyType.Boolean: itr.boolValue = _Toggle(label, itr.boolValue); break;
-                            case SerializedPropertyType.Integer: itr.intValue = _IntField(label, itr.intValue); break;
-                            case SerializedPropertyType.Float: itr.floatValue = _FloatField(label, itr.floatValue); break;
-                            case SerializedPropertyType.String: itr.stringValue = _TextField(label, itr.stringValue); break;
-                            case SerializedPropertyType.Color: itr.colorValue = _ColorField(label, itr.colorValue); break;
-                            case SerializedPropertyType.Vector2: itr.vector2Value = _Vector2Field(label, itr.vector2Value); break;
-                            case SerializedPropertyType.Vector3: itr.vector3Value = _Vector3Field(label, itr.vector3Value); break;
-                            case SerializedPropertyType.Vector4: itr.vector4Value = _Vector4Field(label, itr.vector4Value); break;
-                            case SerializedPropertyType.Vector2Int: itr.vector2IntValue = _Vector2IntField(label, itr.vector2IntValue); break;
-                            case SerializedPropertyType.Vector3Int: itr.vector3IntValue = _Vector3IntField(label, itr.vector3IntValue); break;
-                            case SerializedPropertyType.Generic:
-                            case SerializedPropertyType.ObjectReference:
-                            case SerializedPropertyType.LayerMask:
-                            case SerializedPropertyType.Enum:
-                            case SerializedPropertyType.Rect:
-                            case SerializedPropertyType.ArraySize:
-                            case SerializedPropertyType.Character:
-                            case SerializedPropertyType.AnimationCurve:
-                            case SerializedPropertyType.Bounds:
-                            case SerializedPropertyType.Gradient:
-                            case SerializedPropertyType.Quaternion:
-                            case SerializedPropertyType.ExposedReference:
-                            case SerializedPropertyType.FixedBufferSize:
-                            case SerializedPropertyType.RectInt:
-                            case SerializedPropertyType.BoundsInt:
-                            case SerializedPropertyType.ManagedReference:
-                            case SerializedPropertyType.Hash128:
-                            default: EditorGUILayout.PropertyField(itr, TempContent(label), true); break;
-                        }
-                    }
+                    using (Disable(disabled)) PropertyField(itr, label);
                 }
 
                 if (info.extraInfo.TryGetValue(path, out var extraInfo))
@@ -185,7 +163,55 @@ namespace IceEditor
                 {
                     using (GROUP) LabelError(error);
                 }
-            } while (itr.NextVisible(false) && itr != end);
+            } while (itr.NextVisible(false) && itr.propertyPath != end?.propertyPath);
+        }
+        /// <summary>
+        /// TODO:全面支持多目标编辑
+        /// </summary>
+        static void PropertyField(SerializedProperty p, string label)
+        {
+            var bMulti = p.hasMultipleDifferentValues;
+            if (bMulti) GUI.color = CurrentThemeColor * 0.6f;
+            using (GUICHECK)
+            {
+                switch (p.propertyType)
+                {
+                    //case SerializedPropertyType.Boolean: var boolVal = _Toggle(label, itr.boolValue); if (GUIChanged) itr.boolValue = boolVal; break;
+                    //case SerializedPropertyType.Integer: var intVal = _IntField(label, itr.intValue); if (GUIChanged) itr.intValue = intVal; break;
+                    //case SerializedPropertyType.Float: var floatValue = _FloatField(label, itr.floatValue); if (GUIChanged) itr.floatValue = floatValue; break;
+                    //case SerializedPropertyType.String: var stringValue = _TextField(label, itr.stringValue); if (GUIChanged) itr.stringValue = stringValue; break;
+                    //case SerializedPropertyType.Color: var colorValue = _ColorField(label, itr.colorValue); if (GUIChanged) itr.colorValue = colorValue; break;
+                    case SerializedPropertyType.Vector2: var vector2Value = _Vector2Field(label, p.vector2Value); if (GUIChanged) p.vector2Value = vector2Value; break;
+                    case SerializedPropertyType.Vector3: var vector3Value = _Vector3Field(label, p.vector3Value); if (GUIChanged) p.vector3Value = vector3Value; break;
+                    case SerializedPropertyType.Vector4: var vector4Value = _Vector4Field(label, p.vector4Value); if (GUIChanged) p.vector4Value = vector4Value; break;
+                    case SerializedPropertyType.Vector2Int: var vector2IntValue = _Vector2IntField(label, p.vector2IntValue); if (GUIChanged) p.vector2IntValue = vector2IntValue; break;
+                    case SerializedPropertyType.Vector3Int: var vector3IntValue = _Vector3IntField(label, p.vector3IntValue); if (GUIChanged) p.vector3IntValue = vector3IntValue; break;
+                    case SerializedPropertyType.Generic:
+                    case SerializedPropertyType.ObjectReference:
+                    case SerializedPropertyType.LayerMask:
+                    case SerializedPropertyType.Enum:
+                    case SerializedPropertyType.Rect:
+                    case SerializedPropertyType.ArraySize:
+                    case SerializedPropertyType.Character:
+                    case SerializedPropertyType.AnimationCurve:
+                    case SerializedPropertyType.Bounds:
+                    case SerializedPropertyType.Gradient:
+                    case SerializedPropertyType.Quaternion:
+                    case SerializedPropertyType.ExposedReference:
+                    case SerializedPropertyType.FixedBufferSize:
+                    case SerializedPropertyType.RectInt:
+                    case SerializedPropertyType.BoundsInt:
+                    case SerializedPropertyType.ManagedReference:
+                    case SerializedPropertyType.Hash128:
+                    default: EditorGUILayout.PropertyField(p, TempContent(label), true); break;
+                }
+            }
+            if (bMulti) GUI.color = Color.white;
+            //if (E.type == EventType.Repaint && itr.hasMultipleDifferentValues)
+            //{
+            //    var rMul = GetLastRect().MoveEdge(EditorGUIUtility.labelWidth + 2).ApplyBorder(0);
+            //    StyleBox(rMul, GetStyle(), "Multiple Values");
+            //}
         }
         public static Color DefaultThemeColor => IceIsland.Setting.themeColor;
         public static Color CurrentThemeColor => HasPack ? CurrentPack.ThemeColor : DefaultThemeColor;
@@ -199,14 +225,21 @@ namespace IceEditor
         public class GUIPackScope : IDisposable
         {
             IceGUIAutoPack originPack = null;
+            static GUIStyle LabelStyle => _labelStyle != null ? _labelStyle : (_labelStyle = EditorGUIUtility.GetBuiltinSkin(EditorSkin.Scene).FindStyle("ControlLabel")); static GUIStyle _labelStyle;
+            Color originFocusColor;
+
             public GUIPackScope(IceGUIAutoPack pack)
             {
                 originPack = _currentPack;
                 _currentPack = pack;
+
+                originFocusColor = LabelStyle.focused.textColor;
+                LabelStyle.focused.textColor = pack.ThemeColor;
             }
             void IDisposable.Dispose()
             {
                 _currentPack = originPack;
+                LabelStyle.focused.textColor = originFocusColor;
             }
         }
         #endregion

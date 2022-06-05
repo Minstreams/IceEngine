@@ -4,7 +4,7 @@ using static IceEditor.IceGUI;
 
 namespace IceEditor.Internal
 {
-    [CustomPropertyDrawer(typeof(EnumMap), true)]
+    [@CustomPropertyDrawer(typeof(EnumMap), true)]
     public class EnumMapDrawer : PropertyDrawer
     {
         bool folded = false;

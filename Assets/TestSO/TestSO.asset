@@ -18,7 +18,7 @@ MonoBehaviour:
   map:
     _: 0
     list:
-    - "\u5FAE\u8F6F"
-    - "\u8FED\u4EE3"
     - 
-  a: 123487
+    - 
+    - 
+  a: 0

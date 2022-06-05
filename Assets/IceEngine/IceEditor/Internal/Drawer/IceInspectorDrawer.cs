@@ -10,7 +10,7 @@ namespace IceEditor.Internal
     /// <summary>
     /// 重载编辑器默认的InspectorGUI行为
     /// </summary>
-    [CustomEditor(typeof(MonoBehaviour), true)]
+    [CustomEditor(typeof(Object), true), CanEditMultipleObjects]
     internal class IceInspectorDrawer : UnityEditor.Editor
     {
         IceGUIAutoPack pack;

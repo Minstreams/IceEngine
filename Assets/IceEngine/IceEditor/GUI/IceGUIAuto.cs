@@ -260,8 +260,8 @@ namespace IceEditor
         public static float SliderNoLabel(string key, float min = 0, float max = 1, params GUILayoutOption[] options) => SetFloat(key, _Slider(GetFloat(key), min, max, options));
         public static float Slider(string key, float min = 0, float max = 1, string labelOverride = null, params GUILayoutOption[] options) { using (ControlLabel(key, labelOverride)) return SliderNoLabel(key, min, max, options); }
 
-        public static string TextFieldNoLabel(string key, string defaultVal = "", params GUILayoutOption[] options) => SetString(key, _TextField(GetString(key, defaultVal), options));
-        public static string TextField(string key, string defaultVal = "", string labelOverride = null, params GUILayoutOption[] options) { using (ControlLabel(key, labelOverride)) return TextFieldNoLabel(key, defaultVal, options); }
+        public static string TextFieldNoLabel(string key, string defaultVal = "", GUIStyle styleOverride = null, params GUILayoutOption[] options) => SetString(key, _TextField(GetString(key, defaultVal), styleOverride, options));
+        public static string TextField(string key, string defaultVal = "", string labelOverride = null, GUIStyle styleOverride = null, params GUILayoutOption[] options) { using (ControlLabel(key, labelOverride)) return TextFieldNoLabel(key, defaultVal, styleOverride, options); }
 
         public static Vector2 Vector2FieldNoLabel(string key, Vector2 defaultVal, string xLabel = null, string yLabel = null) => SetVector2(key, _Vector2Field(GetVector2(key, defaultVal), xLabel, yLabel));
         public static Vector2 Vector2Field(string key, Vector2 defaultVal, string labelOverride = null, string xLabel = null, string yLabel = null) { using (ControlLabel(key, labelOverride)) return Vector2FieldNoLabel(key, defaultVal, xLabel, yLabel); }

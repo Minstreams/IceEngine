@@ -234,7 +234,7 @@ namespace IceEditor.Internal
             var hasInit = !string.IsNullOrWhiteSpace(initCode);
 
             if (!hasItor && !hasInit) return $"GUIStyle Stl{styleName} => \"{stlInspectingOrigin.name}\";";
-            else return $"GUIStyle Stl{styleName} => _stl{styleName}?.Check() ?? (_stl{styleName} = new GUIStyle({(string.IsNullOrEmpty(stlInspectingOrigin.name) ? "" : $"\"{stlInspectingOrigin.name}\"")}){ (hasItor ? $" {{ {itorCode}}}" : "")}{(hasInit ? $".Initialize(stl => {{ {initCode}}})" : "")}); GUIStyle _stl{styleName};";
+            else return $"GUIStyle Stl{styleName} => _stl{styleName}?.Check() ?? (_stl{styleName} = new GUIStyle({(string.IsNullOrEmpty(stlInspectingOrigin.name) ? "" : (InGameSkin ? $"EditorGUIUtility.GetBuiltinSkin(EditorSkin.Scene).FindStyle(\"{stlInspectingOrigin.name}\")" : $"\"{stlInspectingOrigin.name}\""))}){ (hasItor ? $" {{ {itorCode}}}" : "")}{(hasInit ? $".Initialize(stl => {{ {initCode}}})" : "")}); GUIStyle _stl{styleName};";
 
         }
         #endregion
