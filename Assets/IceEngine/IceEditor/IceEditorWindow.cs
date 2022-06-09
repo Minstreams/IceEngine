@@ -335,7 +335,7 @@ namespace IceEditor
             using (SubAreaScope area = DebugMode ? SubArea(rBack, out var _, out var _, "Debug Area", 432, DebugGUIDirection) : null)
             {
                 Rect rMain = (area?.mainRect ?? rBack);
-                using (new GUILayout.AreaScope(rMain)) using (ScrollInvisible("Main Content Area", StlBackground))
+                using (Area(rMain)) using (ScrollInvisible("Main Content Area", StlBackground))
                 {
                     // 开始检测controlId重复
                     drawingWindowGUI = true;
@@ -376,7 +376,7 @@ namespace IceEditor
                 if (DebugMode)
                 {
                     // 画DebugUI
-                    using (new GUILayout.AreaScope(area.subRect)) using (ScrollInvisible("Debug UI Scroll Area", StlBackground))
+                    using (Area(area.subRect)) using (ScrollInvisible("Debug UI Scroll Area", StlBackground))
                     {
                         var debugPos = new Rect(Vector2.zero, area.subRect.size);
                         OnDebugGUI(debugPos);

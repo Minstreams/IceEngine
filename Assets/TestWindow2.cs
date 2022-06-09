@@ -1,4 +1,4 @@
-using System.Collections;
+ï»¿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEditor;
@@ -13,7 +13,7 @@ public class TestWindow2 : IceEditorWindow
     [MenuItem("IceEditor/Test2")]
     public static void OpenWindow() => GetWindow<TestWindow2>();
 
-    public override GUIContent TitleContent => new GUIContent("²âÊÔ2");
+    public override GUIContent TitleContent => new GUIContent("æµ‹è¯•2");
 
     protected override void OnWindowGUI(Rect position)
     {

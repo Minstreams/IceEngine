@@ -31,6 +31,7 @@ namespace IceEditor
         public static GUIStyle StlSectionHeader => IceGUIUtility.HasPack ? IceGUIUtility.CurrentPack.StlSectionHeader : _stlSectionHeader?.Check() ?? (_stlSectionHeader = IceGUIUtility.GetStlSectionHeader(IceGUIUtility.DefaultThemeColor)); static GUIStyle _stlSectionHeader;
         public static GUIStyle StlPrefix => IceGUIUtility.HasPack ? IceGUIUtility.CurrentPack.StlPrefix : _stlPrefix?.Check() ?? (_stlPrefix = IceGUIUtility.GetStlPrefix(IceGUIUtility.DefaultThemeColor)); static GUIStyle _stlPrefix;
         public static GUIStyle StlSubAreaSeparator => IceGUIUtility.HasPack ? IceGUIUtility.CurrentPack.StlSubAreaSeparator : _stlSubAreaSeparator?.Check() ?? (_stlSubAreaSeparator = IceGUIUtility.GetStlSubAreaSeparator(IceGUIUtility.DefaultThemeColor)); static GUIStyle _stlSubAreaSeparator;
+        public static GUIStyle StlViewportToolButton => _stlViewportToolButton?.Check() ?? (_stlViewportToolButton = new GUIStyle("HoverHighlight") { alignment = TextAnchor.MiddleCenter, contentOffset = new Vector2(1f, 0f), fixedWidth = 0f, fixedHeight = 0f, }); static GUIStyle _stlViewportToolButton;
         #endregion
 
         #region Scope
@@ -324,6 +325,106 @@ namespace IceEditor
                 }
             }
         }
+        /// <summary>
+        /// 指定一个Area
+        /// </summary>
+        public class AreaScope : IDisposable
+        {
+            public AreaScope(Rect areaRect) : this(areaRect, GUIContent.none, GUIStyle.none) { }
+            public AreaScope(Rect areaRect, GUIContent content, GUIStyle style)
+            {
+                GUILayout.BeginArea(areaRect, content, style);
+                ViewportScope.areaStack.Push(areaRect);
+            }
+            void IDisposable.Dispose()
+            {
+                ViewportScope.areaStack.Pop();
+                GUILayout.EndArea();
+            }
+        }
+
+        /// <summary>
+        /// 一个可缩放可移动的工作视图，目前和ScrollScope不兼容
+        /// </summary>
+        public class ViewportScope : IDisposable
+        {
+            /// <summary>
+            /// 执行剔除的Rect
+            /// </summary>
+            public Rect ClipRect { get; private set; }
+            /// <summary>
+            /// 画布Rect
+            /// </summary>
+            public Rect CanvasRect { get; private set; }
+
+            Matrix4x4 originMatrix;
+            Vector2 screenSize;
+
+            public static Stack<Rect> areaStack = new Stack<Rect>();
+            static Stack<Rect> areaStackTemp = new Stack<Rect>();
+
+            /// <summary>
+            /// 一个可缩放可移动的工作视图
+            /// </summary>
+            /// <param name="baseScreenRect">所在GUI空间的屏幕区域</param>
+            /// <param name="workspace">工作区Rect</param>
+            /// <param name="workspaceSize">工作区的尺寸</param>
+            /// <param name="canvasSize">画布的尺寸</param>
+            /// <param name="scale">画布缩放值</param>
+            /// <param name="offset">画布偏移</param>
+            public ViewportScope(Rect baseScreenRect, Rect workspace, float workspaceSize, float canvasSize, float scale, Vector2 offset)
+            {
+                // 解除外部剔除
+                screenSize = baseScreenRect.size;
+                Rect sc = GUIUtility.GUIToScreenRect(workspace);
+                while (areaStack.Count > 0)
+                {
+                    areaStackTemp.Push(areaStack.Pop());
+                    GUI.EndClip();
+                }
+                GUI.EndClip();
+
+                workspace = GUIUtility.ScreenToGUIRect(sc);
+
+                // 数学运算
+                float workspaceScale = workspaceSize / canvasSize;
+                CanvasRect = new Rect(Vector2.zero, Vector2.one * canvasSize);
+
+                // 矩阵运算
+                {
+                    var baseOffset = GUIUtility.ScreenToGUIPoint(baseScreenRect.position);
+                    originMatrix = GUI.matrix;
+                    GUI.matrix =
+                        // 还原并平移
+                        Matrix4x4.Translate(workspace.center - Vector2.one * 0.5f * workspaceSize * scale + offset * workspaceScale * scale - baseOffset) *
+                        // 自定义缩放
+                        Matrix4x4.Scale(Vector3.one * workspaceScale * scale) *
+                        // 移回原点
+                        Matrix4x4.Translate(baseOffset) *
+                        // 矩阵支持多层叠加
+                        originMatrix;
+                }
+
+                // 剔除运算
+                {
+                    var clipSize = workspace.size / (workspaceScale * scale);
+                    ClipRect = new Rect(Vector2.one * canvasSize * 0.5f - offset - clipSize * 0.5f, clipSize);
+                    GUI.BeginClip(ClipRect, -ClipRect.position, Vector2.zero, false);
+                }
+            }
+            void IDisposable.Dispose()
+            {
+                GUI.EndClip();
+                GUI.matrix = originMatrix;
+                GUI.BeginClip(new Rect(Vector2.up * 21, screenSize));
+                while (areaStackTemp.Count > 0)
+                {
+                    var r = areaStackTemp.Pop();
+                    GUI.BeginClip(r);
+                    areaStack.Push(r);
+                }
+            }
+        }
 
 
         public static GUILayout.HorizontalScope Horizontal(GUIStyle style, params GUILayoutOption[] options) => new GUILayout.HorizontalScope(style ?? GUIStyle.none, options);
@@ -334,20 +435,20 @@ namespace IceEditor
         /// <summary>
         /// 在Using语句中使用的Scope，指定一个Layout Area
         /// </summary>
-        public static GUILayout.AreaScope Area(Rect rect, GUIStyle style)
+        public static AreaScope Area(Rect rect, GUIStyle style)
         {
-            if (style == null) return new GUILayout.AreaScope(rect);
+            if (style == null) return new AreaScope(rect);
             var margin = style.margin;
-            return new GUILayout.AreaScope(rect.MoveEdge(margin.left, -margin.right, margin.top, -margin.bottom), GUIContent.none, style);
+            return new AreaScope(rect.MoveEdge(margin.left, -margin.right, margin.top, -margin.bottom), GUIContent.none, style);
         }
         /// <summary>
         /// 在Using语句中使用的Scope，指定一个Layout Area
         /// </summary>
-        public static GUILayout.AreaScope Area(Rect rect) => Area(rect, StlBackground);
+        public static AreaScope Area(Rect rect) => Area(rect, StlBackground);
         /// <summary>
         /// 在Using语句中使用的Scope，指定一个Layout Area
         /// </summary>
-        public static GUILayout.AreaScope AreaRaw(Rect rect) => Area(rect, null);
+        public static AreaScope AreaRaw(Rect rect) => Area(rect, null);
         /// <summary>
         /// 在Using语句中使用的Scope，手动添加一个Prefix
         /// </summary>
@@ -378,6 +479,168 @@ namespace IceEditor
             subRect = scope.subRect;
             return scope;
         }
+        /// <summary>
+        /// 一个可缩放可移动的工作视图
+        /// </summary>
+        /// <param name="baseScreenRect">所在GUI空间的屏幕区域</param>
+        /// <param name="workspace">工作区Rect</param>
+        /// <param name="canvasSize">画布的尺寸</param>
+        /// <param name="viewScale">画布缩放值</param>
+        /// <param name="viewOffset">画布偏移</param>
+        /// <param name="dragCache">拖拽临时值</param>
+        /// <param name="minScale">最小缩放值</param>
+        /// <param name="maxScale">最大缩放值</param>
+        /// <param name="useWidthOrHeightOfWorkspaceAsSize">为true时，取工作区的宽作为尺寸<br/>为false时，取工作的高作为尺寸<br/>为null时，取二者中较小值作为尺寸</param>
+        /// <param name="useAbsoluteScale">为true时，缩放比例应用于像素<br/>为false时，缩放比例应用于画布</param>
+        /// <param name="useLimitedOffset">是否限制视图偏移范围，使画布始终可见</param>
+        /// <param name="gridColor">指定一个颜色，沿画布边缘对齐绘制一个网格</param>
+        /// <param name="styleBackground">可为工作区设定一个背景样式</param>
+        /// <param name="styleCanvas">可为画布设定一个背景样式</param>
+        /// <returns></returns>
+        public static ViewportScope Viewport(Rect baseScreenRect, Rect workspace, float canvasSize, ref float viewScale, ref Vector2 viewOffset, float minScale = 0.5f, float maxScale = 2.0f, bool? useWidthOrHeightOfWorkspaceAsSize = null, bool useAbsoluteScale = false, bool useLimitedOffset = true, Color? gridColor = null, GUIStyle styleBackground = null, GUIStyle styleCanvas = null)
+        {
+            // 数学运算
+            float workspaceSize = useWidthOrHeightOfWorkspaceAsSize == null ? Mathf.Min(workspace.height, workspace.width) : useWidthOrHeightOfWorkspaceAsSize.Value ? workspace.width : workspace.height;
+            var scale = Mathf.Clamp(viewScale, minScale, maxScale);
+            if (useAbsoluteScale)
+            {
+                scale *= canvasSize / workspaceSize;
+            }
+            var offset = viewOffset;
+            if (useLimitedOffset)
+            {
+                var t = canvasSize / workspaceSize;
+                float borderX = Mathf.Max(workspace.width * t / scale * 0.5f, canvasSize * 0.5f);
+                offset.x = Mathf.Clamp(offset.x, -borderX, borderX);
+                float borderY = Mathf.Max(workspace.height * t / scale * 0.5f, canvasSize * 0.5f);
+                offset.y = Mathf.Clamp(offset.y, -borderY, borderY);
+            }
+
+            // Control
+            int preMoveViewControl = GetControlID();
+            int moveViewControl = GetControlID();
+            if (E.type == EventType.Repaint && (GUIHotControl == moveViewControl || GUIHotControl == preMoveViewControl)) EditorGUIUtility.AddCursorRect(workspace, MouseCursor.Pan);
+
+            // 背景
+            if (styleBackground != null) StyleBox(workspace, styleBackground);
+
+            // 生成Scope对象
+            var viewport = new ViewportScope(baseScreenRect, workspace, workspaceSize, canvasSize, scale, offset);
+            Rect clipRect = viewport.ClipRect;
+            Rect canvasRect = viewport.CanvasRect;
+
+            // 基础控件：移动，缩放
+            switch (E.type)
+            {
+                case EventType.KeyDown:
+                    if (GUIUtility.hotControl == 0 && E.keyCode == KeyCode.Space)
+                    {
+                        GUIUtility.hotControl = preMoveViewControl;
+                        E.Use();
+                    }
+                    break;
+                case EventType.KeyUp:
+                    if (GUIUtility.hotControl == preMoveViewControl && E.keyCode == KeyCode.Space)
+                    {
+                        GUIUtility.hotControl = 0;
+                        E.Use();
+                    }
+                    break;
+                case EventType.MouseDown:
+                    if ((GUIUtility.hotControl == preMoveViewControl || (GUIUtility.hotControl == 0 && E.button != 0)))
+                    {
+                        GUIUtility.hotControl = moveViewControl;
+                        dragCache = E.mousePosition;
+                        E.Use();
+                    }
+                    break;
+                case EventType.MouseUp:
+                    if (GUIUtility.hotControl == moveViewControl)
+                    {
+                        GUIUtility.hotControl = 0;
+                        E.Use();
+                    }
+                    break;
+                case EventType.MouseDrag:
+                    if (GUIUtility.hotControl == moveViewControl)
+                    {
+                        viewOffset = offset += E.mousePosition - dragCache;
+                        E.Use();
+                    }
+                    break;
+                case EventType.ScrollWheel:
+                    if (viewport.ClipRect.Contains(E.mousePosition))
+                    {
+                        if (useAbsoluteScale)
+                        {
+                            scale *= workspaceSize / canvasSize;
+                        }
+
+                        var newScale = Mathf.Clamp(scale * (1 - E.delta.y * 0.05f), minScale, maxScale);
+
+                        viewOffset = offset += (E.mousePosition - clipRect.center) * (scale / newScale - 1);
+                        viewScale = newScale;
+                        E.Use();
+                    }
+                    break;
+                case EventType.Repaint:
+                    // 前景
+                    if (styleCanvas != null) StyleBox(canvasRect, styleCanvas);
+
+                    // Grid
+                    if (gridColor != null)
+                    {
+                        Handles.color = gridColor.Value;
+
+                        float xMin = clipRect.xMin;
+                        float xMax = clipRect.xMax;
+                        float yMin = clipRect.yMin;
+                        float yMax = clipRect.yMax;
+                        float wGrid = canvasSize;
+                        for (float x = wGrid; x < xMax; x += wGrid) Handles.DrawLine(new Vector3(x, yMin), new Vector3(x, yMax));
+                        for (float x = 0; x > xMin; x -= wGrid) Handles.DrawLine(new Vector3(x, yMin), new Vector3(x, yMax));
+                        for (float y = wGrid; y < yMax; y += wGrid) Handles.DrawLine(new Vector3(xMin, y), new Vector3(xMax, y));
+                        for (float y = 0; y > yMin; y -= wGrid) Handles.DrawLine(new Vector3(xMin, y), new Vector3(xMax, y));
+
+                        Handles.color = Color.white;
+                    }
+                    break;
+            }
+            return viewport;
+        }
+        /// <summary>
+        /// 一个可缩放可移动的Canvas视图
+        /// </summary>
+        /// <param name="baseScreenRect">所在GUI空间的屏幕区域</param>
+        /// <param name="workspace">工作区Rect</param>
+        /// <param name="canvasSize">画布的尺寸</param>
+        /// <param name="viewScale">画布缩放值</param>
+        /// <param name="viewOffset">画布偏移</param>
+        /// <param name="dragCache">拖拽临时值</param>
+        /// <param name="minScale">最小缩放值</param>
+        /// <param name="maxScale">最大缩放值</param>
+        /// <param name="useWidthOrHeightOfWorkspaceAsSize">为true时，取工作区的宽作为尺寸<br/>为false时，取工作的高作为尺寸<br/>为null时，取二者中较小值作为尺寸</param>
+        /// <param name="useAbsoluteScale">为true时，缩放比例应用于像素<br/>为false时，缩放比例应用于画布</param>
+        /// <param name="styleBackground">可为工作区设定一个背景样式</param>
+        /// <param name="styleCanvas">可为画布设定一个背景样式</param>
+        /// <returns></returns>
+        public static ViewportScope ViewportCanvas(Rect baseScreenRect, Rect workspace, float canvasSize, ref float viewScale, ref Vector2 viewOffset, float minScale = 0.5f, float maxScale = 2.0f, bool? useWidthOrHeightOfWorkspaceAsSize = null, bool useAbsoluteScale = false, GUIStyle styleBackground = null, GUIStyle styleCanvas = null) => Viewport(baseScreenRect, workspace, canvasSize, ref viewScale, ref viewOffset, minScale, maxScale, useWidthOrHeightOfWorkspaceAsSize, useAbsoluteScale, true, null, styleBackground, styleCanvas);
+        /// <summary>
+        /// 一个可缩放可移动的Grid视图
+        /// </summary>
+        /// <param name="baseScreenRect">所在GUI空间的屏幕区域</param>
+        /// <param name="workspace">工作区Rect</param>
+        /// <param name="gridSize">grid块的尺寸</param>
+        /// <param name="viewScale">画布缩放值</param>
+        /// <param name="viewOffset">画布偏移</param>
+        /// <param name="dragCache">拖拽临时值</param>
+        /// <param name="minScale">最小缩放值</param>
+        /// <param name="maxScale">最大缩放值</param>
+        /// <param name="useWidthOrHeightOfWorkspaceAsSize">为true时，取工作区的宽作为尺寸<br/>为false时，取工作的高作为尺寸<br/>为null时，取二者中较小值作为尺寸</param>
+        /// <param name="gridColor">指定一个颜色，沿画布边缘对齐绘制一个网格</param>
+        /// <param name="styleBackground">可为工作区设定一个背景样式</param>
+        /// <returns></returns>
+        public static ViewportScope ViewportGrid(Rect baseScreenRect, Rect workspace, float gridSize, ref float viewScale, ref Vector2 viewOffset, float minScale = 0.4f, float maxScale = 4.0f, bool? useWidthOrHeightOfWorkspaceAsSize = null, Color? gridColor = null, GUIStyle styleBackground = null) => Viewport(baseScreenRect, workspace, gridSize, ref viewScale, ref viewOffset, minScale, maxScale, useWidthOrHeightOfWorkspaceAsSize, true, false, gridColor, styleBackground, null);
 
         public static GUILayout.HorizontalScope HORIZONTAL => Horizontal();
         public static GUILayout.VerticalScope VERTICAL => Vertical();
@@ -445,9 +708,15 @@ namespace IceEditor
         public static Rect GetRect(float width, float height, GUIStyle style, params GUILayoutOption[] options) => GUILayoutUtility.GetRect(width, height, style, options);
         public static Rect GetLastRect() => Event.current.type == EventType.Repaint ? GUILayoutUtility.GetLastRect() : throw new IceGUIException("Can't call GetLastRect() out of Repaint Event");
 
+        public static int GUIHotControl { get => GUIUtility.hotControl; set => GUIUtility.hotControl = value; }
+        public static int GetControlID(FocusType focus = FocusType.Passive) => GUIUtility.GetControlID(focus);
+
         public static GUIStyle GetStyle(string key = null, Func<GUIStyle> itor = null) => IceGUIStyleBox.GetStyle(key, itor);
 
         public static Event E => Event.current;
+
+        // Caches
+        public static Vector2 dragCache;
         #endregion
 
         #region Drawing Elements

@@ -342,6 +342,70 @@ namespace IceEditor
 
         public static bool IceToggle(string key, bool defaultVal = false, string textOverride = null, string tooltip = null, params GUILayoutOption[] options) => SetBool(key, _IceToggle(string.IsNullOrEmpty(textOverride) ? key : textOverride, GetBool(key, defaultVal), tooltip, options));
         public static bool IceToggleAnim(string key, bool defaultVal = false, string textOverride = null, string tooltip = null, params GUILayoutOption[] options) => SetAnimBoolTarget(key, _IceToggle(string.IsNullOrEmpty(textOverride) ? key : textOverride, GetAnimBoolTarget(key, defaultVal), tooltip, options));
+
+        /// <summary>
+        /// 一个可缩放可移动的工作视图
+        /// </summary>
+        /// <param name="key">临时变量的key</param>
+        /// <param name="baseScreenRect">所在GUI空间的屏幕区域</param>
+        /// <param name="workspace">工作区Rect</param>
+        /// <param name="canvasSize">画布的尺寸</param>
+        /// <param name="defaultScale">默认画布缩放值</param>
+        /// <param name="minScale">最小缩放值</param>
+        /// <param name="maxScale">最大缩放值</param>
+        /// <param name="useWidthOrHeightOfWorkspaceAsSize">为true时，取工作区的宽作为尺寸<br/>为false时，取工作的高作为尺寸<br/>为null时，取二者中较小值作为尺寸</param>
+        /// <param name="useAbsoluteScale">为true时，缩放比例应用于像素<br/>为false时，缩放比例应用于画布</param>
+        /// <param name="useLimitedOffset">是否限制视图偏移范围，使画布始终可见</param>
+        /// <param name="gridColor">指定一个颜色，沿画布边缘对齐绘制一个网格</param>
+        /// <param name="styleBackground">可为工作区设定一个背景样式</param>
+        /// <param name="styleCanvas">可为画布设定一个背景样式</param>
+        /// <returns></returns>
+        public static ViewportScope Viewport(string key, Rect baseScreenRect, Rect workspace, float canvasSize, float defaultScale = 1, float minScale = 0.5f, float maxScale = 2.0f, bool? useWidthOrHeightOfWorkspaceAsSize = null, bool useAbsoluteScale = false, bool useLimitedOffset = true, Color? gridColor = null, GUIStyle styleBackground = null, GUIStyle styleCanvas = null)
+        {
+            string keyViewScale = $"{key}_ViewScale";
+            string keyViewOffset = $"{key}_ViewOffset";
+
+            float viewScale = GetFloat(keyViewScale, defaultScale);
+            Vector2 viewOffset = GetVector2(keyViewOffset);
+
+            var viewport = IceGUI.Viewport(baseScreenRect, workspace, canvasSize, ref viewScale, ref viewOffset, minScale, maxScale, useWidthOrHeightOfWorkspaceAsSize, useAbsoluteScale, useLimitedOffset, gridColor, styleBackground, styleCanvas);
+
+            SetFloat(keyViewScale, viewScale);
+            SetVector2(keyViewOffset, viewOffset);
+            return viewport;
+        }
+        /// <summary>
+        /// 一个可缩放可移动的Canvas视图
+        /// </summary>
+        /// <param name="key">临时变量的key</param>
+        /// <param name="baseScreenRect">所在GUI空间的屏幕区域</param>
+        /// <param name="workspace">工作区Rect</param>
+        /// <param name="canvasSize">画布的尺寸</param>
+        /// <param name="defaultScale">默认画布缩放值</param>
+        /// <param name="minScale">最小缩放值</param>
+        /// <param name="maxScale">最大缩放值</param>
+        /// <param name="useWidthOrHeightOfWorkspaceAsSize">为true时，取工作区的宽作为尺寸<br/>为false时，取工作的高作为尺寸<br/>为null时，取二者中较小值作为尺寸</param>
+        /// <param name="useAbsoluteScale">为true时，缩放比例应用于像素<br/>为false时，缩放比例应用于画布</param>
+        /// <param name="styleBackground">可为工作区设定一个背景样式</param>
+        /// <param name="styleCanvas">可为画布设定一个背景样式</param>
+        /// <returns></returns>
+        public static ViewportScope ViewportCanvas(string key, Rect baseScreenRect, Rect workspace, float canvasSize, float defaultScale = 0.9f, float minScale = 0.5f, float maxScale = 2.0f, bool? useWidthOrHeightOfWorkspaceAsSize = null, bool useAbsoluteScale = false, GUIStyle styleBackground = null, GUIStyle styleCanvas = null) => Viewport(key, baseScreenRect, workspace, canvasSize, defaultScale, minScale, maxScale, useWidthOrHeightOfWorkspaceAsSize, useAbsoluteScale, true, null, styleBackground, styleCanvas);
+        /// <summary>
+        /// 一个可缩放可移动的Grid视图
+        /// </summary>
+        /// <param name="key">临时变量的key</param>
+        /// <param name="baseScreenRect">所在GUI空间的屏幕区域</param>
+        /// <param name="workspace">工作区Rect</param>
+        /// <param name="gridSize">grid块的尺寸</param>
+        /// <param name="defaultScale">默认画布缩放值</param>
+        /// <param name="minScale">最小缩放值</param>
+        /// <param name="maxScale">最大缩放值</param>
+        /// <param name="useWidthOrHeightOfWorkspaceAsSize">为true时，取工作区的宽作为尺寸<br/>为false时，取工作的高作为尺寸<br/>为null时，取二者中较小值作为尺寸</param>
+        /// <param name="gridColor">指定一个颜色，沿画布边缘对齐绘制一个网格</param>
+        /// <param name="styleBackground">可为工作区设定一个背景样式</param>
+        /// <returns></returns>
+        public static ViewportScope ViewportGrid(string key, Rect baseScreenRect, Rect workspace, float gridSize, float defaultScale = 1, float minScale = 0.4f, float maxScale = 4.0f, bool? useWidthOrHeightOfWorkspaceAsSize = null, Color? gridColor = null, GUIStyle styleBackground = null) => Viewport(key, baseScreenRect, workspace, gridSize, defaultScale, minScale, maxScale, useWidthOrHeightOfWorkspaceAsSize, true, false, gridColor, styleBackground, null);
+
         #endregion
     }
 }
