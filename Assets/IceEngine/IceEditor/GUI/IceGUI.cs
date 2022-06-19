@@ -267,7 +267,7 @@ namespace IceEditor
             {
                 // 画Separator
                 var id = GUIUtility.GetControlID(FocusType.Passive);
-                bool focusing = GUIUtility.hotControl == id;
+                bool focusing = GUIHotControl == id;
                 EditorGUIUtility.AddCursorRect(focusing ? originRect : sepRect, direction switch
                 {
                     IceGUIDirection.Top or IceGUIDirection.Bottom => MouseCursor.ResizeVertical,
@@ -279,7 +279,7 @@ namespace IceEditor
                     case EventType.MouseDown:
                         if (Event.current.button == 0 && sepRect.Contains(Event.current.mousePosition))
                         {
-                            GUIUtility.hotControl = id;
+                            GUIHotControl = id;
 
                             float mp = direction switch
                             {
@@ -296,9 +296,9 @@ namespace IceEditor
                         }
                         break;
                     case EventType.MouseUp:
-                        if (focusing)
+                        if (focusing && E.button == 0)
                         {
-                            GUIUtility.hotControl = 0;
+                            GUIHotControl = 0;
                             E.Use();
                         }
                         break;
@@ -342,7 +342,6 @@ namespace IceEditor
                 GUILayout.EndArea();
             }
         }
-
         /// <summary>
         /// 一个可缩放可移动的工作视图，目前和ScrollScope不兼容
         /// </summary>
@@ -423,6 +422,22 @@ namespace IceEditor
                     GUI.BeginClip(r);
                     areaStack.Push(r);
                 }
+            }
+        }
+        /// <summary>
+        /// 暂时改变 GUI.Color
+        /// </summary>
+        public class GUIColorScope : IDisposable
+        {
+            Color originColor;
+            public GUIColorScope(Color color)
+            {
+                originColor = GUI.color;
+                GUI.color = color;
+            }
+            void IDisposable.Dispose()
+            {
+                GUI.color = originColor;
             }
         }
 
@@ -533,36 +548,36 @@ namespace IceEditor
             switch (E.type)
             {
                 case EventType.KeyDown:
-                    if (GUIUtility.hotControl == 0 && E.keyCode == KeyCode.Space)
+                    if (GUIHotControl == 0 && E.keyCode == KeyCode.Space)
                     {
-                        GUIUtility.hotControl = preMoveViewControl;
+                        GUIHotControl = preMoveViewControl;
                         E.Use();
                     }
                     break;
                 case EventType.KeyUp:
-                    if (GUIUtility.hotControl == preMoveViewControl && E.keyCode == KeyCode.Space)
+                    if (GUIHotControl == preMoveViewControl && E.keyCode == KeyCode.Space)
                     {
-                        GUIUtility.hotControl = 0;
+                        GUIHotControl = 0;
                         E.Use();
                     }
                     break;
                 case EventType.MouseDown:
-                    if ((GUIUtility.hotControl == preMoveViewControl || (GUIUtility.hotControl == 0 && E.button != 0)))
+                    if ((GUIHotControl == preMoveViewControl || (GUIHotControl == 0 && E.button != 0)))
                     {
-                        GUIUtility.hotControl = moveViewControl;
+                        GUIHotControl = moveViewControl;
                         dragCache = E.mousePosition;
                         E.Use();
                     }
                     break;
                 case EventType.MouseUp:
-                    if (GUIUtility.hotControl == moveViewControl)
+                    if (GUIHotControl == moveViewControl && E.button != 0)
                     {
-                        GUIUtility.hotControl = 0;
+                        GUIHotControl = 0;
                         E.Use();
                     }
                     break;
                 case EventType.MouseDrag:
-                    if (GUIUtility.hotControl == moveViewControl)
+                    if (GUIHotControl == moveViewControl)
                     {
                         viewOffset = offset += E.mousePosition - dragCache;
                         E.Use();
@@ -641,6 +656,10 @@ namespace IceEditor
         /// <param name="styleBackground">可为工作区设定一个背景样式</param>
         /// <returns></returns>
         public static ViewportScope ViewportGrid(Rect baseScreenRect, Rect workspace, float gridSize, ref float viewScale, ref Vector2 viewOffset, float minScale = 0.4f, float maxScale = 4.0f, bool? useWidthOrHeightOfWorkspaceAsSize = null, Color? gridColor = null, GUIStyle styleBackground = null) => Viewport(baseScreenRect, workspace, gridSize, ref viewScale, ref viewOffset, minScale, maxScale, useWidthOrHeightOfWorkspaceAsSize, true, false, gridColor, styleBackground, null);
+        /// <summary>
+        /// 暂时改变 GUI.Color
+        /// </summary>
+        public static GUIColorScope GUIColor(Color color) => new GUIColorScope(color);
 
         public static GUILayout.HorizontalScope HORIZONTAL => Horizontal();
         public static GUILayout.VerticalScope VERTICAL => Vertical();
@@ -715,8 +734,10 @@ namespace IceEditor
 
         public static Event E => Event.current;
 
-        // Caches
-        public static Vector2 dragCache;
+        // Internal Caches
+        internal static Vector2 dragCache;
+        internal static Vector2 offsetCache;
+        internal static double timeCache;
         #endregion
 
         #region Drawing Elements
