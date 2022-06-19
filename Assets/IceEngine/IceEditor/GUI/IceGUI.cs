@@ -440,6 +440,22 @@ namespace IceEditor
                 GUI.color = originColor;
             }
         }
+        /// <summary>
+        /// 暂时改变 Handles.Color
+        /// </summary>
+        public class HandlesColorScope : IDisposable
+        {
+            Color originColor;
+            public HandlesColorScope(Color color)
+            {
+                originColor = Handles.color;
+                Handles.color = color;
+            }
+            void IDisposable.Dispose()
+            {
+                Handles.color = originColor;
+            }
+        }
 
 
         public static GUILayout.HorizontalScope Horizontal(GUIStyle style, params GUILayoutOption[] options) => new GUILayout.HorizontalScope(style ?? GUIStyle.none, options);
@@ -660,6 +676,10 @@ namespace IceEditor
         /// 暂时改变 GUI.Color
         /// </summary>
         public static GUIColorScope GUIColor(Color color) => new GUIColorScope(color);
+        /// <summary>
+        /// 暂时改变 Handles.Color
+        /// </summary>
+        public static HandlesColorScope HandlesColor(Color color) => new HandlesColorScope(color);
 
         public static GUILayout.HorizontalScope HORIZONTAL => Horizontal();
         public static GUILayout.VerticalScope VERTICAL => Vertical();

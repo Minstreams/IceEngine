@@ -62,7 +62,7 @@ namespace IceEditor.Internal
             else
             {
                 var stl = itor?.Invoke() ?? GUIStyle.none;
-                Instance.stlCacheMap.Add(key, new StyleCache(stl, new GUIStyle(stl.name)));
+                Instance.stlCacheMap.Add(key, new StyleCache(stl, string.IsNullOrEmpty(stl.name) ? new GUIStyle() : new GUIStyle(stl.name)));
                 return stl;
             }
         }
