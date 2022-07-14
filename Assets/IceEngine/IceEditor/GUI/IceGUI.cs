@@ -32,6 +32,7 @@ namespace IceEditor
         public static GUIStyle StlPrefix => IceGUIUtility.HasPack ? IceGUIUtility.CurrentPack.StlPrefix : _stlPrefix?.Check() ?? (_stlPrefix = IceGUIUtility.GetStlPrefix(IceGUIUtility.DefaultThemeColor)); static GUIStyle _stlPrefix;
         public static GUIStyle StlSubAreaSeparator => IceGUIUtility.HasPack ? IceGUIUtility.CurrentPack.StlSubAreaSeparator : _stlSubAreaSeparator?.Check() ?? (_stlSubAreaSeparator = IceGUIUtility.GetStlSubAreaSeparator(IceGUIUtility.DefaultThemeColor)); static GUIStyle _stlSubAreaSeparator;
         public static GUIStyle StlViewportToolButton => _stlViewportToolButton?.Check() ?? (_stlViewportToolButton = new GUIStyle("HoverHighlight") { alignment = TextAnchor.MiddleCenter, contentOffset = new Vector2(1f, 0f), fixedWidth = 0f, fixedHeight = 0f, }); static GUIStyle _stlViewportToolButton;
+        public static GUIStyle StlGraphPortName => _stlGraphPortName?.Check() ?? (_stlGraphPortName = new GUIStyle("label") { margin = new RectOffset(0, 0, 0, 0), padding = new RectOffset(0, 0, 0, 0), fontSize = 8, alignment = TextAnchor.MiddleCenter, }.Initialize(stl => { stl.normal.textColor = new Color(0.3962264f, 0.3962264f, 0.3962264f); })); static GUIStyle _stlGraphPortName;
         #endregion
 
         #region Scope
@@ -356,6 +357,7 @@ namespace IceEditor
             /// </summary>
             public Rect CanvasRect { get; private set; }
 
+            bool hasOutterClip = false;
             Matrix4x4 originMatrix;
             Vector2 screenSize;
 
@@ -371,7 +373,7 @@ namespace IceEditor
             /// <param name="canvasSize">画布的尺寸</param>
             /// <param name="scale">画布缩放值</param>
             /// <param name="offset">画布偏移</param>
-            public ViewportScope(Rect baseScreenRect, Rect workspace, float workspaceSize, float canvasSize, float scale, Vector2 offset)
+            public ViewportScope(Rect baseScreenRect, Rect workspace, float workspaceSize, float canvasSize, float scale, Vector2 offset, bool hasOutterClip)
             {
                 // 解除外部剔除
                 screenSize = baseScreenRect.size;
@@ -381,7 +383,10 @@ namespace IceEditor
                     areaStackTemp.Push(areaStack.Pop());
                     GUI.EndClip();
                 }
-                GUI.EndClip();
+
+                // Tab窗口内需要撤销最外层Clip
+                this.hasOutterClip = hasOutterClip;
+                if (hasOutterClip) GUI.EndClip();
 
                 workspace = GUIUtility.ScreenToGUIRect(sc);
 
@@ -415,7 +420,10 @@ namespace IceEditor
             {
                 GUI.EndClip();
                 GUI.matrix = originMatrix;
-                GUI.BeginClip(new Rect(Vector2.up * 21, screenSize));
+
+                // Tab窗口内需要还原最外层Clip
+                if (hasOutterClip) GUI.BeginClip(new Rect(Vector2.up * 21, screenSize));
+
                 while (areaStackTemp.Count > 0)
                 {
                     var r = areaStackTemp.Pop();
@@ -528,7 +536,7 @@ namespace IceEditor
         /// <param name="styleBackground">可为工作区设定一个背景样式</param>
         /// <param name="styleCanvas">可为画布设定一个背景样式</param>
         /// <returns></returns>
-        public static ViewportScope Viewport(Rect baseScreenRect, Rect workspace, float canvasSize, ref float viewScale, ref Vector2 viewOffset, float minScale = 0.5f, float maxScale = 2.0f, bool? useWidthOrHeightOfWorkspaceAsSize = null, bool useAbsoluteScale = false, bool useLimitedOffset = true, Color? gridColor = null, GUIStyle styleBackground = null, GUIStyle styleCanvas = null)
+        public static ViewportScope Viewport(Rect baseScreenRect, Rect workspace, float canvasSize, ref float viewScale, ref Vector2 viewOffset, float minScale = 0.5f, float maxScale = 2.0f, bool? useWidthOrHeightOfWorkspaceAsSize = null, bool useAbsoluteScale = false, bool useLimitedOffset = true, Color? gridColor = null, GUIStyle styleBackground = null, GUIStyle styleCanvas = null, bool hasOutterClip = true)
         {
             // 数学运算
             float workspaceSize = useWidthOrHeightOfWorkspaceAsSize == null ? Mathf.Min(workspace.height, workspace.width) : useWidthOrHeightOfWorkspaceAsSize.Value ? workspace.width : workspace.height;
@@ -556,7 +564,7 @@ namespace IceEditor
             if (styleBackground != null) StyleBox(workspace, styleBackground);
 
             // 生成Scope对象
-            var viewport = new ViewportScope(baseScreenRect, workspace, workspaceSize, canvasSize, scale, offset);
+            var viewport = new ViewportScope(baseScreenRect, workspace, workspaceSize, canvasSize, scale, offset, hasOutterClip);
             Rect clipRect = viewport.ClipRect;
             Rect canvasRect = viewport.CanvasRect;
 
@@ -655,7 +663,7 @@ namespace IceEditor
         /// <param name="styleBackground">可为工作区设定一个背景样式</param>
         /// <param name="styleCanvas">可为画布设定一个背景样式</param>
         /// <returns></returns>
-        public static ViewportScope ViewportCanvas(Rect baseScreenRect, Rect workspace, float canvasSize, ref float viewScale, ref Vector2 viewOffset, float minScale = 0.5f, float maxScale = 2.0f, bool? useWidthOrHeightOfWorkspaceAsSize = null, bool useAbsoluteScale = false, GUIStyle styleBackground = null, GUIStyle styleCanvas = null) => Viewport(baseScreenRect, workspace, canvasSize, ref viewScale, ref viewOffset, minScale, maxScale, useWidthOrHeightOfWorkspaceAsSize, useAbsoluteScale, true, null, styleBackground, styleCanvas);
+        public static ViewportScope ViewportCanvas(Rect baseScreenRect, Rect workspace, float canvasSize, ref float viewScale, ref Vector2 viewOffset, float minScale = 0.5f, float maxScale = 2.0f, bool? useWidthOrHeightOfWorkspaceAsSize = null, bool useAbsoluteScale = false, GUIStyle styleBackground = null, GUIStyle styleCanvas = null, bool hasOutterClip = true) => Viewport(baseScreenRect, workspace, canvasSize, ref viewScale, ref viewOffset, minScale, maxScale, useWidthOrHeightOfWorkspaceAsSize, useAbsoluteScale, true, null, styleBackground, styleCanvas, hasOutterClip);
         /// <summary>
         /// 一个可缩放可移动的Grid视图
         /// </summary>
@@ -671,7 +679,7 @@ namespace IceEditor
         /// <param name="gridColor">指定一个颜色，沿画布边缘对齐绘制一个网格</param>
         /// <param name="styleBackground">可为工作区设定一个背景样式</param>
         /// <returns></returns>
-        public static ViewportScope ViewportGrid(Rect baseScreenRect, Rect workspace, float gridSize, ref float viewScale, ref Vector2 viewOffset, float minScale = 0.4f, float maxScale = 4.0f, bool? useWidthOrHeightOfWorkspaceAsSize = null, Color? gridColor = null, GUIStyle styleBackground = null) => Viewport(baseScreenRect, workspace, gridSize, ref viewScale, ref viewOffset, minScale, maxScale, useWidthOrHeightOfWorkspaceAsSize, true, false, gridColor, styleBackground, null);
+        public static ViewportScope ViewportGrid(Rect baseScreenRect, Rect workspace, float gridSize, ref float viewScale, ref Vector2 viewOffset, float minScale = 0.4f, float maxScale = 4.0f, bool? useWidthOrHeightOfWorkspaceAsSize = null, Color? gridColor = null, GUIStyle styleBackground = null, bool hasOutterClip = true) => Viewport(baseScreenRect, workspace, gridSize, ref viewScale, ref viewOffset, minScale, maxScale, useWidthOrHeightOfWorkspaceAsSize, true, false, gridColor, styleBackground, null, hasOutterClip);
         /// <summary>
         /// 暂时改变 GUI.Color
         /// </summary>
@@ -816,6 +824,68 @@ namespace IceEditor
 
         public static void Space(float pixels) => GUILayout.Space(pixels);
         public static void Space() => GUILayout.FlexibleSpace();
+
+        /// <summary>
+        /// 绘制有颜色渐变效果的贝塞尔曲线
+        /// </summary>
+        /// <param name="position">起点</param>
+        /// <param name="target">终点</param>
+        /// <param name="tangentPoint">切点</param>
+        /// <param name="startColor">开始颜色</param>
+        /// <param name="endColor">结束颜色</param>
+        /// <param name="width">宽度</param>
+        /// <param name="edge">alpha过渡边缘宽度</param>
+        public static void DrawBezierLine(Vector2 position, Vector2 target, Vector2 tangentPoint, Color startColor, Color endColor, float width = 1.5f, float edge = 1)
+        {
+            if (E.type != EventType.Repaint) return;
+
+            Handles.DrawLine(Vector3.zero, Vector3.zero);
+
+            Vector2 delta = target - position;
+            int segment = Mathf.CeilToInt((Mathf.Abs(delta.x) + 2 * Mathf.Abs(delta.y)) * GUI.matrix[0] / 16) + 1;
+            float unit = 1.0f / (segment - 1);
+
+
+            float innerWidth = Mathf.Max(0, width - edge);
+            if (innerWidth > 0) DrawLinePart(-innerWidth, 1, innerWidth, 1);
+            if (edge > 0)
+            {
+                DrawLinePart(-innerWidth, 1, -width, 0);
+                DrawLinePart(innerWidth, 1, width, 0);
+            }
+
+            void DrawLinePart(float offset1, float alpha1, float offset2, float alpha2)
+            {
+                GL.Begin(GL.TRIANGLE_STRIP);
+
+                Vector2 lp = Vector2.zero;
+                Vector2 n = (tangentPoint - position).normalized;
+                n = new Vector2(n.y, -n.x);
+                for (int i = 0; i < segment; ++i)
+                {
+                    float t = i * unit;
+                    var p1 = Vector2.LerpUnclamped(position, tangentPoint, t);
+                    var p2 = Vector2.LerpUnclamped(tangentPoint, target, t);
+                    Color col = Color.LerpUnclamped(startColor, endColor, t);
+                    Vector2 p = Vector2.LerpUnclamped(p1, p2, t);
+                    if (i > 0)
+                    {
+                        n = (p - lp).normalized;
+                        n = new Vector2(n.y, -n.x);
+                    }
+                    lp = p;
+                    col.a = alpha1;
+                    GL.Color(col);
+                    GL.Vertex(p + n * offset1);
+                    col.a = alpha2;
+                    GL.Color(col);
+                    GL.Vertex(p + n * offset2);
+                }
+
+                GL.End();
+            }
+        }
+
         #endregion
 
         #region Button & Fields

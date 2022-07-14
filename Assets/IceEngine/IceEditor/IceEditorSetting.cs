@@ -2,6 +2,7 @@
 using UnityEngine;
 using UnityEditorInternal;
 using System.IO;
+using System.Reflection;
 using IceEngine;
 
 namespace IceEditor
@@ -64,17 +65,14 @@ namespace IceEditor
         static string GetPath()
         {
             var tT = typeof(T);
-            var attributes = tT.GetCustomAttributes(typeof(IceSettingPathAttribute), false);
 
-            if (attributes.Length > 0)
+            var path = tT.GetCustomAttribute<IceSettingPathAttribute>()?.Path;
+            if (!string.IsNullOrEmpty(path))
             {
-                var path = (attributes[0] as IceSettingPathAttribute).Path;
-                if (!string.IsNullOrEmpty(path))
-                {
-                    if (path.StartsWith("Assets")) Debug.LogError($"{tT.Name}的路径不能放到Assets下!");
-                    else return $"{path}/{tT.Name}.asset";
-                }
+                if (path.StartsWith("Assets")) Debug.LogError($"{tT.Name}的路径不能放到Assets下!");
+                else return $"{path}/{tT.Name}.asset";
             }
+
             // 默认路径
             return $"IceEditorSettings/{tT.Name}.asset";
         }

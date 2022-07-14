@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Reflection;
 using UnityEngine;
 
 namespace IceEngine
@@ -43,15 +44,10 @@ namespace IceEngine
 
                         // 计算path
                         string filePath = "Assets";
-                        var ats = tT.GetCustomAttributes(typeof(IceSettingPathAttribute), false);
-                        if (ats.Length > 0)
-                        {
-                            var path = (ats[0] as IceSettingPathAttribute).Path;
-                            if (!string.IsNullOrEmpty(path))
-                            {
-                                filePath += $"/{path}";
-                            }
-                        }
+
+                        var path = tT.GetCustomAttribute<IceSettingPathAttribute>()?.Path;
+                        if (!string.IsNullOrEmpty(path)) filePath += $"/{path}";
+
                         filePath += $"/Resources/{tName}.asset";
 
                         // 创建目录

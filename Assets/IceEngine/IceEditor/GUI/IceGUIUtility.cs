@@ -19,7 +19,31 @@ namespace IceEditor
 
     public static class IceGUIUtility
     {
+        #region Custom Drawer
+        // 统计所有已有CustomDrawer的类
+        static HashSet<Type> _typesWithCustomDrawer;
+        static HashSet<Type> TypesWithCustomDrawer
+        {
+            get
+            {
+                if (_typesWithCustomDrawer == null)
+                {
+                    _typesWithCustomDrawer = new HashSet<Type>();
+                    var candidates = TypeCache.GetTypesWithAttribute<HasPropertyDrawerAttribute>();
+                    foreach (var c in candidates) _typesWithCustomDrawer.Add(c);
+                }
+                return _typesWithCustomDrawer;
+            }
+        }
+        static bool HasCustomDrawer(this Type self)
+        {
+            foreach (var t in TypesWithCustomDrawer) if (self.IsSubclassOf(t)) return true;
+            return false;
+        }
+        #endregion
+
         #region General Implementation
+
         public static void DrawSerializedObject(SerializedObject so)
         {
             var info = IceAttributesInfo.GetInfo(so.targetObject.GetType());
@@ -64,8 +88,6 @@ namespace IceEditor
             // Cache
             static readonly Dictionary<Type, IceAttributesInfo> cacheMap = new Dictionary<Type, IceAttributesInfo>();
 
-            // 统计所有已有CustomDrawer的类
-            static List<Type> HasCustomDrawerList => _hasCustomDrawerList ??= new List<Type>(TypeCache.GetTypesWithAttribute<HasPropertyDrawerAttribute>()); [System.NonSerialized] static List<Type> _hasCustomDrawerList;
             public static IceAttributesInfo GetInfo(Type t) => cacheMap.TryGetValue(t, out var info) ? info : cacheMap[t] = new IceAttributesInfo(t);
             public static void ClearCache() => cacheMap.Clear();
 
@@ -93,23 +115,16 @@ namespace IceEditor
 
                     // 生成子结构
                     var tt = f.FieldType;
-                    if (!IsSystemType(tt) && tt.GetCustomAttribute<SerializableAttribute>() is not null && !HasCustomDrawer(tt))
+                    if (!IsSystemType(tt) && tt.GetCustomAttribute<SerializableAttribute>() is not null && !tt.HasCustomDrawer())
                     {
                         childrenMap.Add(path, GetInfo(tt));
                     }
                 }
+
                 static bool IsSystemType(Type t)
                 {
                     var ns = t.GetRoot().Namespace;
                     return ns != null && (ns.StartsWith("System") || ns.StartsWith("Unity"));
-                }
-                static bool HasCustomDrawer(Type t)
-                {
-                    foreach (var d in HasCustomDrawerList)
-                    {
-                        if (t == d || t.IsSubclassOf(d)) return true;
-                    }
-                    return false;
                 }
 
                 // 只对根类型处理Methods

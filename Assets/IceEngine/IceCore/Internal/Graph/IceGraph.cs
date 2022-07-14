@@ -3,7 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace IceEngine
+namespace IceEngine.Internal
 {
     /// <summary>
     /// 序列化的图结构
@@ -91,6 +91,7 @@ namespace IceEngine
         }
         public virtual bool IsPortsMatch(IceGraphPort p1, IceGraphPort p2)
         {
+            if (p1.node == p2.node) return false;
             if (p1.valueType == p2.valueType) return true;
             return false;
         }

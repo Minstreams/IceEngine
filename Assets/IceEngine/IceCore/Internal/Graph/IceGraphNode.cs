@@ -3,7 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace IceEngine
+namespace IceEngine.Internal
 {
     /// <summary>
     /// 序列化的图节点
@@ -27,6 +27,12 @@ namespace IceEngine
         public void AddOutportMultiple<T>(string name) => outports.Add(new IceGraphPort(name, typeof(T), this, outports.Count, true, true));
         public void AddInportMultiple(string name, Type valueType = null) => inports.Add(new IceGraphPort(name, valueType, this, inports.Count, false, true));
         public void AddInportMultiple<T>(string name) => inports.Add(new IceGraphPort(name, typeof(T), this, inports.Count, false, true));
+
+        // 数据托管
+        [SerializeField] IceDictionary<string, bool> _boolMap = new();
+        [SerializeField] IceDictionary<string, int> _intMap = new();
+        [SerializeField] IceDictionary<string, float> _floatMap = new();
+        [SerializeField] public IceDictionary<string, string> _stringMap = new();
 
         #region GUI
 

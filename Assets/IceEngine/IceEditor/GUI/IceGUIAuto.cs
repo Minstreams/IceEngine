@@ -9,6 +9,8 @@ using UnityEditor.AnimatedValues;
 using UnityEngine.Rendering;
 
 using IceEngine;
+using IceEngine.Internal;
+using IceEditor.Internal;
 using static IceEditor.IceGUI;
 
 namespace IceEditor
@@ -360,7 +362,7 @@ namespace IceEditor
         /// <param name="styleBackground">可为工作区设定一个背景样式</param>
         /// <param name="styleCanvas">可为画布设定一个背景样式</param>
         /// <returns></returns>
-        public static ViewportScope Viewport(string key, Rect baseScreenRect, Rect workspace, float canvasSize, float defaultScale = 1, float minScale = 0.5f, float maxScale = 2.0f, bool? useWidthOrHeightOfWorkspaceAsSize = null, bool useAbsoluteScale = false, bool useLimitedOffset = true, Color? gridColor = null, GUIStyle styleBackground = null, GUIStyle styleCanvas = null)
+        public static ViewportScope Viewport(string key, Rect baseScreenRect, Rect workspace, float canvasSize, float defaultScale = 1, float minScale = 0.5f, float maxScale = 2.0f, bool? useWidthOrHeightOfWorkspaceAsSize = null, bool useAbsoluteScale = false, bool useLimitedOffset = true, Color? gridColor = null, GUIStyle styleBackground = null, GUIStyle styleCanvas = null, bool hasOutterClip = true)
         {
             string keyViewScale = $"{key}_ViewScale";
             string keyViewOffset = $"{key}_ViewOffset";
@@ -368,7 +370,7 @@ namespace IceEditor
             float viewScale = GetFloat(keyViewScale, defaultScale);
             Vector2 viewOffset = GetVector2(keyViewOffset);
 
-            var viewport = IceGUI.Viewport(baseScreenRect, workspace, canvasSize, ref viewScale, ref viewOffset, minScale, maxScale, useWidthOrHeightOfWorkspaceAsSize, useAbsoluteScale, useLimitedOffset, gridColor, styleBackground, styleCanvas);
+            var viewport = IceGUI.Viewport(baseScreenRect, workspace, canvasSize, ref viewScale, ref viewOffset, minScale, maxScale, useWidthOrHeightOfWorkspaceAsSize, useAbsoluteScale, useLimitedOffset, gridColor, styleBackground, styleCanvas, hasOutterClip);
 
             SetFloat(keyViewScale, viewScale);
             SetVector2(keyViewOffset, viewOffset);
@@ -389,7 +391,7 @@ namespace IceEditor
         /// <param name="styleBackground">可为工作区设定一个背景样式</param>
         /// <param name="styleCanvas">可为画布设定一个背景样式</param>
         /// <returns></returns>
-        public static ViewportScope ViewportCanvas(string key, Rect baseScreenRect, Rect workspace, float canvasSize, float defaultScale = 0.9f, float minScale = 0.5f, float maxScale = 2.0f, bool? useWidthOrHeightOfWorkspaceAsSize = null, bool useAbsoluteScale = false, GUIStyle styleBackground = null, GUIStyle styleCanvas = null) => Viewport(key, baseScreenRect, workspace, canvasSize, defaultScale, minScale, maxScale, useWidthOrHeightOfWorkspaceAsSize, useAbsoluteScale, true, null, styleBackground, styleCanvas);
+        public static ViewportScope ViewportCanvas(string key, Rect baseScreenRect, Rect workspace, float canvasSize, float defaultScale = 0.9f, float minScale = 0.5f, float maxScale = 2.0f, bool? useWidthOrHeightOfWorkspaceAsSize = null, bool useAbsoluteScale = false, GUIStyle styleBackground = null, GUIStyle styleCanvas = null, bool hasOutterClip = true) => Viewport(key, baseScreenRect, workspace, canvasSize, defaultScale, minScale, maxScale, useWidthOrHeightOfWorkspaceAsSize, useAbsoluteScale, true, null, styleBackground, styleCanvas, hasOutterClip);
         /// <summary>
         /// 一个可缩放可移动的Grid视图
         /// </summary>
@@ -404,7 +406,194 @@ namespace IceEditor
         /// <param name="gridColor">指定一个颜色，沿画布边缘对齐绘制一个网格</param>
         /// <param name="styleBackground">可为工作区设定一个背景样式</param>
         /// <returns></returns>
-        public static ViewportScope ViewportGrid(string key, Rect baseScreenRect, Rect workspace, float gridSize, float defaultScale = 1, float minScale = 0.4f, float maxScale = 4.0f, bool? useWidthOrHeightOfWorkspaceAsSize = null, Color? gridColor = null, GUIStyle styleBackground = null) => Viewport(key, baseScreenRect, workspace, gridSize, defaultScale, minScale, maxScale, useWidthOrHeightOfWorkspaceAsSize, true, false, gridColor, styleBackground, null);
+        public static ViewportScope ViewportGrid(string key, Rect baseScreenRect, Rect workspace, float gridSize, float defaultScale = 1, float minScale = 0.4f, float maxScale = 4.0f, bool? useWidthOrHeightOfWorkspaceAsSize = null, Color? gridColor = null, GUIStyle styleBackground = null, bool hasOutterClip = true) => Viewport(key, baseScreenRect, workspace, gridSize, defaultScale, minScale, maxScale, useWidthOrHeightOfWorkspaceAsSize, true, false, gridColor, styleBackground, null, hasOutterClip);
+
+        /// <summary>
+        /// 一个Graph操作区
+        /// </summary>
+        /// <param name="baseScreenRect">所在GUI空间的屏幕区域</param>
+        /// <param name="area">工作区Rect</param>
+        /// <param name="g">graph对象</param>
+        /// <param name="stlBackGround">背景样式</param>
+        /// <param name="gridSize">grid块的尺寸</param>
+        public static void GraphArea(Rect baseScreenRect, Rect area, IceGraph g, float gridSize = 32, float defaultScale = 1, float minScale = 0.4f, float maxScale = 4.0f, GUIStyle stlBackGround = null, bool hasOutterClip = true)
+        {
+            using var viewport = ViewportGrid("GraphView", baseScreenRect, area, gridSize, defaultScale, minScale, maxScale, null, IceGUIUtility.CurrentThemeColor * 0.5f, stlBackGround, hasOutterClip);
+
+            foreach (var node in g.nodeList) node.GetDrawer().OnGUI(gridSize);
+
+            int idDragPort = GetControlID();
+            foreach (var node in g.nodeList)
+            {
+                foreach (var port in node.inports) OnGUI_Port(port);
+                foreach (var port in node.outports) OnGUI_Port(port);
+            }
+            void OnGUI_Port(IceGraphPort port)
+            {
+                Vector2 pos = port.GetPos();
+
+                // Line
+                if (E.type == EventType.Repaint && port.IsConnected)
+                {
+                    var tagent = port.GetTangent();
+                    foreach (var pt in port.targetPortList)
+                    {
+                        IceGraphUtility.DrawPortLine(pos, pt.GetPos(), tagent, port.Color, pt.Color);
+                    }
+                }
+
+                if (!port.node.folded)
+                {
+                    Rect rPort = pos.ExpandToRect(IceGraphPort.PORT_RADIUS);
+                    switch (E.type)
+                    {
+                        case EventType.MouseDown:
+                            // Drag Control
+                            if (GUIHotControl == 0 && E.button == 0 && rPort.Contains(E.mousePosition))
+                            {
+                                offsetCache = rPort.center;
+                                GUIHotControl = idDragPort;
+                                if (!port.isMultiple) port.DisconnectAll();
+                                port.GetAvailablePorts();
+                                E.Use();
+                            }
+                            break;
+                        case EventType.MouseUp:
+                            if (GUIHotControl == idDragPort && E.button == 0 && rPort.Contains(E.mousePosition) && IceGraphUtility.AvailablePorts.Contains(port))
+                            {
+                                IceGraphUtility.EditingPort.ConnectTo(port);
+                            }
+                            break;
+                        case EventType.Repaint:
+                            // Port
+                            {
+                                var c = port.Color;
+                                if (GUIHotControl == idDragPort)
+                                {
+                                    // 拖拽状态
+                                    if (IceGraphUtility.EditingPort == port)
+                                    {
+                                        // 被拖拽的 Port
+                                        DiscSolid(0.15f, c);
+                                    }
+                                    else
+                                    {
+                                        // 其他 Port
+                                        if (port.IsConnected)
+                                        {
+                                            // 连接状态
+                                            DiscSolid(0.3f, c);
+                                        }
+
+                                        if (IceGraphUtility.AvailablePorts.Contains(port))
+                                        {
+                                            // 备选状态
+                                            DiscWire(0.2f, c * 0.8f);
+                                            DiscWire(0.8f, c * 0.7f);
+
+                                            if (rPort.Contains(E.mousePosition))
+                                            {
+                                                // hover
+                                                DiscWire(0.8f, IceGUIUtility.CurrentThemeColor);
+                                            }
+                                            else
+                                            {
+                                                // 未hover
+                                                DiscWire(0.8f, IceGUIUtility.CurrentThemeColor * 0.7f);
+                                            }
+                                        }
+                                        else
+                                        {
+                                            // 非备选直接隐藏
+                                        }
+                                    }
+                                }
+                                else
+                                {
+                                    if (port.IsConnected)
+                                    {
+                                        // 连接状态
+                                        DiscSolid(0.3f, c);
+                                    }
+                                    else
+                                    {
+                                        // 普通
+                                        DiscWire(0.3f, c * 0.8f);
+                                    }
+
+                                    if (rPort.Contains(E.mousePosition))
+                                    {
+                                        // hover
+                                        DiscWire(0.6f, c);
+                                    }
+                                }
+
+
+                                // 画 Port 内圈
+                                void DiscWire(float radius, Color color)
+                                {
+                                    radius *= IceGraphPort.PORT_RADIUS;
+                                    using (HandlesColor(color)) Handles.DrawWireDisc(pos, Vector3.forward, radius);
+                                    // 柔化边缘
+                                    color.a *= 0.4f;
+                                    using (HandlesColor(color))
+                                    {
+                                        float off = 0.3f / GUI.matrix[0];
+                                        Handles.DrawWireDisc(pos, Vector3.forward, radius + off);
+                                        Handles.DrawWireDisc(pos, Vector3.forward, radius - off);
+                                    }
+                                }
+                                void DiscSolid(float radius, Color color)
+                                {
+                                    radius *= IceGraphPort.PORT_RADIUS;
+                                    using (HandlesColor(color)) Handles.DrawSolidDisc(pos, Vector3.forward, radius);
+                                    // 柔化边缘
+                                    color.a *= 0.4f;
+                                    using (HandlesColor(color)) Handles.DrawWireDisc(pos, Vector3.forward, radius + 0.3f / GUI.matrix[0]);
+                                }
+                            }
+                            break;
+                    }
+
+                    // Text
+                    float wText = StlGraphPortName.CalcSize(new GUIContent(port.name)).x;
+                    Rect rText = new Rect(port.isOutport ? rPort.xMax : rPort.x - wText, rPort.y, wText, IceGraphPort.PORT_SIZE);
+                    GUI.Label(rText, new GUIContent(port.name, port.valueType?.Name ?? "void"), StlGraphPortName);
+                    StyleBox(rText, StlGraphPortName, port.name);
+                }
+            }
+
+            switch (E.type)
+            {
+                case EventType.MouseUp:
+                    if (GUIHotControl == idDragPort && E.button == 0)
+                    {
+                        GUIHotControl = 0;
+                        IceGraphUtility.ClearAvailablePorts();
+                        E.Use();
+                    }
+                    break;
+                case EventType.MouseDrag:
+                    if (GUIHotControl == idDragPort)
+                    {
+                        E.Use();
+                    }
+                    break;
+                case EventType.Repaint:
+                    if (GUIHotControl == idDragPort)
+                    {
+                        // 正在拖动
+                        var pos = IceGraphUtility.EditingPort.GetPos();
+                        var tagent = IceGraphUtility.EditingPort.GetTangent();
+                        var color = g.GetPortColor(IceGraphUtility.EditingPort);
+                        IceGraphUtility.DrawPortLine(pos, E.mousePosition, tagent, color, color);
+                        IceGraphUtility.DrawPortLine(E.mousePosition, pos, -tagent, color, color);
+                    }
+                    break;
+            }
+
+            //GUI.Label(viewport.ClipRect, $"Scale:{GUI.matrix[0]}");
+        }
 
         #endregion
     }
