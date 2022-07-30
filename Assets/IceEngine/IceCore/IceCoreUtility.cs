@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 
 namespace IceEngine
@@ -69,6 +70,10 @@ namespace IceEngine
             }
             return self;
         }
+        static readonly Type nullableType = typeof(Nullable<>);
+        static readonly Type iCollectionType = typeof(ICollection);
+        public static bool IsNullable(this Type theType) => (theType.IsGenericType && theType.GetGenericTypeDefinition().Equals(nullableType));
+        public static bool IsCollection(this Type type) => iCollectionType.IsAssignableFrom(type);
         #endregion
 
         #endregion

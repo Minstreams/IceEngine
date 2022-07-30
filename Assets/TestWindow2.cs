@@ -7,6 +7,7 @@ using IceEngine;
 using IceEditor;
 using static IceEditor.IceGUI;
 using static IceEditor.IceGUIAuto;
+using System;
 
 public class TestWindow2 : IceEditorWindow
 {
@@ -21,35 +22,32 @@ public class TestWindow2 : IceEditorWindow
         bbbbb = 1,
         bbbbbasda = 2,
     }
+
+    public sealed class Class1
+    {
+        public float f1;
+        public string s2;
+        public Class2 c3;
+    }
+    [System.Serializable]
+    public class Class2
+    {
+        public float ff1;
+        public string ss2;
+        public int? iii = 13;
+        public Type tt;
+    }
+
+    public sealed class Class3
+    {
+        public string s1 = "asddwww";
+        public List<int> iiiiiii2;
+        public Class2[] c3;
+        public IceDictionary<string, string> d4;
+    }
+
     protected override void OnWindowGUI(Rect position)
     {
-        using (HORIZONTAL)
-        {
-            if (IceButton("Null GameObject"))
-            {
-                GameObject obj = null;
-                TestBinary(obj);
-            }
-            if (IceButton("string")) TestBinary("Hello, World!");
-            if (IceButton("byte")) TestBinary((byte)14);
-            if (IceButton("sbyte")) TestBinary((sbyte)-15);
-            if (IceButton("bool")) TestBinary((bool)true);
-            if (IceButton("char")) TestBinary('从');
-            if (IceButton("short")) TestBinary((short)-964);
-            if (IceButton("ushort")) TestBinary((ushort)1851);
-            if (IceButton("int")) TestBinary((int)-151232);
-            if (IceButton("uint")) TestBinary((uint)345893u);
-            if (IceButton("long")) TestBinary((long)-145893594948994);
-            if (IceButton("ulong")) TestBinary((ulong)345893594948994u);
-            if (IceButton("float")) TestBinary((float)3.141592f);
-            if (IceButton("double")) TestBinary((double)1.14159225619849465465465);
-            if (IceButton("decimal")) TestBinary((decimal)1462457354234234);
-            if (IceButton("Type")) TestBinary(typeof(Enum1));
-            if (IceButton("Enum1")) TestBinary(Enum1.bbbbbasda);
-            if (IceButton("byte[]")) TestBinary(new byte[] { 0, 1, 2, 3, 4, 5 });
-            if (IceButton("Self")) TestBinary(this);
-        }
-
         using (HORIZONTAL)
         {
             if (IceButton("Null GameObject"))
@@ -74,7 +72,23 @@ public class TestWindow2 : IceEditorWindow
             if (IceButton("Type")) TB(typeof(Enum1));
             if (IceButton("Enum1")) TB(Enum1.bbbbbasda);
             if (IceButton("byte[]")) TB(new byte[] { 0, 1, 2, 3, 4, 5 });
-            if (IceButton("Self")) TB(this);
+            //if (IceButton("Self")) TB(this);
+            if (IceButton("C1")) TB(new Class1() { f1 = 1.2323f, s2 = "asdddss", c3 = new Class2() { ff1 = 4123.23f, ss2 = "WWQEE", tt = typeof(int) } });
+            if (IceButton("C3")) TB(new Class3()
+            {
+                s1 = "PPPP",
+                iiiiiii2 = new List<int> { 1567567, 3453453, 555454, 3245 },
+                c3 = new Class2[]
+                {
+                    new Class2(){ss2 = "asdas"},
+                    new Class2(){ss2 = "asdas2"},
+                    new Class2(){ss2 = "asdas3"},
+                },
+                d4 = new IceDictionary<string, string>()
+                {
+                    {"asd", "wewewe" }
+                }
+            });
         }
 
         using (GROUP)
@@ -94,17 +108,14 @@ public class TestWindow2 : IceEditorWindow
             Label(GetString("Console4"));
         }
     }
-    void TestBinary(object obj)
-    {
-        SetString("Console", IceBinaryUtility.ToBytes(obj, out var bytes));
-        var res = IceBinaryUtility.FromBytesT(bytes);
-        SetString("Console2", res == null ? "null" : $"[{res.GetType()}] {res}");
-        SetString("Console3", JsonUtility.ToJson(obj, true));
-        SetString("Console4", JsonUtility.ToJson(res, true));
-    }
 
     #region 封装一层
-    int? baseStack = null;
+    string PrintJson(object obj)
+    {
+        string s1 = JsonUtility.ToJson(obj, false);
+        string s2 = JsonUtility.ToJson(obj, true);
+        return $"[{s1.Length}]\n{s2}";
+    }
     void TB(object obj)
     {
         baseStack = null;
@@ -113,9 +124,10 @@ public class TestWindow2 : IceEditorWindow
         var bytes = IceBinaryUtility.ToBytes(obj);
         var res = IceBinaryUtility.FromBytes(bytes);
         SetString("Console2", res == null ? "null" : $"[{res.GetType()}] {res}");
-        SetString("Console3", JsonUtility.ToJson(obj, true));
-        SetString("Console4", JsonUtility.ToJson(res, true));
+        SetString("Console3", PrintJson(obj));
+        SetString("Console4", PrintJson(res));
     }
+    int? baseStack = null;
     void OnLog(string log)
     {
         string curLog = GetString("Console");
@@ -141,22 +153,6 @@ public class TestWindow2 : IceEditorWindow
         curLog += log;
 
         SetString("Console", curLog);
-    }
-
-    void TT()
-    {
-        var ass = AssetDatabase.FindAssets("t:Material", new string[] { AssetDatabase.GetAssetPath(Selection.activeObject) });
-        foreach (var uid in ass)
-        {
-            var path = AssetDatabase.GUIDToAssetPath(uid);
-            if (path.EndsWith("_pc.mat")) continue;
-            var newPath = path.Replace(".mat", "_pc.mat");
-            AssetDatabase.MoveAsset(path, newPath);
-            Debug.Log($"{path}\n{newPath}");
-        }
-        AssetDatabase.SaveAssets();
-        AssetDatabase.Refresh();
-
     }
     #endregion
 }

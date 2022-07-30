@@ -12,7 +12,7 @@ namespace IceEngine
     /// </summary>
     public static class IceBinaryUtility
     {
-        #region BitConverter 字节转换器
+        #region BitConverter
         // 将基数据类型转换为指定端的一个字节数组，或将一个字节数组转换为指定端基数据类型。
 
         /// <summary>
@@ -252,58 +252,6 @@ namespace IceEngine
 
         #region Serialization
 
-        #region 待删除
-        // 在这里定义基础类型的缩写
-        static readonly List<(string compressed, string origin)> baseTypeMapPageList = new()
-        {
-            ("^S", "System.String"),
-            ("+B", "System.Byte"),
-            ("=B", "System.SByte"),
-            ("^b", "System.Boolean"),
-            ("=C", "System.Char"),
-            ("=S", "System.Int16"),
-            ("+S", "System.UInt16"),
-            ("=I", "System.Int32"),
-            ("+I", "System.UInt32"),
-            ("=L", "System.Int64"),
-            ("+L", "System.UInt64"),
-            ("=F", "System.Single"),
-            ("=D", "System.Double"),
-            ("^D", "System.Decimal"),   // Decimal 会转换为double, 造成精度损失
-            ("[B", "System.Byte[]"),
-            ("^T", "System.RuntimeType"),
-        };
-        static Dictionary<string, string> BaseTypeMap_ToBytes => _typeMap_ToBytes ??= new Dictionary<string, string>(baseTypeMapPageList.Select(p => new KeyValuePair<string, string>(p.origin, p.compressed))); static Dictionary<string, string> _typeMap_ToBytes = null;
-        static Dictionary<string, string> BaseTypeMap_FromBytes => _typeMap_FromBytes ??= new Dictionary<string, string>(baseTypeMapPageList.Select(p => new KeyValuePair<string, string>(p.compressed, p.origin))); static Dictionary<string, string> _typeMap_FromBytes = null;
-
-        static string Hex(byte[] bytes)
-        {
-            string res = "";
-            for (int i = 0; i < bytes.Length; i++)
-            {
-                var b = bytes[i];
-                res += $"{b:x2}";
-                if (i < bytes.Length - 1)
-                {
-                    if (((i + 1) & 3) == 0) res += " |";
-                    res += " ";
-                }
-            }
-            return res;
-        }
-        static string ASCII(byte[] bytes)
-        {
-            string res = "";
-            for (int i = 0; i < bytes.Length; i++)
-            {
-                var b = bytes[i];
-                res += $"{(char)b}";
-                if (i < bytes.Length - 1) res += " ";
-            }
-            return res;
-        }
-        #endregion
-
         #region 临时log
         // 外部接口
         [System.Diagnostics.Conditional("DEBUG")]
@@ -339,6 +287,14 @@ namespace IceEngine
             }
             return res;
         }
+        [System.Diagnostics.Conditional("DEBUG")]
+        static void LogBlock(this List<byte> buffer, int count)
+        {
+            Log($"{count}".Color("#0AB"));
+            Log(" [");
+            Log(buffer.Hex(count).Color("#FA0"));
+            Log("] ");
+        }
         #endregion
 
         /// <summary>
@@ -348,27 +304,96 @@ namespace IceEngine
 
         static class FieldBlockHeaderDefinitions
         {
-            public const byte nullField = 0;
-            public const byte byteField = 1;
-            public const byte sbyteField = 2;
-            public const byte boolField = 3;
-            public const byte charField = 4;
-            public const byte shortField = 5;
-            public const byte ushortField = 6;
-            public const byte intField = 7;
-            public const byte uintField = 8;
-            public const byte longField = 9;
-            public const byte ulongField = 10;
-            public const byte floatField = 11;
-            public const byte doubleField = 12;
-            public const byte decimalField = 13;
-            public const byte bytesField = 14;
-            public const byte stringField = 15;
-            public const byte typeField = 16;
-            public const byte enumField = 17;
+            public const byte nullField = 0x00;
+            public const byte byteField = 0x01;
+            public const byte sbyteField = 0x02;
+            public const byte boolField = 0x03;
+            public const byte charField = 0x04;
+            public const byte shortField = 0x05;
+            public const byte ushortField = 0x06;
+            public const byte intField = 0x07;
+            public const byte uintField = 0x08;
+            public const byte longField = 0x09;
+            public const byte ulongField = 0x0A;
+            public const byte floatField = 0x0B;
+            public const byte doubleField = 0x0C;
+            public const byte decimalField = 0x0D;
+            public const byte bytesField = 0x0E;
+            public const byte stringField = 0x0F;
+            public const byte typeField = 0x10;
+            public const byte classField = 0x11;
+            public const byte arrayField = 0x12;
+            public const byte collectionField = 0x13;
+            public const byte baseClassField = 0x14;
         }
+        static class TypeDefinitions
+        {
+            public static readonly Type byteType = typeof(byte);
+            public static readonly Type sbyteType = typeof(sbyte);
+            public static readonly Type boolType = typeof(bool);
+            public static readonly Type shortType = typeof(short);
+            public static readonly Type ushortType = typeof(ushort);
+            public static readonly Type intType = typeof(int);
+            public static readonly Type uintType = typeof(uint);
+            public static readonly Type charType = typeof(char);
+            public static readonly Type longType = typeof(long);
+            public static readonly Type ulongType = typeof(ulong);
+            public static readonly Type floatType = typeof(float);
+            public static readonly Type doubleType = typeof(double);
+            public static readonly Type decimalType = typeof(decimal);
+            //public static readonly Type dateTimeType = typeof(DateTime);
+            public static readonly Type bytesType = typeof(byte[]);
+            public static readonly Type stringType = typeof(string);
+            public static readonly Type dicType = typeof(IDictionary);
 
-        public static void AddFieldBlock(this List<byte> buffer, object obj, bool withHeader = true)
+            public static readonly Type iEnumerableType = typeof(IEnumerable);
+            public static readonly Type arrayType = typeof(Array);
+            public static readonly Type listType = typeof(IList);
+        }
+        static readonly Dictionary<byte, Type> headerToTypeMap = new()
+        {
+            { 0x00, null },
+            { 0x01, TypeDefinitions.byteType },
+            { 0x02, TypeDefinitions.sbyteType },
+            { 0x03, TypeDefinitions.boolType },
+            { 0x04, TypeDefinitions.charType },
+            { 0x05, TypeDefinitions.shortType },
+            { 0x06, TypeDefinitions.ushortType },
+            { 0x07, TypeDefinitions.intType },
+            { 0x08, TypeDefinitions.uintType },
+            { 0x09, TypeDefinitions.longType },
+            { 0x0A, TypeDefinitions.ulongType },
+            { 0x0B, TypeDefinitions.floatType },
+            { 0x0C, TypeDefinitions.doubleType },
+            { 0x0D, TypeDefinitions.decimalType },
+            { 0x0E, TypeDefinitions.bytesType },
+            { 0x0F, TypeDefinitions.stringType },
+        };
+
+        #region Optimization
+        //static List<(short, Type)>
+        #endregion
+
+        #region Serialize
+        static bool HasHeader(this Type type)
+        {
+            if (type.IsNullable()) return true;
+            if (type.IsCollection()) return false;
+            if (type.IsSealed) return false;
+            if (type.IsGenericType) return false;
+            return true;
+        }
+        static void AddHeader(this List<byte> buffer, byte header)
+        {
+            buffer.Add(header);
+            buffer.LogBlock(1);
+        }
+        static void AddBytes(this List<byte> buffer, byte[] bytes)
+        {
+            buffer.AddRange(bytes);
+            buffer.LogBlock(bytes.Length);
+        }
+        public static void AddFieldBlock(this List<byte> buffer, object obj, bool withHeader = true, string name = "_", Type baseType = null)
         {
             Log("\n");
 
@@ -376,10 +401,9 @@ namespace IceEngine
             {
                 if (withHeader == false) throw new ArgumentException("Nullable Object must have header!");
 
-                Log("null | ");
+                Log("null \t| ");
 
-                buffer.Add(FieldBlockHeaderDefinitions.nullField);
-                LogBlock(1);
+                buffer.AddHeader(FieldBlockHeaderDefinitions.nullField);
             }
             else if (obj is byte bt) AddBlock("byte", bt, FieldBlockHeaderDefinitions.byteField, bt);
             else if (obj is sbyte sbt) AddBlock("sbyte", sbt, FieldBlockHeaderDefinitions.sbyteField, (byte)sbt);
@@ -387,7 +411,7 @@ namespace IceEngine
             else if (obj is char c) AddBlock("char", c, FieldBlockHeaderDefinitions.charField, GetBytes(c));
             else if (obj is short s) AddBlock("short", s, FieldBlockHeaderDefinitions.shortField, GetBytes(s));
             else if (obj is ushort us) AddBlock("ushort", us, FieldBlockHeaderDefinitions.ushortField, GetBytes(us));
-            else if (obj is int i) AddBlock("int", i, FieldBlockHeaderDefinitions.intField, GetBytes(i));
+            else if (obj is int it) AddBlock("int", it, FieldBlockHeaderDefinitions.intField, GetBytes(it));
             else if (obj is uint ui) AddBlock("uint", ui, FieldBlockHeaderDefinitions.uintField, GetBytes(ui));
             else if (obj is long l) AddBlock("long", l, FieldBlockHeaderDefinitions.longField, GetBytes(l));
             else if (obj is ulong ul) AddBlock("ulong", ul, FieldBlockHeaderDefinitions.ulongField, GetBytes(ul));
@@ -396,40 +420,26 @@ namespace IceEngine
             else if (obj is decimal dd) AddBlock("decimal", dd, FieldBlockHeaderDefinitions.decimalField, GetBytes((double)dd));
             else if (obj is byte[] bts)
             {
-                Log($"{"byte[]".Color("#4CA")} | ");
+                Log($"{"byte[]".Color("#4CA")} {name.Color("#AF0")} \t| ");
 
-                if (withHeader)
-                {
-                    buffer.Add(FieldBlockHeaderDefinitions.bytesField);
-                    LogBlock(1);
-                }
+                if (withHeader) buffer.AddHeader(FieldBlockHeaderDefinitions.bytesField);
 
                 var lengthBlock = GenLengthBlock(bts);
 
-                buffer.AddRange(lengthBlock);
-                LogBlock(lengthBlock.Length);
-
-                buffer.AddRange(bts);
-                LogBlock(bts.Length);
+                buffer.AddBytes(lengthBlock);
+                buffer.AddBytes(bts);
             }
             else if (obj is string str)
             {
-                Log($"{"string".Color("#4CA")} {str} | ");
+                Log($"{"string".Color("#4CA")} {name.Color("#AF0")} = {str} \t| ");
 
-                if (withHeader)
-                {
-                    buffer.Add(FieldBlockHeaderDefinitions.stringField);
-                    LogBlock(1);
-                }
+                if (withHeader) buffer.AddHeader(FieldBlockHeaderDefinitions.stringField);
 
                 var bytes = DefaultEncoding.GetBytes(str);
                 var lengthBlock = GenLengthBlock(bytes);
 
-                buffer.AddRange(lengthBlock);
-                LogBlock(lengthBlock.Length);
-
-                buffer.AddRange(bytes);
-                LogBlock(bytes.Length);
+                buffer.AddBytes(lengthBlock);
+                buffer.AddBytes(bytes);
 
                 Log($"({buffer.ASCII(bytes.Length)})");
             }
@@ -437,22 +447,15 @@ namespace IceEngine
             {
                 string tName = tp.FullName;
                 // TODO: 这里可以做压缩
-                Log($"{"Type".Color("#4CA")} {tName} | ");
+                Log($"{"Type".Color("#4CA")} {name.Color("#AF0")} = {tName} \t| ");
 
-                if (withHeader)
-                {
-                    buffer.Add(FieldBlockHeaderDefinitions.typeField);
-                    LogBlock(1);
-                }
+                if (withHeader) buffer.AddHeader(FieldBlockHeaderDefinitions.typeField);
 
                 var bytes = DefaultEncoding.GetBytes(tName);
                 var lengthBlock = GenLengthBlock(bytes);
 
-                buffer.AddRange(lengthBlock);
-                LogBlock(lengthBlock.Length);
-
-                buffer.AddRange(bytes);
-                LogBlock(bytes.Length);
+                buffer.AddBytes(lengthBlock);
+                buffer.AddBytes(bytes);
 
                 Log($"({buffer.ASCII(bytes.Length)})");
             }
@@ -462,16 +465,15 @@ namespace IceEngine
                 Type type = obj.GetType();
                 if (type.IsEnum)
                 {
-                    Log($"{type.FullName.Color("#4CA")} {obj} | ");
+                    Log($"{type.FullName.Color("#4CA")} {name.Color("#AF0")} = {obj}");
+
+                    Log("\n{       ");
 
                     if (withHeader)
                     {
-                        buffer.Add(FieldBlockHeaderDefinitions.enumField);
-                        LogBlock(1);
+                        buffer.AddHeader(FieldBlockHeaderDefinitions.classField);
+                        buffer.AddFieldBlock(type, withHeader: false);
                     }
-                    Log("\n{");
-
-                    if (withHeader) buffer.AddFieldBlock(type, withHeader: false);
 
                     var enumValType = Enum.GetUnderlyingType(type);
 
@@ -482,35 +484,104 @@ namespace IceEngine
 
                     Log("\n}");
                 }
+                else if (type.IsArray)
+                {
+                    Log($"{type.FullName.Color("#4CA")} {name.Color("#AF0")} = {obj}");
+
+                    Log("\n{       ");
+                    if (withHeader)
+                    {
+                        buffer.AddHeader(FieldBlockHeaderDefinitions.arrayField);
+                        buffer.AddFieldBlock(type, withHeader: false);
+                    }
+
+                    var ar = (Array)obj;
+                    Type iType = type.GetElementType();
+
+                    int length = ar.Length;
+                    if (length > ushort.MaxValue) throw new OverflowException("Length of array length overflow!");
+                    buffer.AddFieldBlock((ushort)length, false, "length");
+
+                    bool hasHeader = iType.HasHeader();
+                    for (int i = 0; i < length; i++)
+                    {
+                        buffer.AddFieldBlock(ar.GetValue(i), hasHeader, $"[{i}]", iType);
+                    }
+                    Log("\n}");
+                }
+                else if (type.IsCollection())
+                {
+                    Log($"{type.FullName.Color("#4CA")} {name.Color("#AF0")} = {obj}");
+
+                    Log("\n{       ");
+                    if (withHeader)
+                    {
+                        buffer.AddHeader(FieldBlockHeaderDefinitions.collectionField);
+                        buffer.AddFieldBlock(type, withHeader: false);
+                    }
+
+                    var ic = (ICollection)obj;
+                    var iType = ic.AsQueryable().ElementType;
+                    int count = ic.Count;
+
+                    if (count > ushort.MaxValue) throw new OverflowException("Length of collection count overflow!");
+                    buffer.AddFieldBlock((ushort)count, false, "count");
+
+                    bool hasHeader = iType.HasHeader();
+
+                    int i = 0;
+                    foreach (var item in ic)
+                    {
+                        buffer.AddFieldBlock(item, hasHeader, $"[{i++}]", iType);
+                    }
+                    Log("\n}");
+                }
+                else if (type.IsClass)
+                {
+                    Log($"{type.FullName.Color("#4CA")} {name.Color("#AF0")} = {obj}");
+
+                    Log("\n{       ");
+                    if (withHeader)
+                    {
+                        if (baseType == type) buffer.AddHeader(FieldBlockHeaderDefinitions.baseClassField);
+                        else
+                        {
+                            buffer.AddHeader(FieldBlockHeaderDefinitions.classField);
+                            buffer.AddFieldBlock(type, withHeader: false, name: "type");
+                        }
+                    }
+
+                    var fields = type.GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+                    foreach (var f in fields)
+                    {
+                        var fType = f.FieldType;
+                        if (!fType.IsSerializable) continue;
+                        if (TypeDefinitions.dicType.IsAssignableFrom(fType)) continue;
+
+                        var fobj = f.GetValue(obj);
+
+                        buffer.AddFieldBlock(fobj, withHeader: fType.HasHeader(), name: f.Name);
+                    }
+
+                    Log("\n}");
+                }
 
             }
 
             // Inner Functions --------------
             void AddBlock(string typeStr, object val, byte header, params byte[] bytes)
             {
-                Log($"{typeStr.Color("#4CA")} {val} | ");
+                Log($"{typeStr.Color("#4CA")} {name.Color("#AF0")} = {val} \t| ");
 
-                if (withHeader)
-                {
-                    buffer.Add(header);
-                    LogBlock(1);
-                }
+                if (withHeader) buffer.AddHeader(header);
 
-                buffer.AddRange(bytes);
-                LogBlock(bytes.Length);
+                buffer.AddBytes(bytes);
             }
             byte[] GenLengthBlock(byte[] bytes)
             {
                 int length = bytes.Length;
                 if (length > ushort.MaxValue) throw new OverflowException("Length of field bytes overflow!");
                 return GetBytes((ushort)length);
-            }
-            void LogBlock(int count)
-            {
-                Log($"{count}".Color("#0AB"));
-                Log(" [");
-                Log(buffer.Hex(count).Color("#FA0"));
-                Log("] ");
             }
         }
         public static byte[] ToBytes(object obj)
@@ -529,7 +600,9 @@ namespace IceEngine
 
             return buffer.ToArray();
         }
+        #endregion
 
+        #region Deserialize
         static byte ReadByte(this byte[] bytes, ref int offset)
         {
             var data = bytes[offset];
@@ -624,274 +697,125 @@ namespace IceEngine
         {
             return IceCoreUtility.GetType(bytes.ReadString(ref offset));
         }
+        static object ReadValueOfType(this byte[] bytes, ref int offset, Type type)
+        {
+            if (type == null) return null;
+            if (type.IsNullable()) type = type.GetGenericArguments()[0];
+            if (type == TypeDefinitions.byteType) return bytes.ReadByte(ref offset);
+            if (type == TypeDefinitions.sbyteType) return bytes.ReadSByte(ref offset);
+            if (type == TypeDefinitions.boolType) return bytes.ReadBool(ref offset);
+            if (type == TypeDefinitions.charType) return bytes.ReadChar(ref offset);
+            if (type == TypeDefinitions.shortType) return bytes.ReadShort(ref offset);
+            if (type == TypeDefinitions.ushortType) return bytes.ReadUShort(ref offset);
+            if (type == TypeDefinitions.intType) return bytes.ReadInt(ref offset);
+            if (type == TypeDefinitions.uintType) return bytes.ReadUInt(ref offset);
+            if (type == TypeDefinitions.longType) return bytes.ReadLong(ref offset);
+            if (type == TypeDefinitions.ulongType) return bytes.ReadULong(ref offset);
+            if (type == TypeDefinitions.floatType) return bytes.ReadFloat(ref offset);
+            if (type == TypeDefinitions.doubleType) return bytes.ReadDouble(ref offset);
+            if (type == TypeDefinitions.decimalType) return bytes.ReadDecimal(ref offset);
+            if (type == TypeDefinitions.bytesType) return bytes.ReadBytes(ref offset);
+            if (type == TypeDefinitions.stringType) return bytes.ReadString(ref offset);
+            string tName = type.FullName;
+            if (tName == "System.RuntimeType") return bytes.ReadType(ref offset);
+            if (type.IsEnum)
+            {
+                Type enumType = Enum.GetUnderlyingType(type);
 
+                if (enumType == TypeDefinitions.byteType) return Enum.ToObject(type, bytes.ReadByte(ref offset));
+                else if (enumType == TypeDefinitions.shortType) return Enum.ToObject(type, bytes.ReadShort(ref offset));
+                else if (enumType == TypeDefinitions.intType) return Enum.ToObject(type, bytes.ReadInt(ref offset));
+                else return Enum.ToObject(type, bytes.ReadLong(ref offset));
+            }
+            if (type.IsArray)
+            {
+                ushort length = bytes.ReadUShort(ref offset);
+                Type iType = type.GetElementType();
+                bool hasHeader = iType.HasHeader();
+
+                var ar = Array.CreateInstance(iType, length);
+                if (hasHeader)
+                {
+                    for (int i = 0; i < length; ++i) ar.SetValue(bytes.ReadValueWithHeader(ref offset, iType), i);
+                }
+                else
+                {
+                    for (int i = 0; i < length; ++i) ar.SetValue(bytes.ReadValueOfType(ref offset, iType), i);
+                }
+
+                return ar;
+            }
+            if (type.IsCollection())
+            {
+                var ic = (ICollection)Activator.CreateInstance(type);
+                var addMethod = type.GetMethod("Add");
+
+                ushort count = bytes.ReadUShort(ref offset);
+                Type iType = ic.AsQueryable().ElementType;
+                bool hasHeader = iType.HasHeader();
+
+                if (hasHeader)
+                {
+                    for (int i = 0; i < count; ++i) addMethod.Invoke(ic, new object[] { bytes.ReadValueWithHeader(ref offset, iType) });
+                }
+                else
+                {
+                    for (int i = 0; i < count; ++i) addMethod.Invoke(ic, new object[] { bytes.ReadValueOfType(ref offset, iType) });
+                }
+
+                return ic;
+            }
+            if (type.IsClass)
+            {
+                var obj = Activator.CreateInstance(type);
+                bytes.ReadObjectOverride(ref offset, obj, type);
+                return obj;
+            }
+            return null;
+        }
+        static object ReadValueWithHeader(this byte[] bytes, ref int offset, Type baseType = null)
+        {
+            byte header = bytes.ReadByte(ref offset);
+
+            if (headerToTypeMap.TryGetValue(header, out Type t)) return bytes.ReadValueOfType(ref offset, t);
+
+            switch (header)
+            {
+                case FieldBlockHeaderDefinitions.typeField: return bytes.ReadType(ref offset);
+                case FieldBlockHeaderDefinitions.classField:
+                case FieldBlockHeaderDefinitions.arrayField:
+                case FieldBlockHeaderDefinitions.collectionField: return bytes.ReadValueOfType(ref offset, bytes.ReadType(ref offset));
+                case FieldBlockHeaderDefinitions.baseClassField: return bytes.ReadValueOfType(ref offset, baseType);
+            }
+
+            throw new Exception($"Not supported header! {header}");
+        }
+        static void ReadObjectOverride(this byte[] bytes, ref int offset, object obj, Type type = null)
+        {
+            if (type == null) type = obj.GetType();
+
+            var fields = type.GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+            foreach (var f in fields)
+            {
+                var fType = f.FieldType;
+                if (!fType.IsSerializable) continue;
+                if (TypeDefinitions.dicType.IsAssignableFrom(fType)) continue;
+
+                bool bHeader = fType.HasHeader();
+                if (bHeader) f.SetValue(obj, bytes.ReadValueWithHeader(ref offset));
+                else f.SetValue(obj, bytes.ReadValueOfType(ref offset, fType));
+            }
+        }
 
         public static object FromBytes(byte[] inBytes)
         {
             if (inBytes.Length == 0) throw new ArgumentException("数据为空！");
 
-            byte header = inBytes[0];
-            int offset = 1;
-
-            switch (header)
-            {
-                case FieldBlockHeaderDefinitions.nullField: return null;
-                case FieldBlockHeaderDefinitions.byteField: return inBytes.ReadByte(ref offset);
-                case FieldBlockHeaderDefinitions.sbyteField: return inBytes.ReadSByte(ref offset);
-                case FieldBlockHeaderDefinitions.boolField: return inBytes.ReadBool(ref offset);
-                case FieldBlockHeaderDefinitions.charField: return inBytes.ReadChar(ref offset);
-                case FieldBlockHeaderDefinitions.shortField: return inBytes.ReadShort(ref offset);
-                case FieldBlockHeaderDefinitions.ushortField: return inBytes.ReadUShort(ref offset);
-                case FieldBlockHeaderDefinitions.intField: return inBytes.ReadInt(ref offset);
-                case FieldBlockHeaderDefinitions.uintField: return inBytes.ReadUInt(ref offset);
-                case FieldBlockHeaderDefinitions.longField: return inBytes.ReadLong(ref offset);
-                case FieldBlockHeaderDefinitions.ulongField: return inBytes.ReadULong(ref offset);
-                case FieldBlockHeaderDefinitions.floatField: return inBytes.ReadFloat(ref offset);
-                case FieldBlockHeaderDefinitions.doubleField: return inBytes.ReadDouble(ref offset);
-                case FieldBlockHeaderDefinitions.decimalField: return inBytes.ReadDecimal(ref offset);
-                case FieldBlockHeaderDefinitions.bytesField: return inBytes.ReadBytes(ref offset);
-                case FieldBlockHeaderDefinitions.stringField: return inBytes.ReadString(ref offset);
-                case FieldBlockHeaderDefinitions.typeField: return inBytes.ReadType(ref offset);
-                case FieldBlockHeaderDefinitions.enumField:
-                    var type = inBytes.ReadType(ref offset);
-
-                    Type enumType = Enum.GetUnderlyingType(type);
-
-                    if (enumType == TypeDefinitions.byteType) return Enum.ToObject(type, inBytes.ReadByte(ref offset));
-                    else if (enumType == TypeDefinitions.shortType) return Enum.ToObject(type, inBytes.ReadShort(ref offset));
-                    else if (enumType == TypeDefinitions.intType) return Enum.ToObject(type, inBytes.ReadInt(ref offset));
-                    else return Enum.ToObject(type, inBytes.ReadLong(ref offset));
-            }
-
-            return null;
+            int offset = 0;
+            return inBytes.ReadValueWithHeader(ref offset);
         }
+        #endregion
 
-
-        // ------------------------------- 下面的都要删
-        public static byte[] _ToBytes(object obj, out string outLog, bool withHeader = false, int indent = 0)
-        {
-            // 处理null
-            if (obj is null)
-            {
-                outLog = "数据为空，不用存储任何内容！\n";
-                return new byte[0];
-            }
-
-            string log = "";
-
-            List<byte> buffer = new();
-
-            byte[] GetFieldHeader(byte[] bytes)
-            {
-                int length = bytes.Length;
-                if (length > ushort.MaxValue) throw new OverflowException("Length of field bytes overflow!");
-                return GetBytes((ushort)length);
-            }
-
-            void AppendBuffer(byte[] bytes, string record, bool ascii = false)
-            {
-                string pStr = "";
-                for (int i = 0; i < indent; ++i)
-                {
-                    pStr += "\t";
-                }
-                if (withHeader)
-                {
-                    var header = GetFieldHeader(bytes);
-
-                    buffer.AddRange(header);
-                    buffer.AddRange(bytes);
-
-                    log += pStr + record;
-                    log += $"\n{pStr}----Bytes: 【{Hex(header)}】【{Hex(bytes)}】";
-                    if (ascii) log += $"【{ASCII(bytes)}】";
-                    log += $"\n{pStr}----长度: {bytes.Length + 2}\t = {2} + {bytes.Length}\n";
-                }
-                else
-                {
-                    buffer.AddRange(bytes);
-
-                    log += record;
-                    log += $"\n{pStr}----Bytes: 【{Hex(bytes)}】";
-                    if (ascii) log += $"【{ASCII(bytes)}】";
-                    log += $"\n{pStr}----长度: {bytes.Length}\n";
-                }
-            }
-
-            // 先搞定类型信息
-            Type type = obj.GetType();
-
-            // 处理值
-            if (obj is string str) AppendBuffer(DefaultEncoding.GetBytes(str), $"[string] {str}", true);
-            else if (obj is byte by) AppendBuffer(new byte[] { by }, $"[byte] {by}");
-            else if (obj is sbyte sby) AppendBuffer(new byte[] { (byte)sby }, $"[sbyte] {sby}");
-            else if (obj is bool b) AppendBuffer(GetBytes(b), $"[bool] {b}");
-            else if (obj is char c) AppendBuffer(GetBytes(c), $"[char] {c}");
-            else if (obj is short s) AppendBuffer(GetBytes(s), $"[short] {s}");
-            else if (obj is ushort us) AppendBuffer(GetBytes(us), $"[ushort] {us}");
-            else if (obj is int i) AppendBuffer(GetBytes(i), $"[int] {i}");
-            else if (obj is uint ui) AppendBuffer(GetBytes(ui), $"[uint] {ui}");
-            else if (obj is long l) AppendBuffer(GetBytes(l), $"[long] {l}");
-            else if (obj is ulong ul) AppendBuffer(GetBytes(ul), $"[ulong] {ul}");
-            else if (obj is float ft) AppendBuffer(GetBytes(ft), $"[float] {ft}");
-            else if (obj is double d) AppendBuffer(GetBytes(d), $"[double] {d}");
-            else if (obj is decimal dd) AppendBuffer(GetBytes((double)dd), $"[decimal] {dd}");
-            else if (obj is Type tp)
-            {
-                string tName = tp.FullName;
-                if (BaseTypeMap_ToBytes.TryGetValue(tName, out var bt)) tName = bt;
-                AppendBuffer(DefaultEncoding.GetBytes(tName), $"[Type] {tp.FullName} [{tName}]", true);
-            }
-            else if (obj is byte[] bs) AppendBuffer(bs, $"[bytes]");
-            else if (type.IsEnum)
-            {
-                var enumValType = Enum.GetUnderlyingType(type);
-
-                if (enumValType == TypeDefinitions.byteType) AppendBuffer(new byte[] { (byte)obj }, $"[Enum(byte)] {obj}");
-                else if (enumValType == TypeDefinitions.shortType) AppendBuffer(GetBytes((short)obj), $"[Enum(short)] {obj}");
-                else if (enumValType == TypeDefinitions.intType) AppendBuffer(GetBytes((int)obj), $"[Enum(int)] {obj}");
-                else AppendBuffer(GetBytes((long)obj), $"[Enum(long)] {obj}");
-            }
-            else if (type.IsClass)
-            {
-                var fields = type.GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
-                foreach (var f in fields)
-                {
-                    if (!f.FieldType.IsSerializable) continue;
-
-                    string pStr = "";
-                    for (int j = 0; j <= indent; ++j) pStr += "\t";
-
-                    log += $"{pStr}[{f.Name}]\n".Color("#FA0");
-                    var fobj = f.GetValue(obj);
-                    var bytes = _ToBytes(fobj, out string olog, true, indent + 1);
-                    buffer.AddRange(bytes);
-                    log += olog;
-                    //f.GetValue(obj)
-                }
-            }
-
-            outLog = log;
-
-            return buffer.ToArray();
-        }
-        public static string ToBytes(object obj, out byte[] outBytes)
-        {
-            // 处理null
-            if (obj is null)
-            {
-                outBytes = new byte[0];
-                return "数据为空，不用存储任何内容！";
-            }
-
-            string log = "";
-
-
-            List<byte> buffer = new();
-
-            // 先搞定类型信息
-            Type type = obj.GetType();
-            buffer.AddRange(_ToBytes(type, out string tlog, withHeader: true));
-            log += tlog;
-
-            // 处理值
-            buffer.AddRange(_ToBytes(obj, out string oLog));
-            log += oLog;
-
-            // 打印所有数据
-            outBytes = buffer.ToArray();
-            log += $"\n{Hex(outBytes)}";
-            log += $"\n总长度: {outBytes.Length}";
-
-            return log;
-        }
-
-        static class TypeDefinitions
-        {
-            public static readonly Type byteType = typeof(byte);
-            public static readonly Type shortType = typeof(short);
-            public static readonly Type intType = typeof(int);
-
-            public static readonly Type stringType = typeof(string);
-            public static readonly Type sbyteType = typeof(sbyte);
-            public static readonly Type ushortType = typeof(ushort);
-            public static readonly Type uintType = typeof(uint);
-            public static readonly Type boolType = typeof(bool);
-            public static readonly Type charType = typeof(char);
-            public static readonly Type longType = typeof(long);
-            public static readonly Type ulongType = typeof(ulong);
-            public static readonly Type floatType = typeof(float);
-            public static readonly Type doubleType = typeof(double);
-            public static readonly Type decimalType = typeof(decimal);
-            //public static readonly Type dateTimeType = typeof(DateTime);
-            public static readonly Type bytesType = typeof(byte[]);
-            public static readonly Type dicType = typeof(IDictionary);
-            public static readonly Type iEnumerableType = typeof(IEnumerable);
-            public static readonly Type arrayType = typeof(Array);
-            public static readonly Type listType = typeof(IList);
-            public static readonly Type nullableType = typeof(Nullable<>);
-        }
-
-        public static object FromBytesT(byte[] inBytes)
-        {
-            // 处理null
-            if (inBytes.Length == 0) return null;
-
-            // 处理类型
-            ushort count = ToUInt16(inBytes);
-            int offset = 2;
-            string tName = DefaultEncoding.GetString(inBytes, offset, count);
-            if (BaseTypeMap_FromBytes.TryGetValue(tName, out var bt)) tName = bt;
-            Type type = IceCoreUtility.GetType(tName);
-            offset += count;
-
-            //if (offset >= inBytes.Length) return null;
-
-            //count = ToUInt16(inBytes, offset);
-            //offset += 2;
-
-            // 处理值
-            if (type == null) throw new InvalidCastException($"Type cast failed! type: {tName}");
-            else if (type == TypeDefinitions.stringType) return DefaultEncoding.GetString(inBytes, offset, inBytes.Length - offset);
-            else if (type == TypeDefinitions.byteType) return inBytes[offset];
-            else if (type == TypeDefinitions.sbyteType) return (sbyte)inBytes[offset];
-            else if (type == TypeDefinitions.boolType) return inBytes.ToBoolean(offset);
-            else if (type == TypeDefinitions.charType) return inBytes.ToChar(offset);
-            else if (type == TypeDefinitions.shortType) return inBytes.ToInt16(offset);
-            else if (type == TypeDefinitions.ushortType) return inBytes.ToUInt16(offset);
-            else if (type == TypeDefinitions.intType) return inBytes.ToInt32(offset);
-            else if (type == TypeDefinitions.uintType) return inBytes.ToUInt32(offset);
-            else if (type == TypeDefinitions.longType) return inBytes.ToInt64(offset);
-            else if (type == TypeDefinitions.ulongType) return inBytes.ToUInt64(offset);
-            else if (type == TypeDefinitions.floatType) return inBytes.ToSingle(offset);
-            else if (type == TypeDefinitions.doubleType) return inBytes.ToDouble(offset);
-            else if (type == TypeDefinitions.decimalType) return (decimal)inBytes.ToDouble(offset);
-            else if (tName == "System.RuntimeType")
-            {
-                string ttName = DefaultEncoding.GetString(inBytes, offset, inBytes.Length - offset);
-                if (BaseTypeMap_FromBytes.TryGetValue(ttName, out var btt)) ttName = btt;
-                return IceCoreUtility.GetType(ttName);
-            }
-            else if (type.IsEnum)
-            {
-                Type enumType = Enum.GetUnderlyingType(type);
-
-                if (enumType == TypeDefinitions.byteType) return Enum.ToObject(type, inBytes[offset]);
-                else if (enumType == TypeDefinitions.shortType) return Enum.ToObject(type, ToInt16(inBytes, offset));
-                else if (enumType == TypeDefinitions.intType) return Enum.ToObject(type, ToInt32(inBytes, offset));
-                else return Enum.ToObject(type, ToInt64(inBytes, offset));
-            }
-            else if (type == TypeDefinitions.bytesType)
-            {
-                byte[] bytes = new byte[inBytes.Length - offset];
-                Array.Copy(inBytes, offset, bytes, 0, bytes.Length);
-                return bytes;
-            }
-
-            return null;
-
-            throw new Exception($"Unsupported type! type: {tName}");
-        }
         #endregion
     }
 }
