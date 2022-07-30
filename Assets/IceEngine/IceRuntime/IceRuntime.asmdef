@@ -1,7 +1,9 @@
 {
-    "name": "IceEngine",
+    "name": "IceRuntime",
     "rootNamespace": "IceEngine",
-    "references": [],
+    "references": [
+        "GUID:89180e411e64de241968c1679933ca85"
+    ],
     "includePlatforms": [],
     "excludePlatforms": [],
     "allowUnsafeCode": false,

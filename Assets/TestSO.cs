@@ -17,7 +17,7 @@ public class TestSO : ScriptableObject
         dq,
         qwee
     }
-    public EnumMap<EE, string> map = new EnumMap<EE, string>();
+    public IceEnumMap<EE, string> map = new IceEnumMap<EE, string>();
     [Label("ASS")]
     public float a;
 

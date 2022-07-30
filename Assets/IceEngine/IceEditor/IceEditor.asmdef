@@ -2,6 +2,7 @@
     "name": "IceEditor",
     "rootNamespace": "IceEditor",
     "references": [
+        "GUID:89180e411e64de241968c1679933ca85",
         "GUID:f8369544ff6f0dd4cac29829590234fd"
     ],
     "includePlatforms": [

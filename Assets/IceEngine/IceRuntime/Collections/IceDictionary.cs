@@ -4,13 +4,17 @@ using UnityEngine;
 
 namespace IceEngine
 {
-    [HasPropertyDrawer]
-    public class IceDictionary { }
+    namespace Internal
+    {
+        [HasPropertyDrawer]
+        public class IceDictionary { }
+    }
+
     /// <summary>
     /// 可序列化的Dictionary
     /// </summary>
     [System.Serializable]
-    public class IceDictionary<TKey, TValue> : IceDictionary, IDictionary<TKey, TValue>, ISerializationCallbackReceiver
+    public class IceDictionary<TKey, TValue> : Internal.IceDictionary, IDictionary<TKey, TValue>, ISerializationCallbackReceiver
     {
         [SerializeField] List<TKey> m_Keys = new List<TKey>();
         [SerializeField] List<TValue> m_Values = new List<TValue>();

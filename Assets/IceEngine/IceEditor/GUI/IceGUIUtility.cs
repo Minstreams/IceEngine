@@ -9,6 +9,7 @@ using UnityEditor;
 
 using IceEngine;
 using IceEngine.Internal;
+using IceEngine.Framework.Internal;
 using IceEditor.Internal;
 using static IceEditor.IceGUI;
 using static IceEditor.IceGUIAuto;
@@ -123,7 +124,7 @@ namespace IceEditor
 
                 static bool IsSystemType(Type t)
                 {
-                    var ns = t.GetRoot().Namespace;
+                    var ns = t.GetRootType().Namespace;
                     return ns != null && (ns.StartsWith("System") || ns.StartsWith("Unity"));
                 }
 
@@ -228,7 +229,7 @@ namespace IceEditor
             //    StyleBox(rMul, GetStyle(), "Multiple Values");
             //}
         }
-        public static Color DefaultThemeColor => IceIsland.Setting.themeColor;
+        public static Color DefaultThemeColor => Ice.Island.Setting.themeColor;
         public static Color CurrentThemeColor => HasPack ? CurrentPack.ThemeColor : DefaultThemeColor;
         #endregion
 

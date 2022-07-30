@@ -4,17 +4,17 @@ using UnityEngine;
 namespace IceEngine.Internal
 {
     /// <summary>
-    /// IceIsland在场景中的组件实例
+    /// Island在场景中的组件实例
     /// </summary>
-    internal class IceIslandComponent : MonoBehaviour
+    internal class IslandComponent : MonoBehaviour
     {
         void Awake()
         {
-            IceIsland.CallSubSystem("Awake");
+            Ice.Island.CallSubSystem("Awake");
         }
         void Start()
         {
-            IceIsland.CallSubSystem("Start");
+            Ice.Island.CallSubSystem("Start");
         }
     }
 }

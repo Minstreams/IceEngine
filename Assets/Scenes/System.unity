@@ -132,7 +132,6 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 514310356}
-  - component: {fileID: 514310355}
   - component: {fileID: 514310357}
   m_Layer: 0
   m_Name: GameObject (1)
@@ -141,44 +140,6 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!114 &514310355
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 514310354}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ea4b667dcdaec9c458a3ac972a6ccb1c, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  testEvent2:
-    m_PersistentCalls:
-      m_Calls: []
-  testEvent:
-    m_PersistentCalls:
-      m_Calls: []
-  testStr: 
-  a: 2.67
-  b: 0
-  i: 0
-  c: {r: 0.8773585, g: 0.45937166, b: 0.45937166, a: 1}
-  v2: {x: 34234, y: 0}
-  v3: {x: 1, y: 0, z: 0}
-  v4: {x: 3.93, y: -0.45, z: 0, w: 0}
-  comps:
-    m_Keys: []
-    m_Values: []
-  map:
-    _: 0
-    list:
-    - uui
-    - 
-    - 
-  bs:
-    bb: 70
-    bd: 0
 --- !u!4 &514310356
 Transform:
   m_ObjectHideFlags: 0
@@ -206,36 +167,35 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ee27caba3beda9147838e642ea6c9401, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  blueprint:
-    nodeList:
-    - outports: []
-      inports:
-      - name: TestIn
-        valueTypeName: 
-        targetNodeIdList: 
-        targetPortIdList: 
-        isMultiple: 0
-      - name: TestIn2
-        valueTypeName: 
-        targetNodeIdList: 
-        targetPortIdList: 
-        isMultiple: 0
-      _boolMap:
-        m_Keys: []
-        m_Values: 
-      _intMap:
-        m_Keys: []
-        m_Values: 
-      _floatMap:
-        m_Keys: []
-        m_Values: []
-      _stringMap:
-        m_Keys:
-        - TestIn
-        - TestIn2
-        m_Values:
-        - mark
-        - mark
-      position: {x: 83, y: 28}
-      folded: 0
-  tfloat: 0
+  tfloat: 1
+--- !u!1 &1116228198
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1116228199}
+  m_Layer: 0
+  m_Name: GameObject
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1116228199
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1116228198}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 82.67083, y: 1.2593927, z: -78.776245}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_RootOrder: 1
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}

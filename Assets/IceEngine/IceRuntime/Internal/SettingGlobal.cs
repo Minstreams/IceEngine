@@ -2,12 +2,14 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+using IceEngine.Framework;
+
 namespace IceEngine.Internal
 {
     /// <summary>
     /// 全局系统配置
     /// </summary>
-    [IceSettingPath("IceEngine/IceCore")]
+    [IceSettingPath("IceEngine/IceRuntime")]
     public class SettingGlobal : IceSetting<SettingGlobal>
     {
 

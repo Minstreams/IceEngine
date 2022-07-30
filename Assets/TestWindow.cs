@@ -16,7 +16,7 @@ namespace IceEditor
         public void TestTTTT344() { }
         #endregion
 
-        [MenuItem("IceEditor/测试！")]
+        [MenuItem("测试/测试！")]
         static void OpenWindow() => GetWindow<TestWindow>();
 
         protected override string Title => "测试";
@@ -38,6 +38,19 @@ namespace IceEditor
                 using (Area(subRect))
                 {
                     if (Button("Sub")) EditorWindow.GetWindow<TestWindow2>();
+
+                    if (Button("TestString1"))
+                    {
+                        LogImportant("asad".IsNullOrEmpty() ? "true" : "false");
+                    }
+                    if (Button("TestString2"))
+                    {
+                        LogImportant("".IsNullOrEmpty() ? "true" : "false");
+                    }
+                    if (Button("TestString3"))
+                    {
+                        LogImportant(((string)null).IsNullOrEmpty() ? "true" : "false");
+                    }
                 }
             }
         }

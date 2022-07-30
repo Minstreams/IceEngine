@@ -1,4 +1,4 @@
-using System.Collections;
+ï»¿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEditor;
@@ -11,7 +11,7 @@ using static IceEditor.IceGUIAuto;
 namespace IceEditor.Internal
 {
     /// <summary>
-    /// ÓÃÓÚ»æÖÆÒ»¸öNode
+    /// ç”¨äºŽç»˜åˆ¶ä¸€ä¸ªNode
     /// </summary>
     public class IceGraphNodeDrawer
     {
@@ -37,7 +37,7 @@ namespace IceEditor.Internal
                         else
                         {
                             timeCache = 0;
-                            // Ë«»÷
+                            // åŒå‡»
                             Target.folded = !Target.folded;
                         }
                     }
@@ -71,22 +71,22 @@ namespace IceEditor.Internal
                             Target.position = dragCache + E.mousePosition;
                             if (E.shift)
                             {
-                                // Æ½ÒÆ²Ù×÷
+                                // å¹³ç§»æ“ä½œ
                                 var offset = Target.position - offsetCache;
                                 if (Mathf.Abs(offset.x) > Mathf.Abs(offset.y))
                                 {
-                                    // ÑØxÖáÆ½ÒÆ
+                                    // æ²¿xè½´å¹³ç§»
                                     Target.position.y = offsetCache.y;
                                 }
                                 else
                                 {
-                                    // ÑØyÖáÆ½ÒÆ
+                                    // æ²¿yè½´å¹³ç§»
                                     Target.position.x = offsetCache.x;
                                 }
                             }
                             if (E.control)
                             {
-                                // Íø¸ñÎü¸½²Ù×÷
+                                // ç½‘æ ¼å¸é™„æ“ä½œ
                                 Target.position = Target.position.Snap(gridSize);
                             }
                             E.Use();
@@ -97,13 +97,13 @@ namespace IceEditor.Internal
                         {
                             var holderRect = new Rect(nodeRect) { position = offsetCache };
 
-                            // ÔÚÔ­Ê¼Î»ÖÃ»­Ò»¸ö²ÐÓ°
+                            // åœ¨åŽŸå§‹ä½ç½®ç”»ä¸€ä¸ªæ®‹å½±
                             using (GUIColor(Color.white * 0.6f)) StyleBox(holderRect, StlGraphNodeBackground);
 
-                            // TODO: ¸´ÖÆ²Ù×÷
+                            // TODO: å¤åˆ¶æ“ä½œ
                             if (E.alt)
                             {
-                                // TODO:ÔÚÔ­Ê¼Î»ÖÃ»­Ò»¸ö²ÐÓ°
+                                // TODO:åœ¨åŽŸå§‹ä½ç½®ç”»ä¸€ä¸ªæ®‹å½±
                             }
                         }
                         break;
@@ -124,11 +124,11 @@ namespace IceEditor.Internal
         protected virtual GUIStyle StlGraphNodeBackground => StlNode;
         protected virtual void OnGUI_Title(Rect rect)
         {
-            using (AreaRaw(rect)) Label("¿Õ½Úµã");
+            using (AreaRaw(rect)) Label("ç©ºèŠ‚ç‚¹");
         }
         protected virtual void OnGUI_Body(Rect rect)
         {
-            using (AreaRaw(rect)) Label("¡­¡­");
+            using (AreaRaw(rect)) Label("â€¦â€¦");
         }
         #endregion
     }

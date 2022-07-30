@@ -55,7 +55,7 @@ namespace IceEditor
                 return;
             }
 
-            GraphArea(this.position, position, Target.blueprint, stlBackGround: StlDock);
+            //GraphArea(this.position, position, Target.blueprint, stlBackGround: StlDock);
         }
     }
 }

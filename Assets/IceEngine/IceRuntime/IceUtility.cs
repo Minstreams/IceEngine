@@ -1,13 +1,12 @@
-﻿using System.Collections;
-using System.Collections.Generic;
+﻿using System;
 using UnityEngine;
 
 namespace IceEngine
 {
     /// <summary>
-    /// 各系统依赖的核心扩展方法
+    /// 依赖Unity的核心工具箱 & 扩展方法
     /// </summary>
-    public static class IceExtension
+    public static class IceUtility
     {
         #region GUIStyle
         /// <summary>
@@ -19,7 +18,7 @@ namespace IceEngine
         /// </summary>
         /// <param name="action">初始化行为</param>
         /// <returns>初始化后的自身</returns>
-        public static GUIStyle Initialize(this GUIStyle style, System.Action<GUIStyle> action)
+        public static GUIStyle Initialize(this GUIStyle style, Action<GUIStyle> action)
         {
             action?.Invoke(style);
             return style;
@@ -28,41 +27,17 @@ namespace IceEngine
 
         #region String
         /// <summary>
-        /// 等价于 <c><![CDATA[<color=]]><paramref name="colorExp"/>><paramref name="self"/><![CDATA[</color>]]></c>
-        /// </summary>
-        /// <param name="self">原字符串</param>
-        /// <param name="colorExp">颜色表达式</param>
-        /// <returns>结果表达式</returns>
-        public static string Color(this string self, string colorExp) => $"<color={colorExp}>{self}</color>";
-        /// <summary>
         /// 等价于 <c><![CDATA[<color=#]]><paramref name="color"/>><paramref name="self"/><![CDATA[</color>]]></c>
         /// </summary>
         /// <param name="self">原字符串</param>
         /// <param name="color">颜色</param>
         /// <returns>结果表达式</returns>
         public static string Color(this string self, Color color) => $"<color=#{ColorUtility.ToHtmlStringRGB(color)}>{self}</color>";
-        /// <summary>
-        /// 等价于 <c><![CDATA[<b>]]><paramref name="self"/><![CDATA[</b>]]></c>
-        /// </summary>
-        /// <returns>结果表达式</returns>
-        public static string Bold(this string self) => $"<b>{self}</b>";
-        /// <summary>
-        /// 等价于 <c><![CDATA[<size=]]><paramref name="size"/>><paramref name="self"/><![CDATA[</size>]]></c>
-        /// </summary>
-        /// <returns>结果表达式</returns>
-        public static string Size(this string self, int size) => $"<size={size}>{self}</size>";
         #endregion
 
         #region Rect
-        static float InverseLerpUnclamped(float a, float b, float value)
-        {
-            if (a != b)
-            {
-                return (value - a) / (b - a);
-            }
+        static float InverseLerpUnclamped(float a, float b, float value) => a == b ? 0 : (value - a) / (b - a);
 
-            return 0f;
-        }
         /// <summary>
         /// 给Rect应用一个指定宽度的边框
         /// </summary>
@@ -196,20 +171,6 @@ namespace IceEngine
                 TextureFormat.RGBA4444 => RenderTextureFormat.ARGB4444,
                 _ => RenderTextureFormat.ARGB32,
             };
-        }
-        #endregion
-
-        #region Type
-        public static System.Type GetRoot(this System.Type self)
-        {
-            var end = typeof(object);
-            while (self != end)
-            {
-                var b = self.BaseType;
-                if (b == end) break;
-                self = b;
-            }
-            return self;
         }
         #endregion
 

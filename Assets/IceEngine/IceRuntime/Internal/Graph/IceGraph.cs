@@ -16,7 +16,7 @@ namespace IceEngine.Internal
         void ISerializationCallbackReceiver.OnAfterDeserialize()
         {
             // 解析序列化数据
-            //Debug.Log("IceGraph".Color(Color.green) + ".OnAfterDeserialize");
+            Debug.Log("IceGraph".Color(Color.green) + ".OnAfterDeserialize");
 
             // TODO: 下放到node
 
@@ -72,7 +72,7 @@ namespace IceEngine.Internal
         void ISerializationCallbackReceiver.OnBeforeSerialize()
         {
             // 构造序列化数据
-            //Debug.Log("IceGraph".Color(Color.green) + ".OnBeforeSerialize");
+            Debug.Log("IceGraph".Color(Color.green) + ".OnBeforeSerialize");
 
             for (int i = 0; i < nodeList.Count; i++)
             {

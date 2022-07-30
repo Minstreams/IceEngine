@@ -3,7 +3,7 @@ using System.IO;
 using System.Reflection;
 using UnityEngine;
 
-namespace IceEngine
+namespace IceEngine.Framework
 {
     namespace Internal
     {
@@ -59,7 +59,7 @@ namespace IceEngine
                         UnityEditor.AssetDatabase.CreateAsset(_setting, filePath);
 #else            
                         // 运行时直接抛异常
-                        throw new Exception($"{typeof(T).FullName}的Config资源不存在！");
+                        throw new Exception($"{typeof(T).FullName}的Setting资源不存在！");
 #endif
                     }
                 }

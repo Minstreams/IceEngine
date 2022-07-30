@@ -2,7 +2,9 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace IceEngine
+using Ice;
+
+namespace IceEngine.Framework
 {
     namespace Internal
     {
@@ -28,32 +30,32 @@ namespace IceEngine
         /// <summary>
         /// 配置
         /// </summary>
-        public static SubSetting Setting => _Setting != null ? _Setting : (_Setting = Resources.Load<SubSetting>(TypeName)); static SubSetting _Setting;
+        public static SubSetting Setting => IceSetting<SubSetting>.Setting;
         #endregion
 
         #region 协程控制
         /// <summary>
         /// 开始协程
         /// </summary>
-        public static LinkedListNode<Coroutine> StartCoroutine(IEnumerator routine) => IceIsland.StartCoroutine(routine, typeof(SubSetting));
+        public static LinkedListNode<Coroutine> StartCoroutine(IEnumerator routine) => Island.StartCoroutine(routine, typeof(SubSetting));
         /// <summary>
         /// 停止所有协程
         /// </summary>
-        public static void StopAllCoroutines() => IceIsland.StopAllCoroutines(typeof(SubSetting));
+        public static void StopAllCoroutines() => Island.StopAllCoroutines(typeof(SubSetting));
         /// <summary>
         /// 停止指定协程
         /// </summary>
-        public static void StopCoroutine(LinkedListNode<Coroutine> routine) => IceIsland.StopCoroutine(routine);
+        public static void StopCoroutine(LinkedListNode<Coroutine> routine) => Island.StopCoroutine(routine);
         #endregion
 
         #region Log & Dialog
         static string TypeName => _typeName ??= typeof(SubSetting).Name.Substring(7/*Setting的长度为7个字母*/); static string _typeName = null;
         static string DebugPrefix => $"【{TypeName.Color(Setting.themeColor)}】";
         [System.Diagnostics.Conditional("DEBUG")]
-        public static void Log(object message, Object context = null) => IceIsland.Log(message, context, DebugPrefix);
-        public static void LogImportant(object message, Object context = null) => IceIsland.LogImportant(message, context, DebugPrefix);
-        public static void LogWarning(object message, Object context = null) => IceIsland.LogWarning(message, context, DebugPrefix);
-        public static void LogError(object message, Object context = null) => IceIsland.LogError(message, context, DebugPrefix);
+        public static void Log(object message, Object context = null) => Island.Log(message, context, DebugPrefix);
+        public static void LogImportant(object message, Object context = null) => Island.LogImportant(message, context, DebugPrefix);
+        public static void LogWarning(object message, Object context = null) => Island.LogWarning(message, context, DebugPrefix);
+        public static void LogError(object message, Object context = null) => Island.LogError(message, context, DebugPrefix);
         #endregion
     }
 }

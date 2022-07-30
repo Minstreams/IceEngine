@@ -4,22 +4,27 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using UnityEngine;
-using IceEngine.Internal;
 
-namespace IceEngine
+using IceEngine;
+using IceEngine.Internal;
+using IceEngine.Framework;
+using IceEngine.Framework.Internal;
+
+// Ice命名空间内只有所有子系统静态类，这样设计有助于运行时代码快速定位到子系统
+namespace Ice
 {
     using IceCoroutine = LinkedListNode<Coroutine>;
 
     /// <summary>
     /// 冰屿，IceEngine的核心
     /// </summary>
-    public static class IceIsland
+    public static class Island
     {
         #region 全局实例对象
         /// <summary>
         /// 场景中的组件实例
         /// </summary>
-        internal static IceIslandComponent Instance
+        internal static IslandComponent Instance
         {
             get
             {
@@ -37,7 +42,7 @@ namespace IceEngine
                 return _instance;
             }
         }
-        static IceIslandComponent _instance = null;
+        static IslandComponent _instance = null;
 
         /// <summary>
         /// 系统配置
@@ -86,7 +91,7 @@ namespace IceEngine
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
         static void Initialize()
         {
-            _instance = new GameObject("Ice Island").AddComponent<IceIslandComponent>();
+            _instance = new GameObject("Ice Island").AddComponent<IslandComponent>();
             UnityEngine.Object.DontDestroyOnLoad(_instance);
             {
                 // Awake之后，Start之前的额外初始化操作
