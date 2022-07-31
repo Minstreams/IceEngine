@@ -325,6 +325,7 @@ namespace IceEngine
             public const byte arrayField = 0x12;
             public const byte collectionField = 0x13;
             public const byte baseClassField = 0x14;
+            public const byte packetField = 0x15; // TODO: 针对网络包做进一步优化（去掉type字段）
         }
         static class TypeDefinitions
         {
@@ -344,11 +345,15 @@ namespace IceEngine
             //public static readonly Type dateTimeType = typeof(DateTime);
             public static readonly Type bytesType = typeof(byte[]);
             public static readonly Type stringType = typeof(string);
-            public static readonly Type dicType = typeof(IDictionary);
+            //public static readonly Type dicType = typeof(IDictionary);
+            public static readonly Type serializeFieldType = IceCoreUtility.GetType("UnityEngine.SerializeField");
+            public static readonly Type iCollectionType = typeof(ICollection<>);
+            public static readonly Type objectType = typeof(object);
 
-            public static readonly Type iEnumerableType = typeof(IEnumerable);
-            public static readonly Type arrayType = typeof(Array);
-            public static readonly Type listType = typeof(IList);
+
+            //public static readonly Type iEnumerableType = typeof(IEnumerable);
+            //public static readonly Type arrayType = typeof(Array);
+            //public static readonly Type listType = typeof(IList);
         }
         static readonly Dictionary<byte, Type> headerToTypeMap = new()
         {
@@ -536,7 +541,7 @@ namespace IceEngine
                     }
                     Log("\n}");
                 }
-                else if (type.IsClass)
+                else if (type.IsClass || type.IsValueType)
                 {
                     Log($"{type.FullName.Color("#4CA")} {name.Color("#AF0")} = {obj}");
 
@@ -551,12 +556,14 @@ namespace IceEngine
                         }
                     }
 
-                    var fields = type.GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
-                    foreach (var f in fields)
+                    List<FieldInfo> fieldList = new();
+                    fieldList.AddRange(type.GetFields(BindingFlags.Instance | BindingFlags.Public));
+                    for (var t = type; t != TypeDefinitions.objectType; t = t.BaseType) fieldList.AddRange(t.GetFields(BindingFlags.Instance | BindingFlags.NonPublic));
+                    foreach (var f in fieldList)
                     {
                         var fType = f.FieldType;
                         if (!fType.IsSerializable) continue;
-                        if (TypeDefinitions.dicType.IsAssignableFrom(fType)) continue;
+                        if (!type.IsValueType && TypeDefinitions.serializeFieldType != null && f.IsPrivate && f.GetCustomAttribute(TypeDefinitions.serializeFieldType) == null) continue;
 
                         var fobj = f.GetValue(obj);
 
@@ -748,10 +755,11 @@ namespace IceEngine
             if (type.IsCollection())
             {
                 var ic = (ICollection)Activator.CreateInstance(type);
-                var addMethod = type.GetMethod("Add");
+                Type iType = ic.AsQueryable().ElementType;
+                var cType = TypeDefinitions.iCollectionType.MakeGenericType(iType);
+                var addMethod = cType.GetMethod("Add");
 
                 ushort count = bytes.ReadUShort(ref offset);
-                Type iType = ic.AsQueryable().ElementType;
                 bool hasHeader = iType.HasHeader();
 
                 if (hasHeader)
@@ -765,13 +773,13 @@ namespace IceEngine
 
                 return ic;
             }
-            if (type.IsClass)
+            if (type.IsClass || type.IsValueType)
             {
                 var obj = Activator.CreateInstance(type);
                 bytes.ReadObjectOverride(ref offset, obj, type);
                 return obj;
             }
-            return null;
+            throw new NotSupportedException($"Not supported type: {type.FullName}");
         }
         static object ReadValueWithHeader(this byte[] bytes, ref int offset, Type baseType = null)
         {
@@ -794,12 +802,14 @@ namespace IceEngine
         {
             if (type == null) type = obj.GetType();
 
-            var fields = type.GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
-            foreach (var f in fields)
+            List<FieldInfo> fieldList = new();
+            fieldList.AddRange(type.GetFields(BindingFlags.Instance | BindingFlags.Public));
+            for (var t = type; t != TypeDefinitions.objectType; t = t.BaseType) fieldList.AddRange(t.GetFields(BindingFlags.Instance | BindingFlags.NonPublic));
+            foreach (var f in fieldList)
             {
                 var fType = f.FieldType;
                 if (!fType.IsSerializable) continue;
-                if (TypeDefinitions.dicType.IsAssignableFrom(fType)) continue;
+                if (!type.IsValueType && TypeDefinitions.serializeFieldType != null && f.IsPrivate && f.GetCustomAttribute(TypeDefinitions.serializeFieldType) == null) continue;
 
                 bool bHeader = fType.HasHeader();
                 if (bHeader) f.SetValue(obj, bytes.ReadValueWithHeader(ref offset));

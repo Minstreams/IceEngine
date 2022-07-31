@@ -29,21 +29,24 @@ public class TestWindow2 : IceEditorWindow
         public string s2;
         public Class2 c3;
     }
-    [System.Serializable]
-    public class Class2
+    public class CC2
     {
-        public float ff1;
+        [SerializeField] float ff1;
         public string ss2;
         public int? iii = 13;
+    }
+    [System.Serializable]
+    public sealed class Class2 : CC2
+    {
         public Type tt;
     }
 
     public sealed class Class3
     {
+        public Dictionary<string, string> d4;
         public string s1 = "asddwww";
         public List<int> iiiiiii2;
         public Class2[] c3;
-        public IceDictionary<string, string> d4;
     }
 
     protected override void OnWindowGUI(Rect position)
@@ -73,7 +76,12 @@ public class TestWindow2 : IceEditorWindow
             if (IceButton("Enum1")) TB(Enum1.bbbbbasda);
             if (IceButton("byte[]")) TB(new byte[] { 0, 1, 2, 3, 4, 5 });
             //if (IceButton("Self")) TB(this);
-            if (IceButton("C1")) TB(new Class1() { f1 = 1.2323f, s2 = "asdddss", c3 = new Class2() { ff1 = 4123.23f, ss2 = "WWQEE", tt = typeof(int) } });
+            if (IceButton("C1")) TB(new Class1()
+            {
+                f1 = 1.2323f,
+                s2 = "asdddss",
+                c3 = null// new Class2() { /*ff1 = 4123.23f,*/ ss2 = "WWQEE", tt = typeof(int) } 
+            });
             if (IceButton("C3")) TB(new Class3()
             {
                 s1 = "PPPP",
@@ -84,11 +92,12 @@ public class TestWindow2 : IceEditorWindow
                     new Class2(){ss2 = "asdas2"},
                     new Class2(){ss2 = "asdas3"},
                 },
-                d4 = new IceDictionary<string, string>()
+                d4 = new Dictionary<string, string>()
                 {
                     {"asd", "wewewe" }
                 }
             });
+            if (IceButton("self")) TB(this);
         }
 
         using (GROUP)

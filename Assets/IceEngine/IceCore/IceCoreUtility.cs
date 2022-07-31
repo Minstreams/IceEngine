@@ -59,20 +59,20 @@ namespace IceEngine
             }
             return null;
         }
+        static readonly Type objectType = typeof(object);
         public static Type GetRootType(this Type self)
         {
-            var end = typeof(object);
-            while (self != end)
+            while (self != objectType)
             {
                 var b = self.BaseType;
-                if (b == end) break;
+                if (b == objectType) break;
                 self = b;
             }
             return self;
         }
         static readonly Type nullableType = typeof(Nullable<>);
         static readonly Type iCollectionType = typeof(ICollection);
-        public static bool IsNullable(this Type theType) => (theType.IsGenericType && theType.GetGenericTypeDefinition().Equals(nullableType));
+        public static bool IsNullable(this Type type) => (type.IsGenericType && type.GetGenericTypeDefinition().Equals(nullableType));
         public static bool IsCollection(this Type type) => iCollectionType.IsAssignableFrom(type);
         #endregion
 
