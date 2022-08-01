@@ -45,21 +45,63 @@ namespace IceEngine
 
         #region Type
 
-        static Dictionary<string, Type> typeCacheMap = new();
+        #region Cache
+        static readonly Dictionary<string, Type> _typeCacheMap = new();
+        static readonly Type objectType = typeof(object);
+        static readonly Type nullableType = typeof(Nullable<>);
+        static readonly Type iCollectionType = typeof(ICollection);
+        static readonly Type icePacketType = typeof(IcePacketAttribute);
+
+        static Dictionary<int, Type> _hash2PktMap = null;
+        static Dictionary<Type, int> _pkt2HashMap = null;
+
+        static (Dictionary<int, Type> h2p, Dictionary<Type, int> p2h) CollectAllTypes()
+        {
+            _hash2PktMap = new();
+            _pkt2HashMap = new();
+            foreach (var a in AppDomain.CurrentDomain.GetAssemblies())
+            {
+                var ts = a.GetTypes();
+                foreach (var t in ts)
+                {
+                    var packetAttributes = t.GetCustomAttributes(icePacketType, false);
+                    if (packetAttributes.Length > 0)
+                    {
+                        var attr = (IcePacketAttribute)packetAttributes[0];
+                        int hash = attr.Hashcode;
+                        if (hash == 0) hash = t.FullName.GetHashCode();
+
+                        if (_hash2PktMap.TryAdd(hash, t))
+                        {
+                            _pkt2HashMap.Add(t, hash);
+                        }
+                        else
+                        {
+                            throw new Exception($"Packet hash ({hash}) of [{t}] already exists in [{_hash2PktMap[hash]}]");
+                        }
+                    }
+                }
+            }
+            return (_hash2PktMap, _pkt2HashMap);
+        }
+
+        static Dictionary<int, Type> Hash2PktMap => _hash2PktMap ?? CollectAllTypes().h2p;
+        static Dictionary<Type, int> Pkt2HashMap = _pkt2HashMap ?? CollectAllTypes().p2h;
+        #endregion
+
         public static Type GetType(string typeFullName)
         {
-            if (typeCacheMap.TryGetValue(typeFullName, out var type)) return type;
+            if (_typeCacheMap.TryGetValue(typeFullName, out var type)) return type;
             foreach (var a in AppDomain.CurrentDomain.GetAssemblies())
             {
                 type = a.GetType(typeFullName);
                 if (type != null)
                 {
-                    return typeCacheMap[typeFullName] = type;
+                    return _typeCacheMap[typeFullName] = type;
                 }
             }
             return null;
         }
-        static readonly Type objectType = typeof(object);
         public static Type GetRootType(this Type self)
         {
             while (self != objectType)
@@ -70,10 +112,20 @@ namespace IceEngine
             }
             return self;
         }
-        static readonly Type nullableType = typeof(Nullable<>);
-        static readonly Type iCollectionType = typeof(ICollection);
+
         public static bool IsNullable(this Type type) => (type.IsGenericType && type.GetGenericTypeDefinition().Equals(nullableType));
         public static bool IsCollection(this Type type) => iCollectionType.IsAssignableFrom(type);
+        public static Type HashCodeToPacketType(int hash)
+        {
+            if (Hash2PktMap.TryGetValue(hash, out var type)) return type;
+            throw new Exception($"{hash} is not a packet hash!");
+        }
+        public static int PacketTypeToHashCode(Type type)
+        {
+            if (Pkt2HashMap.TryGetValue(type, out int hash)) return hash;
+            throw new Exception($"{type} is not a packet type!");
+        }
+        public static bool IsPacketType(this Type type) => Pkt2HashMap.ContainsKey(type);
         #endregion
 
         #endregion

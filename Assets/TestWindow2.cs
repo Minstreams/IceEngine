@@ -23,15 +23,16 @@ public class TestWindow2 : IceEditorWindow
         bbbbbasda = 2,
     }
 
-    public sealed class Class1
+    [IcePacket]
+    public struct Class1
     {
         public float f1;
         public string s2;
         public CC2 c3;
-        public C4 c4 = new C4(1.0f);
+        public C4 c4;
     }
-    [System.Serializable]
-    public class C4
+    [IcePacket]
+    public struct C4
     {
         [SerializeField] float f3;
         public C4(float f3)
@@ -39,19 +40,20 @@ public class TestWindow2 : IceEditorWindow
             this.f3 = f3;
         }
     }
-    [System.Serializable]
+    [IcePacket]
     public class CC2
     {
         [SerializeField] float ff1;
-        public int? iii = 13;
+        public int? iii;
     }
-    [System.Serializable]
+    [IcePacket]
     public sealed class Class2 : CC2
     {
         public string ss2;
         public Type tt;
     }
 
+    [IcePacket]
     public sealed class Class3
     {
         public Dictionary<string, string> d4;

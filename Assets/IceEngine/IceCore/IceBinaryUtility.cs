@@ -374,7 +374,7 @@ namespace IceEngine
         };
 
         #region Optimization
-        //static List<(short, Type)>
+
         #endregion
 
         #region Serialize
@@ -546,10 +546,15 @@ namespace IceEngine
                     if (withHeader)
                     {
                         if (baseType == type) buffer.AddHeader(FieldBlockHeaderDefinitions.baseClassField);
+                        else if (type.IsPacketType())
+                        {
+                            buffer.AddHeader(FieldBlockHeaderDefinitions.packetField);
+                            buffer.AddFieldBlock(IceCoreUtility.PacketTypeToHashCode(type), false, "typeHash");
+                        }
                         else
                         {
                             buffer.AddHeader(FieldBlockHeaderDefinitions.classField);
-                            buffer.AddFieldBlock(type, withHeader: false, name: "type");
+                            buffer.AddFieldBlock(type, false, "type");
                         }
                     }
 
@@ -559,7 +564,7 @@ namespace IceEngine
                     foreach (var f in fieldList)
                     {
                         var fType = f.FieldType;
-                        if (!fType.IsSerializable) continue;
+                        if (!fType.IsSerializable && !fType.IsPacketType()) continue;
                         if (!type.IsValueType && TypeDefinitions.serializeFieldType != null && f.IsPrivate && f.GetCustomAttribute(TypeDefinitions.serializeFieldType) == null) continue;
 
                         var fobj = f.GetValue(obj);
@@ -785,16 +790,16 @@ namespace IceEngine
 
             if (headerToTypeMap.TryGetValue(header, out Type t)) return bytes.ReadValueOfType(ref offset, t);
 
-            switch (header)
+            return header switch
             {
-                case FieldBlockHeaderDefinitions.typeField: return bytes.ReadType(ref offset);
-                case FieldBlockHeaderDefinitions.classField:
-                case FieldBlockHeaderDefinitions.arrayField:
-                case FieldBlockHeaderDefinitions.collectionField: return bytes.ReadValueOfType(ref offset, bytes.ReadType(ref offset), instance);
-                case FieldBlockHeaderDefinitions.baseClassField: return bytes.ReadValueOfType(ref offset, baseType, instance);
-            }
-
-            throw new Exception($"Not supported header! {header}");
+                FieldBlockHeaderDefinitions.typeField => bytes.ReadType(ref offset),
+                FieldBlockHeaderDefinitions.classField or
+                FieldBlockHeaderDefinitions.arrayField or
+                FieldBlockHeaderDefinitions.collectionField => bytes.ReadValueOfType(ref offset, bytes.ReadType(ref offset), instance),
+                FieldBlockHeaderDefinitions.baseClassField => bytes.ReadValueOfType(ref offset, baseType, instance),
+                FieldBlockHeaderDefinitions.packetField => bytes.ReadValueOfType(ref offset, IceCoreUtility.HashCodeToPacketType(bytes.ReadInt(ref offset)), instance),
+                _ => throw new Exception($"Not supported header! {header}"),
+            };
         }
         static void ReadObjectOverride(this byte[] bytes, ref int offset, object obj, Type type = null)
         {
@@ -806,7 +811,7 @@ namespace IceEngine
             foreach (var f in fieldList)
             {
                 var fType = f.FieldType;
-                if (!fType.IsSerializable) continue;
+                if (!fType.IsSerializable && !fType.IsPacketType()) continue;
                 if (!type.IsValueType && TypeDefinitions.serializeFieldType != null && f.IsPrivate && f.GetCustomAttribute(TypeDefinitions.serializeFieldType) == null) continue;
 
                 bool bHeader = fType.HasHeader();
