@@ -253,14 +253,29 @@ namespace IceEngine
         #region Serialization
 
         #region 临时log
+        static event Action<string> Logger = null;
+
         // 外部接口
-        [System.Diagnostics.Conditional("DEBUG")]
-        public static void RegisterLogger(Action<string> onLog) => logger = onLog;
-        static Action<string> logger = null;
+        /// <summary>
+        /// 在Scope内监听<see cref="ToBytes(object)"/>中的日志
+        /// </summary>
+        public class LogScope : IDisposable
+        {
+            readonly Action<string> logAction;
+            public LogScope(Action<string> onLog)
+            {
+                logAction = onLog;
+                Logger += logAction;
+            }
+            void IDisposable.Dispose()
+            {
+                Logger -= logAction;
+            }
+        }
 
         // 内部接口
         [System.Diagnostics.Conditional("DEBUG")]
-        static void Log(string message) => logger?.Invoke(message);
+        static void Log(string message) => Logger?.Invoke(message);
         static string Hex(this IList<byte> buffer, int count)
         {
             string res = "";
@@ -372,10 +387,6 @@ namespace IceEngine
             { 0x0E, TypeDefinitions.bytesType },
             { 0x0F, TypeDefinitions.stringType },
         };
-
-        #region Optimization
-
-        #endregion
 
         #region Serialize
         static bool HasHeader(this Type type)

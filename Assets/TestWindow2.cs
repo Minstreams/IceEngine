@@ -144,12 +144,14 @@ public class TestWindow2 : IceEditorWindow
     {
         baseStack = null;
         SetString("Console", "");
-        IceBinaryUtility.RegisterLogger(OnLog);
-        var bytes = IceBinaryUtility.ToBytes(obj);
-        var res = IceBinaryUtility.FromBytes(bytes);
-        SetString("Console2", res == null ? "null" : $"[{res.GetType()}] {res}");
-        SetString("Console3", PrintJson(obj));
-        SetString("Console4", PrintJson(res));
+        using (new IceBinaryUtility.LogScope(OnLog))
+        {
+            var bytes = IceBinaryUtility.ToBytes(obj);
+            var res = IceBinaryUtility.FromBytes(bytes);
+            SetString("Console2", res == null ? "null" : $"[{res.GetType()}] {res}");
+            SetString("Console3", PrintJson(obj));
+            SetString("Console4", PrintJson(res));
+        }
     }
     int? baseStack = null;
     void OnLog(string log)
