@@ -52,10 +52,10 @@ namespace IceEngine
         static readonly Type iCollectionType = typeof(ICollection);
         static readonly Type icePacketType = typeof(IcePacketAttribute);
 
-        static Dictionary<int, Type> _hash2PktMap = null;
-        static Dictionary<Type, int> _pkt2HashMap = null;
+        static Dictionary<ushort, Type> _hash2PktMap = null;
+        static Dictionary<Type, ushort> _pkt2HashMap = null;
 
-        static (Dictionary<int, Type> h2p, Dictionary<Type, int> p2h) CollectAllTypes()
+        static (Dictionary<ushort, Type> h2p, Dictionary<Type, ushort> p2h) CollectAllTypes()
         {
             _hash2PktMap = new();
             _pkt2HashMap = new();
@@ -68,8 +68,8 @@ namespace IceEngine
                     if (packetAttributes.Length > 0)
                     {
                         var attr = (IcePacketAttribute)packetAttributes[0];
-                        int hash = attr.Hashcode;
-                        if (hash == 0) hash = t.FullName.GetHashCode();
+                        ushort hash = attr.Hashcode;
+                        if (hash == 0) hash = t.GetShortHashCode();
 
                         if (_hash2PktMap.TryAdd(hash, t))
                         {
@@ -85,8 +85,8 @@ namespace IceEngine
             return (_hash2PktMap, _pkt2HashMap);
         }
 
-        static Dictionary<int, Type> Hash2PktMap => _hash2PktMap ?? CollectAllTypes().h2p;
-        static Dictionary<Type, int> Pkt2HashMap = _pkt2HashMap ?? CollectAllTypes().p2h;
+        static Dictionary<ushort, Type> Hash2PktMap => _hash2PktMap ?? CollectAllTypes().h2p;
+        static Dictionary<Type, ushort> Pkt2HashMap = _pkt2HashMap ?? CollectAllTypes().p2h;
         #endregion
 
         public static Type GetType(string typeFullName)
@@ -115,14 +115,30 @@ namespace IceEngine
 
         public static bool IsNullable(this Type type) => (type.IsGenericType && type.GetGenericTypeDefinition().Equals(nullableType));
         public static bool IsCollection(this Type type) => iCollectionType.IsAssignableFrom(type);
-        public static Type HashCodeToPacketType(int hash)
+        public static ushort GetShortHashCode(this Type type)
+        {
+            string key = type.FullName;
+            const ushort pow = 3;
+            ushort hashCode = 0;
+            if (key != null && key.Length > 0)
+            {
+                hashCode = 0;
+                for (int i = 0; i < key.Length; i++)
+                {
+                    hashCode = (ushort)(hashCode * pow + key[i]);
+                }
+            }
+            return hashCode;
+
+        }
+        public static Type HashCodeToPacketType(ushort hash)
         {
             if (Hash2PktMap.TryGetValue(hash, out var type)) return type;
             throw new Exception($"{hash} is not a packet hash!");
         }
-        public static int PacketTypeToHashCode(Type type)
+        public static ushort PacketTypeToHashCode(Type type)
         {
-            if (Pkt2HashMap.TryGetValue(type, out int hash)) return hash;
+            if (Pkt2HashMap.TryGetValue(type, out ushort hash)) return hash;
             throw new Exception($"{type} is not a packet type!");
         }
         public static bool IsPacketType(this Type type) => Pkt2HashMap.ContainsKey(type);

@@ -28,8 +28,9 @@ public class TestWindow2 : IceEditorWindow
     {
         public float f1;
         public string s2;
-        public CC2 c3;
+        public Class2 c3;
         public C4 c4;
+        public Enum1 e1;
     }
     [IcePacket]
     public struct C4

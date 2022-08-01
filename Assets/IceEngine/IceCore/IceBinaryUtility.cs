@@ -797,7 +797,7 @@ namespace IceEngine
                 FieldBlockHeaderDefinitions.arrayField or
                 FieldBlockHeaderDefinitions.collectionField => bytes.ReadValueOfType(ref offset, bytes.ReadType(ref offset), instance),
                 FieldBlockHeaderDefinitions.baseClassField => bytes.ReadValueOfType(ref offset, baseType, instance),
-                FieldBlockHeaderDefinitions.packetField => bytes.ReadValueOfType(ref offset, IceCoreUtility.HashCodeToPacketType(bytes.ReadInt(ref offset)), instance),
+                FieldBlockHeaderDefinitions.packetField => bytes.ReadValueOfType(ref offset, IceCoreUtility.HashCodeToPacketType(bytes.ReadUShort(ref offset)), instance),
                 _ => throw new Exception($"Not supported header! {header}"),
             };
         }

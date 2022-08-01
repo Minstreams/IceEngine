@@ -11,6 +11,6 @@ namespace IceEngine
         /// <summary>
         /// Override the hashcode of the packet
         /// </summary>
-        public int Hashcode { get; set; } = 0;
+        public ushort Hashcode { get; set; } = 0;
     }
 }
