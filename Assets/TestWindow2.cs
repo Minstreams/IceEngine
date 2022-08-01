@@ -27,17 +27,28 @@ public class TestWindow2 : IceEditorWindow
     {
         public float f1;
         public string s2;
-        public Class2 c3;
+        public CC2 c3;
+        public C4 c4 = new C4(1.0f);
     }
+    [System.Serializable]
+    public class C4
+    {
+        [SerializeField] float f3;
+        public C4(float f3)
+        {
+            this.f3 = f3;
+        }
+    }
+    [System.Serializable]
     public class CC2
     {
         [SerializeField] float ff1;
-        public string ss2;
         public int? iii = 13;
     }
     [System.Serializable]
     public sealed class Class2 : CC2
     {
+        public string ss2;
         public Type tt;
     }
 
@@ -80,11 +91,12 @@ public class TestWindow2 : IceEditorWindow
             {
                 f1 = 1.2323f,
                 s2 = "asdddss",
-                c3 = null// new Class2() { /*ff1 = 4123.23f,*/ ss2 = "WWQEE", tt = typeof(int) } 
+                c3 = new Class2() { /*ff1 = 4123.23f,*/ ss2 = "WWQEE", tt = typeof(int) },
+                c4 = new C4(1.44444f)
             });
             if (IceButton("C3")) TB(new Class3()
             {
-                s1 = "PPPP",
+                s1 = null,
                 iiiiiii2 = new List<int> { 1567567, 3453453, 555454, 3245 },
                 c3 = new Class2[]
                 {
