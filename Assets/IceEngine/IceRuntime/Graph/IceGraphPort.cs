@@ -40,8 +40,6 @@ namespace IceEngine.Graph
         public int portId;
     }
 
-    [IcePacket]
-    [Serializable]
     public sealed class IceGraphInport : IceGraphPort
     {
         #region Cache
@@ -88,12 +86,9 @@ namespace IceEngine.Graph
         #endregion
     }
 
-    [IcePacket]
-    [Serializable]
     public sealed class IceGraphOutport : IceGraphPort
     {
         #region Serialized Data
-        // Runtime
         public List<IceGraphInportData> connectedPorts = new();
         #endregion
 

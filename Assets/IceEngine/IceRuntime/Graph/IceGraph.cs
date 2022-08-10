@@ -14,8 +14,10 @@ namespace IceEngine.Graph
             // Step1: redirect outport data
             foreach (var node in nodeList)
             {
-                foreach (var op in node.outports)
+                for (int i = 0; i < node.outports.Count; ++i)
                 {
+                    var op = node.outports[i];
+                    op.connectedPorts = node.connectionData[i];
                     for (int pi = 0; pi < op.connectedPorts.Count; ++pi)
                     {
                         var pd = op.connectedPorts[pi];
@@ -36,19 +38,19 @@ namespace IceEngine.Graph
             for (int pi = 0; pi < node.inports.Count; ++pi)
             {
                 var port = node.inports[pi];
-                port.node = node;
-                port.id = pi;
+                //port.node = node;
+                //port.id = pi;
 
                 var pd = port.data;
                 pd.nodeId = id;
-                pd.portId = pi;
+                //pd.portId = pi;
             }
-            for (int pi = 0; pi < node.outports.Count; ++pi)
-            {
-                var port = node.outports[pi];
-                port.node = node;
-                port.id = pi;
-            }
+            //for (int pi = 0; pi < node.outports.Count; ++pi)
+            //{
+            //    var port = node.outports[pi];
+            //    port.node = node;
+            //    port.id = pi;
+            //}
         }
         #endregion
 

@@ -40,10 +40,6 @@ namespace IceEditor
                 if (IceButton("New Node"))
                 {
                     var node = new IceGraphNode();
-                    node.AddOutport<float>("testOut1");
-                    node.AddOutport<int>("testOut2");
-                    node.AddInport<float>("V");
-                    node.AddInport<int>("F");
                     g.AddNode(node);
                 }
                 Space();
@@ -55,10 +51,6 @@ namespace IceEditor
                 if (IceButton("New Node"))
                 {
                     var node = new IceGraphNode();
-                    node.AddOutport<float>("testOut1");
-                    node.AddOutport<int>("testOut2");
-                    node.AddInport<float>("V");
-                    node.AddInport<int>("F");
                     g.AddNode(node);
                 }
                 Space();

@@ -12,16 +12,16 @@ namespace IceEngine.Graph
         #region Cache
         [NonSerialized] public IceGraph graph;
         [NonSerialized] public int id;
+        [NonSerialized] public List<IceGraphInport> inports = new();
+        [NonSerialized] public List<IceGraphOutport> outports = new();
         #endregion
 
         #region Serialized Data
-        // Runtime
-        public List<IceGraphInport> inports = new();
-        public List<IceGraphOutport> outports = new();
+        public List<List<IceGraphInportData>> connectionData = new();
         #endregion
 
         #region Interface
-        public void AddInport(string name, bool allowMultiple = true, Type valueType = null)
+        protected void AddInport(string name, bool allowMultiple = true, Type valueType = null)
         {
             var port = new IceGraphInport
             {
@@ -35,8 +35,8 @@ namespace IceEngine.Graph
             port.data.portId = inports.Count;
             inports.Add(port);
         }
-        public void AddInport<T>(string name, bool allowMultiple = true) => AddInport(name, allowMultiple, typeof(T));
-        public void AddOutport(string name, bool allowMultiple = true, Type valueType = null)
+        protected void AddInport<T>(string name, bool allowMultiple = true) => AddInport(name, allowMultiple, typeof(T));
+        protected void AddOutport(string name, bool allowMultiple = true, Type valueType = null)
         {
             var port = new IceGraphOutport
             {
@@ -46,9 +46,18 @@ namespace IceEngine.Graph
                 node = this,
                 id = outports.Count,
             };
+            connectionData.Add(port.connectedPorts);
             outports.Add(port);
         }
-        public void AddOutport<T>(string name, bool allowMultiple = true) => AddOutport(name, allowMultiple, typeof(T));
+        protected void AddOutport<T>(string name, bool allowMultiple = true) => AddOutport(name, allowMultiple, typeof(T));
+
+        public IceGraphNode()
+        {
+            AddOutport<float>("out10");
+            AddOutport<int>("testOut2");
+            AddInport<float>("V");
+            AddInport<int>("F");
+        }
         #endregion
 
 
