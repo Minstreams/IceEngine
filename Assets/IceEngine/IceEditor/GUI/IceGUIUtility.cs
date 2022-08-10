@@ -16,8 +16,6 @@ using static IceEditor.IceGUIAuto;
 
 namespace IceEditor
 {
-
-
     public static class IceGUIUtility
     {
         #region Custom Drawer
@@ -44,7 +42,6 @@ namespace IceEditor
         #endregion
 
         #region General Implementation
-
         public static void DrawSerializedObject(SerializedObject so)
         {
             var info = IceAttributesInfo.GetInfo(so.targetObject.GetType());

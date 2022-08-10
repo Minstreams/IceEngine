@@ -333,11 +333,12 @@ namespace IceEngine
             public const byte bytesField = 0x0E;
             public const byte stringField = 0x0F;
             public const byte typeField = 0x10;
-            public const byte classField = 0x11;
-            public const byte arrayField = 0x12;
-            public const byte collectionField = 0x13;
-            public const byte baseClassField = 0x14;
-            public const byte packetField = 0x15; // TODO: 针对网络包做进一步优化（去掉type字段）
+            public const byte typeHashField = 0x11;
+            public const byte classField = 0x12;
+            public const byte arrayField = 0x13;
+            public const byte collectionField = 0x14;
+            public const byte baseClassField = 0x15;
+            public const byte packetField = 0x16; // TODO: 针对网络包做进一步优化（去掉type字段）
         }
         static class TypeDefinitions
         {
@@ -392,8 +393,8 @@ namespace IceEngine
         static bool HasHeader(this Type type)
         {
             if (type.IsNullable()) return true;
-            if (type.IsCollection()) return false;
             if (type.IsValueType) return false;
+            if (type.IsNotNullPacket()) return false;
             return true;
         }
         static void AddHeader(this List<byte> buffer, byte header)
@@ -412,7 +413,11 @@ namespace IceEngine
 
             if (obj is null)
             {
-                if (withHeader == false) throw new ArgumentException("Nullable Object must have header!");
+                if (withHeader == false)
+                {
+                    if (baseType.IsNotNullPacket()) throw new ArgumentException($"Sealed packet can not be null! [{baseType?.FullName} {name}] (set IcePacketAttribute.IsNullable to false if it's intended to do so)");
+                    throw new ArgumentException($"Nullable Object must have header! [{baseType?.FullName} {name}]");
+                }
 
                 Log("null \t| ");
 
@@ -459,10 +464,21 @@ namespace IceEngine
             else if (obj is Type tp)
             {
                 string tName = tp.FullName;
-                // TODO: 这里可以做压缩
                 Log($"{"Type".Color("#4CA")} {name.Color("#AF0")} = {tName.Color("#F0B")} \t| ");
 
-                if (withHeader) buffer.AddHeader(FieldBlockHeaderDefinitions.typeField);
+                if (withHeader)
+                {
+                    if (tp.IsPacketType())
+                    {
+                        buffer.AddHeader(FieldBlockHeaderDefinitions.typeHashField);
+                        buffer.AddBytes(GetBytes(IceCoreUtility.PacketTypeToHashCode(tp)));
+                        return;
+                    }
+                    else
+                    {
+                        buffer.AddHeader(FieldBlockHeaderDefinitions.typeField);
+                    }
+                }
 
                 var bytes = DefaultEncoding.GetBytes(tName);
                 var lengthBlock = GenLengthBlock(bytes);
@@ -478,7 +494,7 @@ namespace IceEngine
                 Type type = obj.GetType();
                 if (type.IsEnum)
                 {
-                    Log($"{type.FullName.Color("#4CA")} {name.Color("#AF0")} = {obj}");
+                    Log($"{type.Name.Color("#4CA")} {name.Color("#AF0")} = {obj}");
 
                     Log("\n{       ");
 
@@ -499,21 +515,19 @@ namespace IceEngine
                 }
                 else if (type.IsArray)
                 {
-                    Log($"{type.FullName.Color("#4CA")} {name.Color("#AF0")} = {obj}");
+                    Log($"{type.Name.Color("#4CA")} {name.Color("#AF0")} = {obj}");
 
                     Log("\n{       ");
                     if (withHeader)
                     {
                         buffer.AddHeader(FieldBlockHeaderDefinitions.arrayField);
-                        buffer.AddFieldBlock(type, withHeader: false);
                     }
 
                     var ar = (Array)obj;
                     Type iType = type.GetElementType();
 
                     int length = ar.Length;
-                    if (length > ushort.MaxValue) throw new OverflowException("Length of array length overflow!");
-                    buffer.AddFieldBlock((ushort)length, false, "length");
+                    buffer.AddFieldBlock(length, false, "length");
 
                     bool hasHeader = iType.HasHeader();
                     for (int i = 0; i < length; i++)
@@ -524,21 +538,19 @@ namespace IceEngine
                 }
                 else if (type.IsCollection())
                 {
-                    Log($"{type.FullName.Color("#4CA")} {name.Color("#AF0")} = {obj}");
+                    Log($"{type.Name.Color("#4CA")} {name.Color("#AF0")} = {obj}");
 
                     Log("\n{       ");
                     if (withHeader)
                     {
                         buffer.AddHeader(FieldBlockHeaderDefinitions.collectionField);
-                        buffer.AddFieldBlock(type, withHeader: false);
                     }
 
                     var ic = (ICollection)obj;
                     var iType = ic.AsQueryable().ElementType;
                     int count = ic.Count;
 
-                    if (count > ushort.MaxValue) throw new OverflowException("Length of collection count overflow!");
-                    buffer.AddFieldBlock((ushort)count, false, "count");
+                    buffer.AddFieldBlock(count, false, "count");
 
                     bool hasHeader = iType.HasHeader();
 
@@ -551,7 +563,7 @@ namespace IceEngine
                 }
                 else if (type.IsClass || type.IsValueType)
                 {
-                    Log($"{(baseType ?? type).FullName.Color("#4CA")} {name.Color("#AF0")} = {obj}");
+                    Log($"{(baseType ?? type).Name.Color("#4CA")} {name.Color("#AF0")} = {obj}");
 
                     Log("\n{       ");
                     if (withHeader)
@@ -575,7 +587,8 @@ namespace IceEngine
                     foreach (var f in fieldList)
                     {
                         var fType = f.FieldType;
-                        if (!fType.IsSerializable && !fType.IsPacketType()) continue;
+                        if (f.IsNotSerialized) continue;
+                        if (!fType.IsSerialzableType() && !fType.IsPacketType()) continue;
                         if (!type.IsValueType && TypeDefinitions.serializeFieldType != null && f.IsPrivate && f.GetCustomAttribute(TypeDefinitions.serializeFieldType) == null) continue;
 
                         var fobj = f.GetValue(obj);
@@ -605,12 +618,12 @@ namespace IceEngine
             }
         }
 
-        public static byte[] ToBytes(object obj)
+        public static byte[] ToBytes(object obj, bool withHeader = true, Type baseType = null)
         {
             List<byte> buffer = new();
 
             // 处理值
-            buffer.AddFieldBlock(obj);
+            buffer.AddFieldBlock(obj, withHeader, baseType: baseType);
 
             // 打印所有数据
             Log("\n");
@@ -750,7 +763,7 @@ namespace IceEngine
             }
             if (type.IsArray)
             {
-                ushort length = bytes.ReadUShort(ref offset);
+                int length = bytes.ReadInt(ref offset);
                 Type iType = type.GetElementType();
                 bool hasHeader = iType.HasHeader();
 
@@ -773,7 +786,7 @@ namespace IceEngine
                 var cType = TypeDefinitions.iCollectionType.MakeGenericType(iType);
                 var addMethod = cType.GetMethod("Add");
 
-                ushort count = bytes.ReadUShort(ref offset);
+                int count = bytes.ReadInt(ref offset);
                 bool hasHeader = iType.HasHeader();
 
                 if (hasHeader)
@@ -804,9 +817,10 @@ namespace IceEngine
             return header switch
             {
                 FieldBlockHeaderDefinitions.typeField => bytes.ReadType(ref offset),
-                FieldBlockHeaderDefinitions.classField or
+                FieldBlockHeaderDefinitions.typeHashField => IceCoreUtility.HashCodeToPacketType(bytes.ReadUShort(ref offset)),
+                FieldBlockHeaderDefinitions.classField => bytes.ReadValueOfType(ref offset, bytes.ReadType(ref offset), instance),
                 FieldBlockHeaderDefinitions.arrayField or
-                FieldBlockHeaderDefinitions.collectionField => bytes.ReadValueOfType(ref offset, bytes.ReadType(ref offset), instance),
+                FieldBlockHeaderDefinitions.collectionField or
                 FieldBlockHeaderDefinitions.baseClassField => bytes.ReadValueOfType(ref offset, baseType, instance),
                 FieldBlockHeaderDefinitions.packetField => bytes.ReadValueOfType(ref offset, IceCoreUtility.HashCodeToPacketType(bytes.ReadUShort(ref offset)), instance),
                 _ => throw new Exception($"Not supported header! {header}"),
@@ -822,7 +836,8 @@ namespace IceEngine
             foreach (var f in fieldList)
             {
                 var fType = f.FieldType;
-                if (!fType.IsSerializable && !fType.IsPacketType()) continue;
+                if (f.IsNotSerialized) continue;
+                if (!fType.IsSerialzableType() && !fType.IsPacketType()) continue;
                 if (!type.IsValueType && TypeDefinitions.serializeFieldType != null && f.IsPrivate && f.GetCustomAttribute(TypeDefinitions.serializeFieldType) == null) continue;
 
                 bool bHeader = fType.HasHeader();
@@ -845,17 +860,27 @@ namespace IceEngine
 
         public static object FromBytes(byte[] bytes)
         {
-            if (bytes.Length == 0) throw new ArgumentException("数据为空！");
+            if (bytes.Length == 0) throw new ArgumentException("Bytes is null!");
 
             int offset = 0;
             return bytes.ReadValueWithHeader(ref offset);
         }
-        public static object FromBytesOverride(byte[] bytes, object target)
+        public static void FromBytesOverride(byte[] bytes, object target, Type type = null, bool withHeader = true, int offset = 0)
         {
-            if (bytes.Length == 0) throw new ArgumentException("数据为空！");
+            if (bytes.Length == 0) throw new ArgumentException("Bytes is null!");
+            if (target is null) throw new ArgumentException("Target is null!");
 
-            int offset = 0;
-            return bytes.ReadValueWithHeader(ref offset, target.GetType(), target);
+            if (type == null) type = target.GetType();
+            if (type.IsEnum || type.IsArray || type.IsCollection() || (!type.IsClass && !type.IsValueType)) throw new ArgumentException($"Unsupported type {type}");
+
+            if (withHeader)
+            {
+                bytes.ReadValueWithHeader(ref offset, type, target);
+            }
+            else
+            {
+                bytes.ReadObjectOverride(ref offset, target, type);
+            }
         }
         #endregion
 

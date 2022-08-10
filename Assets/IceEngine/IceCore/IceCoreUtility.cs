@@ -51,14 +51,53 @@ namespace IceEngine
         static readonly Type nullableType = typeof(Nullable<>);
         static readonly Type iCollectionType = typeof(ICollection);
         static readonly Type icePacketType = typeof(IcePacketAttribute);
+        static readonly HashSet<Type> serializableCollection = new()
+        {
+            GetType("UnityEngine.Vector2"),
+            GetType("UnityEngine.Vector3"),
+            GetType("UnityEngine.Vector4"),
+            GetType("UnityEngine.Vector2Int"),
+            GetType("UnityEngine.Vector3Int"),
+            GetType("UnityEngine.Quaternion"),
+            GetType("UnityEngine.Matrix4x4"),
+        };
+
+        static readonly List<(ushort hash, Type type)> baseTypeCollection = new()
+        {
+            (0, typeof(byte)),
+            (1, typeof(sbyte)),
+            (2, typeof(bool)),
+            (3, typeof(char)),
+            (4, typeof(short)),
+            (5, typeof(ushort)),
+            (6, typeof(int)),
+            (7, typeof(uint)),
+            (8, typeof(long)),
+            (9, typeof(ulong)),
+            (10, typeof(float)),
+            (11, typeof(double)),
+            (12, typeof(decimal)),
+            (13, typeof(string)),
+        };
 
         static Dictionary<ushort, Type> _hash2PktMap = null;
         static Dictionary<Type, ushort> _pkt2HashMap = null;
+        static HashSet<Type> _pktNotNullSet = null;
 
-        static (Dictionary<ushort, Type> h2p, Dictionary<Type, ushort> p2h) CollectAllTypes()
+        static (Dictionary<ushort, Type> h2p, Dictionary<Type, ushort> p2h, HashSet<Type> nullableSet) CollectAllTypes()
         {
             _hash2PktMap = new();
             _pkt2HashMap = new();
+            _pktNotNullSet = new();
+            foreach ((ushort hash, Type t) in baseTypeCollection)
+            {
+                if (t == null)
+                {
+                    throw new Exception($"No base type reference to hash {hash}!");
+                }
+                _hash2PktMap.Add(hash, t);
+                _pkt2HashMap.Add(t, hash);
+            }
             foreach (var a in AppDomain.CurrentDomain.GetAssemblies())
             {
                 var ts = a.GetTypes();
@@ -74,6 +113,7 @@ namespace IceEngine
                         if (_hash2PktMap.TryAdd(hash, t))
                         {
                             _pkt2HashMap.Add(t, hash);
+                            if (!attr.IsNullable && t.IsSealed) _pktNotNullSet.Add(t);
                         }
                         else
                         {
@@ -82,11 +122,13 @@ namespace IceEngine
                     }
                 }
             }
-            return (_hash2PktMap, _pkt2HashMap);
+            return (_hash2PktMap, _pkt2HashMap, _pktNotNullSet);
         }
 
         static Dictionary<ushort, Type> Hash2PktMap => _hash2PktMap ?? CollectAllTypes().h2p;
         static Dictionary<Type, ushort> Pkt2HashMap = _pkt2HashMap ?? CollectAllTypes().p2h;
+        static HashSet<Type> PktNotNullSet => _pktNotNullSet ?? CollectAllTypes().nullableSet;
+
         #endregion
 
         public static Type GetType(string typeFullName)
@@ -142,6 +184,8 @@ namespace IceEngine
             throw new Exception($"{type} is not a packet type!");
         }
         public static bool IsPacketType(this Type type) => Pkt2HashMap.ContainsKey(type);
+        public static bool IsNotNullPacket(this Type type) => PktNotNullSet.Contains(type);
+        public static bool IsSerialzableType(this Type type) => type.IsSerializable || serializableCollection.Contains(type);
         #endregion
 
         #endregion

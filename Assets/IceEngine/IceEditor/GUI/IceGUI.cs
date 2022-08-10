@@ -344,6 +344,26 @@ namespace IceEditor
             }
         }
         /// <summary>
+        /// 指定一个ScrollArea
+        /// </summary>
+        public class ScrollScope : IDisposable
+        {
+            public Vector2 scrollPosition;
+            public ScrollScope(Vector2 scrollPosition, bool alwaysShowHorizontal, bool alwaysShowVertical, GUIStyle horizontalScrollbar, GUIStyle verticalScrollbar, GUIStyle background, params GUILayoutOption[] options)
+            {
+                Vector2 clipPos = EditorGUIUtility.GUIToScreenPoint(Vector2.zero);
+                this.scrollPosition = GUILayout.BeginScrollView(scrollPosition, alwaysShowHorizontal, alwaysShowVertical, horizontalScrollbar, verticalScrollbar, background, options);
+                clipPos = EditorGUIUtility.GUIToScreenPoint(Vector2.zero) - clipPos;
+                ViewportScope.areaStack.Push(new Rect(clipPos, new Vector2(Screen.width, Screen.height + scrollPosition.y)));
+            }
+
+            void IDisposable.Dispose()
+            {
+                ViewportScope.areaStack.Pop();
+                GUILayout.EndScrollView();
+            }
+        }
+        /// <summary>
         /// 一个可缩放可移动的工作视图，目前和ScrollScope不兼容
         /// </summary>
         public class ViewportScope : IDisposable
@@ -357,10 +377,11 @@ namespace IceEditor
             /// </summary>
             public Rect CanvasRect { get; private set; }
 
-            bool hasOutterClip = false;
+            bool inUtilityWindow = false;
             Matrix4x4 originMatrix;
             Vector2 screenSize;
 
+            public static int clipStackCount = 0;
             public static Stack<Rect> areaStack = new Stack<Rect>();
             static Stack<Rect> areaStackTemp = new Stack<Rect>();
 
@@ -373,10 +394,10 @@ namespace IceEditor
             /// <param name="canvasSize">画布的尺寸</param>
             /// <param name="scale">画布缩放值</param>
             /// <param name="offset">画布偏移</param>
-            public ViewportScope(Rect baseScreenRect, Rect workspace, float workspaceSize, float canvasSize, float scale, Vector2 offset, bool hasOutterClip)
+            public ViewportScope(Rect workspace, float workspaceSize, float canvasSize, float scale, Vector2 offset, bool inUtilityWindow)
             {
                 // 解除外部剔除
-                screenSize = baseScreenRect.size;
+                screenSize = new Vector2(Screen.width, Screen.height);
                 Rect sc = GUIUtility.GUIToScreenRect(workspace);
                 while (areaStack.Count > 0)
                 {
@@ -385,8 +406,8 @@ namespace IceEditor
                 }
 
                 // Tab窗口内需要撤销最外层Clip
-                this.hasOutterClip = hasOutterClip;
-                if (hasOutterClip) GUI.EndClip();
+                this.inUtilityWindow = inUtilityWindow;
+                if (!inUtilityWindow) GUI.EndClip();
 
                 workspace = GUIUtility.ScreenToGUIRect(sc);
 
@@ -396,15 +417,15 @@ namespace IceEditor
 
                 // 矩阵运算
                 {
-                    var baseOffset = GUIUtility.ScreenToGUIPoint(baseScreenRect.position);
+                    //var baseOffset = GUIUtility.ScreenToGUIPoint(baseScreenRect.position);
                     originMatrix = GUI.matrix;
                     GUI.matrix =
                         // 还原并平移
-                        Matrix4x4.Translate(workspace.center - Vector2.one * 0.5f * workspaceSize * scale + offset * workspaceScale * scale - baseOffset) *
+                        Matrix4x4.Translate(workspace.center - Vector2.one * 0.5f * workspaceSize * scale + offset * workspaceScale * scale/* - baseOffset*/) *
                         // 自定义缩放
                         Matrix4x4.Scale(Vector3.one * workspaceScale * scale) *
                         // 移回原点
-                        Matrix4x4.Translate(baseOffset) *
+                        //Matrix4x4.Translate(baseOffset) *
                         // 矩阵支持多层叠加
                         originMatrix;
                 }
@@ -422,7 +443,7 @@ namespace IceEditor
                 GUI.matrix = originMatrix;
 
                 // Tab窗口内需要还原最外层Clip
-                if (hasOutterClip) GUI.BeginClip(new Rect(Vector2.up * 21, screenSize));
+                if (!inUtilityWindow) GUI.BeginClip(new Rect(Vector2.up * 21, screenSize));
 
                 while (areaStackTemp.Count > 0)
                 {
@@ -521,12 +542,10 @@ namespace IceEditor
         /// <summary>
         /// 一个可缩放可移动的工作视图
         /// </summary>
-        /// <param name="baseScreenRect">所在GUI空间的屏幕区域</param>
         /// <param name="workspace">工作区Rect</param>
         /// <param name="canvasSize">画布的尺寸</param>
         /// <param name="viewScale">画布缩放值</param>
         /// <param name="viewOffset">画布偏移</param>
-        /// <param name="dragCache">拖拽临时值</param>
         /// <param name="minScale">最小缩放值</param>
         /// <param name="maxScale">最大缩放值</param>
         /// <param name="useWidthOrHeightOfWorkspaceAsSize">为true时，取工作区的宽作为尺寸<br/>为false时，取工作的高作为尺寸<br/>为null时，取二者中较小值作为尺寸</param>
@@ -536,7 +555,7 @@ namespace IceEditor
         /// <param name="styleBackground">可为工作区设定一个背景样式</param>
         /// <param name="styleCanvas">可为画布设定一个背景样式</param>
         /// <returns></returns>
-        public static ViewportScope Viewport(Rect baseScreenRect, Rect workspace, float canvasSize, ref float viewScale, ref Vector2 viewOffset, float minScale = 0.5f, float maxScale = 2.0f, bool? useWidthOrHeightOfWorkspaceAsSize = null, bool useAbsoluteScale = false, bool useLimitedOffset = true, Color? gridColor = null, GUIStyle styleBackground = null, GUIStyle styleCanvas = null, bool hasOutterClip = true)
+        public static ViewportScope Viewport(Rect workspace, float canvasSize, ref float viewScale, ref Vector2 viewOffset, float minScale = 0.5f, float maxScale = 2.0f, bool? useWidthOrHeightOfWorkspaceAsSize = null, bool useAbsoluteScale = false, bool useLimitedOffset = true, Color? gridColor = null, GUIStyle styleBackground = null, GUIStyle styleCanvas = null, bool inUtilityWindow = false)
         {
             // 数学运算
             float workspaceSize = useWidthOrHeightOfWorkspaceAsSize == null ? Mathf.Min(workspace.height, workspace.width) : useWidthOrHeightOfWorkspaceAsSize.Value ? workspace.width : workspace.height;
@@ -564,7 +583,7 @@ namespace IceEditor
             if (styleBackground != null) StyleBox(workspace, styleBackground);
 
             // 生成Scope对象
-            var viewport = new ViewportScope(baseScreenRect, workspace, workspaceSize, canvasSize, scale, offset, hasOutterClip);
+            var viewport = new ViewportScope(workspace, workspaceSize, canvasSize, scale, offset, inUtilityWindow);
             Rect clipRect = viewport.ClipRect;
             Rect canvasRect = viewport.CanvasRect;
 
@@ -650,12 +669,10 @@ namespace IceEditor
         /// <summary>
         /// 一个可缩放可移动的Canvas视图
         /// </summary>
-        /// <param name="baseScreenRect">所在GUI空间的屏幕区域</param>
         /// <param name="workspace">工作区Rect</param>
         /// <param name="canvasSize">画布的尺寸</param>
         /// <param name="viewScale">画布缩放值</param>
         /// <param name="viewOffset">画布偏移</param>
-        /// <param name="dragCache">拖拽临时值</param>
         /// <param name="minScale">最小缩放值</param>
         /// <param name="maxScale">最大缩放值</param>
         /// <param name="useWidthOrHeightOfWorkspaceAsSize">为true时，取工作区的宽作为尺寸<br/>为false时，取工作的高作为尺寸<br/>为null时，取二者中较小值作为尺寸</param>
@@ -663,23 +680,21 @@ namespace IceEditor
         /// <param name="styleBackground">可为工作区设定一个背景样式</param>
         /// <param name="styleCanvas">可为画布设定一个背景样式</param>
         /// <returns></returns>
-        public static ViewportScope ViewportCanvas(Rect baseScreenRect, Rect workspace, float canvasSize, ref float viewScale, ref Vector2 viewOffset, float minScale = 0.5f, float maxScale = 2.0f, bool? useWidthOrHeightOfWorkspaceAsSize = null, bool useAbsoluteScale = false, GUIStyle styleBackground = null, GUIStyle styleCanvas = null, bool hasOutterClip = true) => Viewport(baseScreenRect, workspace, canvasSize, ref viewScale, ref viewOffset, minScale, maxScale, useWidthOrHeightOfWorkspaceAsSize, useAbsoluteScale, true, null, styleBackground, styleCanvas, hasOutterClip);
+        public static ViewportScope ViewportCanvas(Rect workspace, float canvasSize, ref float viewScale, ref Vector2 viewOffset, float minScale = 0.5f, float maxScale = 2.0f, bool? useWidthOrHeightOfWorkspaceAsSize = null, bool useAbsoluteScale = false, GUIStyle styleBackground = null, GUIStyle styleCanvas = null, bool inUtilityWindow = false) => Viewport(workspace, canvasSize, ref viewScale, ref viewOffset, minScale, maxScale, useWidthOrHeightOfWorkspaceAsSize, useAbsoluteScale, true, null, styleBackground, styleCanvas, inUtilityWindow);
         /// <summary>
         /// 一个可缩放可移动的Grid视图
         /// </summary>
-        /// <param name="baseScreenRect">所在GUI空间的屏幕区域</param>
         /// <param name="workspace">工作区Rect</param>
         /// <param name="gridSize">grid块的尺寸</param>
         /// <param name="viewScale">画布缩放值</param>
         /// <param name="viewOffset">画布偏移</param>
-        /// <param name="dragCache">拖拽临时值</param>
         /// <param name="minScale">最小缩放值</param>
         /// <param name="maxScale">最大缩放值</param>
         /// <param name="useWidthOrHeightOfWorkspaceAsSize">为true时，取工作区的宽作为尺寸<br/>为false时，取工作的高作为尺寸<br/>为null时，取二者中较小值作为尺寸</param>
         /// <param name="gridColor">指定一个颜色，沿画布边缘对齐绘制一个网格</param>
         /// <param name="styleBackground">可为工作区设定一个背景样式</param>
         /// <returns></returns>
-        public static ViewportScope ViewportGrid(Rect baseScreenRect, Rect workspace, float gridSize, ref float viewScale, ref Vector2 viewOffset, float minScale = 0.4f, float maxScale = 4.0f, bool? useWidthOrHeightOfWorkspaceAsSize = null, Color? gridColor = null, GUIStyle styleBackground = null, bool hasOutterClip = true) => Viewport(baseScreenRect, workspace, gridSize, ref viewScale, ref viewOffset, minScale, maxScale, useWidthOrHeightOfWorkspaceAsSize, true, false, gridColor, styleBackground, null, hasOutterClip);
+        public static ViewportScope ViewportGrid(Rect workspace, float gridSize, ref float viewScale, ref Vector2 viewOffset, float minScale = 0.4f, float maxScale = 4.0f, bool? useWidthOrHeightOfWorkspaceAsSize = null, Color? gridColor = null, GUIStyle styleBackground = null, bool inUtilityWindow = true) => Viewport(workspace, gridSize, ref viewScale, ref viewOffset, minScale, maxScale, useWidthOrHeightOfWorkspaceAsSize, true, false, gridColor, styleBackground, null, inUtilityWindow);
         /// <summary>
         /// 暂时改变 GUI.Color
         /// </summary>

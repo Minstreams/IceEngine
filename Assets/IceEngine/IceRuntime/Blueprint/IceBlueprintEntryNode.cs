@@ -1,13 +1,14 @@
-using System.Collections;
+锘縰sing System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
 using IceEngine.Internal;
+using IceEngine.Graph;
 
 namespace IceEngine.Blueprint
 {
     /// <summary>
-    /// 每个BP的入口点
+    /// 姣忎釜BP鐨勫叆鍙ｇ偣
     /// </summary>
     [System.Serializable]
     public class IceBlueprintEntryNode : IceGraphNode
