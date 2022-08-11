@@ -76,6 +76,10 @@ namespace IceEngine
         public static bool Contains(this Rect self, Rect other) => self.xMin <= other.xMin && self.xMax >= other.xMax && self.yMin <= other.yMin && self.yMax >= other.yMax;
         #endregion
 
+        #region Vector2
+        public static Rect RangeRect(this Vector2 from, Vector2 to) => Rect.MinMaxRect(Mathf.Min(from.x, to.x), Mathf.Min(from.y, to.y), Mathf.Max(from.x, to.x), Mathf.Max(from.y, to.y));
+        #endregion
+
         #region Render Texture
         /// <summary>
         /// 新建一个Texture2D并将此RT拷贝上去

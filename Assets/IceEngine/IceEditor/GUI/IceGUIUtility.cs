@@ -396,7 +396,31 @@ namespace IceEditor
         #endregion
 
         #region IceGraphNode
-        public static IceGraphNodeDrawer GetDrawer(this IceGraphNode node) => IceGraphNodeDrawer.GetDrawer(node);
+
+        #region Drawer
+        static readonly IceGraphNodeDrawer _defaultDrawer = new IceGraphNodeDrawer();
+        static Dictionary<Type, IceGraphNodeDrawer> _nodeDrawerMap = null;
+        static Dictionary<Type, IceGraphNodeDrawer> NodeDrawerMap
+        {
+            get
+            {
+                if (_nodeDrawerMap == null)
+                {
+                    _nodeDrawerMap = new();
+                    var drawers = TypeCache.GetTypesDerivedFrom<IceGraphNodeDrawer>();
+                    foreach (var dt in drawers)
+                    {
+                        if (dt.IsGenericType) continue;
+                        var drawer = (IceGraphNodeDrawer)Activator.CreateInstance(dt);
+                        if (!_nodeDrawerMap.TryAdd(drawer.NodeType, drawer)) throw new Exception($"Collecting drawer [{dt.FullName}] failed! [{drawer.NodeType}] already has a drawer [{_nodeDrawerMap[drawer.NodeType]}]");
+                    }
+                }
+                return _nodeDrawerMap;
+            }
+        }
+        public static IceGraphNodeDrawer GetDrawer(this IceGraphNode node) => NodeDrawerMap.TryGetValue(node.GetType(), out var drawer) ? drawer : _defaultDrawer;
+        #endregion
+
         public static Rect GetArea(this IceGraphNode node) => new(node.position, node.GetSize());
         public static Vector2 GetSize(this IceGraphNode node) => node.folded ? node.GetSizeFolded() : node.GetSizeUnfolded();
         public static Vector2 GetSizeUnfolded(this IceGraphNode node) => new

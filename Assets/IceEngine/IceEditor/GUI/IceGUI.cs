@@ -33,7 +33,7 @@ namespace IceEditor
         public static GUIStyle StlSubAreaSeparator => IceGUIUtility.HasPack ? IceGUIUtility.CurrentPack.StlSubAreaSeparator : _stlSubAreaSeparator?.Check() ?? (_stlSubAreaSeparator = IceGUIUtility.GetStlSubAreaSeparator(IceGUIUtility.DefaultThemeColor)); static GUIStyle _stlSubAreaSeparator;
         public static GUIStyle StlViewportToolButton => _stlViewportToolButton?.Check() ?? (_stlViewportToolButton = new GUIStyle("HoverHighlight") { alignment = TextAnchor.MiddleCenter, contentOffset = new Vector2(1f, 0f), fixedWidth = 0f, fixedHeight = 0f, }); static GUIStyle _stlViewportToolButton;
         public static GUIStyle StlGraphPortName => _stlGraphPortName?.Check() ?? (_stlGraphPortName = new GUIStyle("label") { margin = new RectOffset(-1, -1, 0, 0), padding = new RectOffset(0, 0, 0, 0), fontSize = 9, alignment = TextAnchor.MiddleCenter, }.Initialize(stl => { stl.normal.textColor = new Color(0.3962264f, 0.3962264f, 0.3962264f); })); static GUIStyle _stlGraphPortName;
-        public static GUIStyle StlGraphPortLabel => _stlGraphPortLabel?.Check() ?? (_stlGraphPortLabel = new GUIStyle("ShurikenValue") { margin = new RectOffset(1, 1, 2, 2), padding = new RectOffset(3, 3, 0, 0), fontSize = 9, alignment = TextAnchor.MiddleCenter, fixedHeight = 0f, }); static GUIStyle _stlGraphPortLabel;
+        public static GUIStyle StlGraphPortLabel => _stlGraphPortLabel?.Check() ?? (_stlGraphPortLabel = new GUIStyle("ShurikenValue") { margin = new RectOffset(1, 1, 2, 2), padding = new RectOffset(3, 3, 0, 0), fontSize = 12, alignment = TextAnchor.MiddleCenter, fixedHeight = 0f, }); static GUIStyle _stlGraphPortLabel;
         #endregion
 
         #region Scope

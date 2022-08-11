@@ -15,146 +15,17 @@ namespace IceEditor.Framework
     {
         public class IceGraphNodeDrawer
         {
-            #region Static Interface
-            static readonly IceGraphNodeDrawer _defaultDrawer = new IceGraphNodeDrawer();
-            static Dictionary<Type, IceGraphNodeDrawer> _nodeDrawerMap = null;
-            static Dictionary<Type, IceGraphNodeDrawer> NodeDrawerMap
-            {
-                get
-                {
-                    if (_nodeDrawerMap == null)
-                    {
-                        _nodeDrawerMap = new();
-                        var drawers = TypeCache.GetTypesDerivedFrom<IceGraphNodeDrawer>();
-                        foreach (var dt in drawers)
-                        {
-                            if (dt.IsGenericType) continue;
-                            var drawer = (Internal.IceGraphNodeDrawer)Activator.CreateInstance(dt);
-                            if (!_nodeDrawerMap.TryAdd(drawer.NodeType, drawer)) throw new Exception($"Collecting drawer [{dt.FullName}] failed! [{drawer.NodeType}] already has a drawer [{_nodeDrawerMap[drawer.NodeType]}]");
-                        }
-                    }
-                    return _nodeDrawerMap;
-                }
-            }
-            public static IceGraphNodeDrawer GetDrawer(IceGraphNode node) => NodeDrawerMap.TryGetValue(node.GetType(), out var drawer) ? drawer : _defaultDrawer;
-            #endregion
-
-            #region Interface
-            public void OnGUI(IceGraphNode node, float gridSize = 32)
-            {
-                // Rect Calculation
-                var nodeRect = node.GetArea();
-                var titleRect = new Rect(nodeRect.x, nodeRect.y, nodeRect.width, node.GetSizeTitle().y);
-
-                // DoubleClick To Fold
-                {
-                    if (E.type == EventType.MouseDown)
-                    {
-                        if (titleRect.Contains(E.mousePosition))
-                        {
-                            double t = EditorApplication.timeSinceStartup;
-                            if (t - _cache_time > 0.2)
-                            {
-                                _cache_time = t;
-                            }
-                            else
-                            {
-                                _cache_time = 0;
-                                // 双击
-                                node.folded = !node.folded;
-                            }
-                        }
-                    }
-                }
-
-                // Drag Control
-                {
-                    int idDragNode = GetControlID();
-                    switch (E.type)
-                    {
-                        case EventType.MouseDown:
-                            if (titleRect.Contains(E.mousePosition) && GUIHotControl == 0 && E.button == 0)
-                            {
-                                GUIHotControl = idDragNode;
-                                _cache_drag = node.position - E.mousePosition;
-                                _cache_offset = node.position;
-                                E.Use();
-                            }
-                            break;
-                        case EventType.MouseUp:
-                            if (GUIHotControl == idDragNode && E.button == 0)
-                            {
-                                GUIHotControl = 0;
-                                E.Use();
-                            }
-                            break;
-                        case EventType.MouseDrag:
-                            if (GUIHotControl == idDragNode)
-                            {
-                                node.position = _cache_drag + E.mousePosition;
-                                if (E.shift)
-                                {
-                                    // 平移操作
-                                    var offset = node.position - _cache_offset;
-                                    if (Mathf.Abs(offset.x) > Mathf.Abs(offset.y))
-                                    {
-                                        // 沿x轴平移
-                                        node.position.y = _cache_offset.y;
-                                    }
-                                    else
-                                    {
-                                        // 沿y轴平移
-                                        node.position.x = _cache_offset.x;
-                                    }
-                                }
-                                if (E.control)
-                                {
-                                    // 网格吸附操作
-                                    node.position = node.position.Snap(gridSize);
-                                }
-                                E.Use();
-                            }
-                            break;
-                        case EventType.Repaint:
-                            if (GUIHotControl == idDragNode)
-                            {
-                                var holderRect = new Rect(nodeRect) { position = _cache_offset };
-
-                                // 在原始位置画一个残影
-                                using (GUIColor(Color.white * 0.6f)) StyleBox(holderRect, StlGraphNodeBackground);
-
-                                // TODO: 复制操作
-                                if (E.alt)
-                                {
-                                    // TODO:在原始位置画一个残影
-                                }
-                            }
-                            break;
-                    }
-                }
-
-                // Draw
-                StyleBox(nodeRect, StlGraphNodeBackground);
-                OnGUI_Title(node, titleRect);
-                if (!node.folded)
-                {
-                    OnGUI_Body(node, new Rect(node.position, node.GetSizeBody()).Move(y: node.GetSizeFolded().y));
-                }
-            }
-
-            #endregion
-
-            internal virtual Type NodeType => null;
-
             #region Configuration
-            protected virtual GUIStyle StlGraphNodeBackground => StlNode;
+            internal virtual Type NodeType => null;
+            public virtual GUIStyle StlGraphNodeBackground => _stlGraphNodeBackground?.Check() ?? (_stlGraphNodeBackground = new GUIStyle("flow node 0") { margin = new RectOffset(6, 6, 4, 4), padding = new RectOffset(10, 10, 6, 6), contentOffset = new Vector2(0f, 0f), }); GUIStyle _stlGraphNodeBackground;
+            public virtual GUIStyle StlGraphNodeBackgroundSelected => _stlGraphNodeBackgroundSelected?.Check() ?? (_stlGraphNodeBackgroundSelected = new GUIStyle("flow node 0 on") { margin = new RectOffset(6, 6, 4, 4), padding = new RectOffset(10, 10, 6, 6), contentOffset = new Vector2(0f, 0f), }); GUIStyle _stlGraphNodeBackgroundSelected;
             public virtual Vector2 GetSizeBody(IceGraphNode node) => new(128, 64);
             public virtual Vector2 GetSizeTitle(IceGraphNode node) => ((GUIStyle)"label").CalcSize(new GUIContent("测试标题"));
-            protected virtual void OnGUI_Title(IceGraphNode node, Rect rect)
+            public virtual void OnGUI_Title(IceGraphNode node, Rect rect)
             {
                 using (AreaRaw(rect)) Label("空节点");
             }
-            protected virtual void OnGUI_Body(IceGraphNode node, Rect rect)
+            public virtual void OnGUI_Body(IceGraphNode node, Rect rect)
             {
                 using (AreaRaw(rect)) Label("……");
             }
@@ -163,6 +34,6 @@ namespace IceEditor.Framework
     }
     public abstract class IceGraphNodeDrawer<Node> : Internal.IceGraphNodeDrawer where Node : IceGraphNode
     {
-        internal override Type NodeType => typeof(Node);
+        internal sealed override Type NodeType => typeof(Node);
     }
 }
