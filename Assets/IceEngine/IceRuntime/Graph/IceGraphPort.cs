@@ -57,8 +57,6 @@ namespace IceEngine.Graph
         public override bool IsConnected => connectedPorts.Count > 0;
         public override void ConnectTo(IceGraphPort other)
         {
-            if (!this.IsConnectableTo(other)) throw new Exception($"IceGraphInport {name} can not connect to {other}");
-
             if (other is IceGraphOutport op)
             {
                 op.connectedPorts.Add(data);
@@ -97,8 +95,6 @@ namespace IceEngine.Graph
         public override bool IsConnected => connectedPorts.Count > 0;
         public override void ConnectTo(IceGraphPort other)
         {
-            if (!this.IsConnectableTo(other)) throw new Exception($"IceGraphOutport {name} can not connect to {other}");
-
             if (other is IceGraphInport ip)
             {
                 ip.connectedPorts.Add(this);

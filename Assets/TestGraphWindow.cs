@@ -22,6 +22,7 @@ public class TestGraphWindow : IceEditorWindow, ISerializationCallbackReceiver
     protected override void OnEnable()
     {
         base.OnEnable();
+        wantsMouseMove = true;
         drawer = new IceGraphDrawer(graph);
     }
     protected override void OnWindowGUI(Rect position)
@@ -42,6 +43,7 @@ public class TestGraphWindow : IceEditorWindow, ISerializationCallbackReceiver
                 }
 
                 drawer.OnGUI(stlBackGround: StlDock);
+                if (E.type == EventType.MouseMove) Repaint();
 
                 bool withHeader = Toggle("WithHeader");
                 using (HORIZONTAL)

@@ -84,12 +84,25 @@ namespace IceEngine.Graph
         }
         #endregion
 
-        #region GUI
+        #region Configuration
         public virtual Color GetPortColor(IceGraphPort port)
         {
             Type t = port.valueType;
             if (t == typeof(int)) return Color.cyan;
             return Color.white;
+        }
+        public virtual bool IsConnectable(IceGraphPort p1, IceGraphPort p2)
+        {
+            if (p1.node == p2.node) return false;
+            if (p1.IsOutport == p2.IsOutport) return false;
+            if (!p1.isMultiple && p1.IsConnected) return false;
+            if (!p2.isMultiple && p2.IsConnected) return false;
+
+            (IceGraphPort pin, IceGraphPort pout) = p1.IsOutport ? (p2, p1) : (p1, p2);
+            if ((pin as IceGraphInport).connectedPorts.Contains(pout as IceGraphOutport)) return false;
+            if (pin.valueType.IsAssignableFrom(pout.valueType)) return true;
+
+            return false;
         }
         #endregion
     }

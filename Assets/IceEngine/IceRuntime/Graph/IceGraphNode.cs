@@ -53,10 +53,10 @@ namespace IceEngine.Graph
 
         public IceGraphNode()
         {
-            AddOutport<float>("out10");
-            AddOutport<int>("testOut2");
-            AddInport<float>("V");
-            AddInport<int>("F");
+            AddOutport<float>("out10", false);
+            AddOutport<int>("testOut2", false);
+            AddInport<float>("V", false);
+            AddInport<int>("F", false);
         }
         #endregion
 

@@ -32,7 +32,8 @@ namespace IceEditor
         public static GUIStyle StlPrefix => IceGUIUtility.HasPack ? IceGUIUtility.CurrentPack.StlPrefix : _stlPrefix?.Check() ?? (_stlPrefix = IceGUIUtility.GetStlPrefix(IceGUIUtility.DefaultThemeColor)); static GUIStyle _stlPrefix;
         public static GUIStyle StlSubAreaSeparator => IceGUIUtility.HasPack ? IceGUIUtility.CurrentPack.StlSubAreaSeparator : _stlSubAreaSeparator?.Check() ?? (_stlSubAreaSeparator = IceGUIUtility.GetStlSubAreaSeparator(IceGUIUtility.DefaultThemeColor)); static GUIStyle _stlSubAreaSeparator;
         public static GUIStyle StlViewportToolButton => _stlViewportToolButton?.Check() ?? (_stlViewportToolButton = new GUIStyle("HoverHighlight") { alignment = TextAnchor.MiddleCenter, contentOffset = new Vector2(1f, 0f), fixedWidth = 0f, fixedHeight = 0f, }); static GUIStyle _stlViewportToolButton;
-        public static GUIStyle StlGraphPortName => _stlGraphPortName?.Check() ?? (_stlGraphPortName = new GUIStyle("label") { margin = new RectOffset(0, 0, 0, 0), padding = new RectOffset(0, 0, 0, 0), fontSize = 8, alignment = TextAnchor.MiddleCenter, }.Initialize(stl => { stl.normal.textColor = new Color(0.3962264f, 0.3962264f, 0.3962264f); })); static GUIStyle _stlGraphPortName;
+        public static GUIStyle StlGraphPortName => _stlGraphPortName?.Check() ?? (_stlGraphPortName = new GUIStyle("label") { margin = new RectOffset(-1, -1, 0, 0), padding = new RectOffset(0, 0, 0, 0), fontSize = 9, alignment = TextAnchor.MiddleCenter, }.Initialize(stl => { stl.normal.textColor = new Color(0.3962264f, 0.3962264f, 0.3962264f); })); static GUIStyle _stlGraphPortName;
+        public static GUIStyle StlGraphPortLabel => _stlGraphPortLabel?.Check() ?? (_stlGraphPortLabel = new GUIStyle("ShurikenValue") { margin = new RectOffset(1, 1, 2, 2), padding = new RectOffset(3, 3, 0, 0), fontSize = 9, alignment = TextAnchor.MiddleCenter, fixedHeight = 0f, }); static GUIStyle _stlGraphPortLabel;
         #endregion
 
         #region Scope
@@ -608,8 +609,7 @@ namespace IceEditor
                     if ((GUIHotControl == preMoveViewControl || (GUIHotControl == 0 && E.button != 0)))
                     {
                         GUIHotControl = moveViewControl;
-                        dragCache = E.mousePosition;
-                        E.Use();
+                        _cache_drag = E.mousePosition;
                     }
                     break;
                 case EventType.MouseUp:
@@ -622,7 +622,7 @@ namespace IceEditor
                 case EventType.MouseDrag:
                     if (GUIHotControl == moveViewControl)
                     {
-                        viewOffset = offset += E.mousePosition - dragCache;
+                        viewOffset = offset += E.mousePosition - _cache_drag;
                         E.Use();
                     }
                     break;
@@ -778,9 +778,9 @@ namespace IceEditor
         public static Event E => Event.current;
 
         // Internal Caches
-        internal static Vector2 dragCache;
-        internal static Vector2 offsetCache;
-        internal static double timeCache;
+        internal static Vector2 _cache_drag;
+        internal static Vector2 _cache_offset;
+        internal static double _cache_time;
         #endregion
 
         #region Drawing Elements

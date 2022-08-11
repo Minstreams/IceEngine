@@ -53,13 +53,13 @@ namespace IceEditor.Framework
                         if (titleRect.Contains(E.mousePosition))
                         {
                             double t = EditorApplication.timeSinceStartup;
-                            if (t - timeCache > 0.2)
+                            if (t - _cache_time > 0.2)
                             {
-                                timeCache = t;
+                                _cache_time = t;
                             }
                             else
                             {
-                                timeCache = 0;
+                                _cache_time = 0;
                                 // 双击
                                 node.folded = !node.folded;
                             }
@@ -76,8 +76,8 @@ namespace IceEditor.Framework
                             if (titleRect.Contains(E.mousePosition) && GUIHotControl == 0 && E.button == 0)
                             {
                                 GUIHotControl = idDragNode;
-                                dragCache = node.position - E.mousePosition;
-                                offsetCache = node.position;
+                                _cache_drag = node.position - E.mousePosition;
+                                _cache_offset = node.position;
                                 E.Use();
                             }
                             break;
@@ -91,20 +91,20 @@ namespace IceEditor.Framework
                         case EventType.MouseDrag:
                             if (GUIHotControl == idDragNode)
                             {
-                                node.position = dragCache + E.mousePosition;
+                                node.position = _cache_drag + E.mousePosition;
                                 if (E.shift)
                                 {
                                     // 平移操作
-                                    var offset = node.position - offsetCache;
+                                    var offset = node.position - _cache_offset;
                                     if (Mathf.Abs(offset.x) > Mathf.Abs(offset.y))
                                     {
                                         // 沿x轴平移
-                                        node.position.y = offsetCache.y;
+                                        node.position.y = _cache_offset.y;
                                     }
                                     else
                                     {
                                         // 沿y轴平移
-                                        node.position.x = offsetCache.x;
+                                        node.position.x = _cache_offset.x;
                                     }
                                 }
                                 if (E.control)
@@ -118,7 +118,7 @@ namespace IceEditor.Framework
                         case EventType.Repaint:
                             if (GUIHotControl == idDragNode)
                             {
-                                var holderRect = new Rect(nodeRect) { position = offsetCache };
+                                var holderRect = new Rect(nodeRect) { position = _cache_offset };
 
                                 // 在原始位置画一个残影
                                 using (GUIColor(Color.white * 0.6f)) StyleBox(holderRect, StlGraphNodeBackground);
