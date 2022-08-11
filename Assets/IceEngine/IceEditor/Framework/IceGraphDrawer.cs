@@ -1,16 +1,14 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 
 using UnityEditor;
 using UnityEngine;
 
 using IceEngine;
-using IceEngine.Internal;
 using IceEngine.Graph;
 using static IceEditor.IceGUI;
 using static IceEditor.IceGUIAuto;
 
-namespace IceEditor.Graph
+namespace IceEditor.Framework
 {
     public class IceGraphDrawer
     {
@@ -57,12 +55,18 @@ namespace IceEditor.Graph
         }
         #endregion
 
+
         /// <summary>
         /// 一个Graph操作区
         /// </summary>
-        /// <param name="baseScreenRect">所在GUI空间的屏幕区域</param>
+        /// <param name="stlBackGround">背景样式</param>
+        /// <param name="gridSize">grid块的尺寸</param>
+        public void OnGUI(float gridSize = 32, float defaultScale = 1, float minScale = 0.4f, float maxScale = 4.0f, GUIStyle stlBackGround = null, bool inUtilityWindow = false) => OnGUI(GetRect(GUILayout.ExpandWidth(true), GUILayout.ExpandHeight(true)), gridSize, defaultScale, minScale, maxScale, stlBackGround, inUtilityWindow);
+
+        /// <summary>
+        /// 一个Graph操作区
+        /// </summary>
         /// <param name="area">工作区Rect</param>
-        /// <param name="Graph">graph对象</param>
         /// <param name="stlBackGround">背景样式</param>
         /// <param name="gridSize">grid块的尺寸</param>
         public void OnGUI(Rect area, float gridSize = 32, float defaultScale = 1, float minScale = 0.4f, float maxScale = 4.0f, GUIStyle stlBackGround = null, bool inUtilityWindow = false)
@@ -98,7 +102,7 @@ namespace IceEditor.Graph
 
                 if (!port.node.folded)
                 {
-                    Rect rPort = pos.ExpandToRect(IceGraphEditorUtitliy.PORT_RADIUS);
+                    Rect rPort = pos.ExpandToRect(IceGUIUtility.PORT_RADIUS);
                     switch (E.type)
                     {
                         case EventType.MouseDown:
@@ -185,7 +189,7 @@ namespace IceEditor.Graph
                                 // 画 Port 内圈
                                 void DiscWire(float radius, Color color)
                                 {
-                                    radius *= IceGraphEditorUtitliy.PORT_RADIUS;
+                                    radius *= IceGUIUtility.PORT_RADIUS;
                                     using (HandlesColor(color)) Handles.DrawWireDisc(pos, Vector3.forward, radius);
                                     // 柔化边缘
                                     color.a *= 0.4f;
@@ -198,7 +202,7 @@ namespace IceEditor.Graph
                                 }
                                 void DiscSolid(float radius, Color color)
                                 {
-                                    radius *= IceGraphEditorUtitliy.PORT_RADIUS;
+                                    radius *= IceGUIUtility.PORT_RADIUS;
                                     using (HandlesColor(color)) Handles.DrawSolidDisc(pos, Vector3.forward, radius);
                                     // 柔化边缘
                                     color.a *= 0.4f;
@@ -210,7 +214,7 @@ namespace IceEditor.Graph
 
                     // Text
                     float wText = StlGraphPortName.CalcSize(new GUIContent(port.name)).x;
-                    Rect rText = new Rect(port.IsOutport ? rPort.xMax : rPort.x - wText, rPort.y, wText, IceGraphEditorUtitliy.PORT_SIZE);
+                    Rect rText = new Rect(port.IsOutport ? rPort.xMax : rPort.x - wText, rPort.y, wText, IceGUIUtility.PORT_SIZE);
                     GUI.Label(rText, new GUIContent(port.name, port.valueType?.Name ?? "void"), StlGraphPortName);
                     StyleBox(rText, StlGraphPortName, port.name);
                 }

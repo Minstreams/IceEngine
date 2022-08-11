@@ -1,6 +1,6 @@
-﻿using System;
-using System.IO;
+﻿using System.IO;
 using System.Reflection;
+
 using UnityEngine;
 
 namespace IceEngine.Framework

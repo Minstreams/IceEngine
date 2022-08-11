@@ -1,15 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
+
 using UnityEditor;
 using UnityEngine;
 
 using IceEngine;
-using IceEngine.Internal;
 using IceEngine.Graph;
 using static IceEditor.IceGUI;
 using static IceEditor.IceGUIAuto;
 
-namespace IceEditor.Graph
+namespace IceEditor.Framework
 {
     namespace Internal
     {

@@ -1,17 +1,10 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+
 using UnityEngine;
 using UnityEditor;
 using UnityEditor.AnimatedValues;
 using UnityEngine.Rendering;
 
-using IceEngine;
-using IceEngine.Graph;
-using IceEngine.Internal;
-using IceEditor.Internal;
 using static IceEditor.IceGUI;
 
 namespace IceEditor

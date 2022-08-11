@@ -1,8 +1,4 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
-
-using IceEngine.Framework;
+﻿using IceEngine.Framework;
 
 namespace IceEngine.Internal
 {

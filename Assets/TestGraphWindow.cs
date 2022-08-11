@@ -8,7 +8,7 @@ using IceEngine.Graph;
 using IceEditor;
 using static IceEditor.IceGUI;
 using static IceEditor.IceGUIAuto;
-using IceEditor.Graph;
+using IceEditor.Framework;
 
 public class TestGraphWindow : IceEditorWindow, ISerializationCallbackReceiver
 {
@@ -41,8 +41,7 @@ public class TestGraphWindow : IceEditorWindow, ISerializationCallbackReceiver
                     Label($"Node Count: {graph.nodeList.Count}");
                 }
 
-                var r = GetRect(256, 256, GUILayout.ExpandWidth(true));
-                drawer.OnGUI(r, stlBackGround: StlDock);
+                drawer.OnGUI(stlBackGround: StlDock);
 
                 bool withHeader = Toggle("WithHeader");
                 using (HORIZONTAL)

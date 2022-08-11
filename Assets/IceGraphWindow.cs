@@ -9,7 +9,7 @@ using IceEngine.Internal;
 using static IceEditor.IceGUI;
 using static IceEditor.IceGUIAuto;
 using System;
-using IceEditor.Graph;
+using IceEditor.Framework;
 
 namespace IceEditor
 {

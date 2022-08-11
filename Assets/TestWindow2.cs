@@ -5,6 +5,7 @@ using UnityEditor;
 
 using IceEngine;
 using IceEditor;
+using IceEditor.Framework;
 using static IceEditor.IceGUI;
 using static IceEditor.IceGUIAuto;
 using System;

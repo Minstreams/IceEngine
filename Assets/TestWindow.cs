@@ -1,4 +1,4 @@
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
@@ -7,6 +7,7 @@ using static IceEditor.IceGUI;
 using static IceEditor.IceGUIAuto;
 using System.IO;
 using System.Text.RegularExpressions;
+using IceEditor.Framework;
 
 namespace IceEditor
 {

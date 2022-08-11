@@ -1,13 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
+
 using UnityEngine;
 using UnityEditor;
+
 using IceEngine;
 using static IceEditor.IceGUI;
 using static IceEditor.IceGUIAuto;
-using System.Runtime.CompilerServices;
 
-namespace IceEditor
+namespace IceEditor.Framework
 {
     /// <summary>
     /// 包含基础功能的窗口类

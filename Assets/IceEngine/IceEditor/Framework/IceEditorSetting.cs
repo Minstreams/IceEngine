@@ -1,11 +1,12 @@
-﻿using UnityEditor;
+﻿using System.IO;
+using System.Reflection;
+
 using UnityEngine;
 using UnityEditorInternal;
-using System.IO;
-using System.Reflection;
+
 using IceEngine;
 
-namespace IceEditor
+namespace IceEditor.Framework
 {
     namespace Internal
     {
