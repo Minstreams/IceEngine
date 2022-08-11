@@ -376,12 +376,12 @@ namespace IceEditor
             {
                 if (port.IsOutport)
                 {
-                    res.x += node.GetSizeFolded().x;
-                    res.y += (node.GetSizeFolded().y * (port.id + 1)) / (node.outports.Count + 1);
+                    res.x += node.GetSizeTitle().x;
+                    res.y += (node.GetSizeTitle().y * (port.id + 1)) / (node.outports.Count + 1);
                 }
                 else
                 {
-                    res.y += (node.GetSizeFolded().y * (port.id + 1)) / (node.inports.Count + 1);
+                    res.y += (node.GetSizeTitle().y * (port.id + 1)) / (node.inports.Count + 1);
                 }
             }
             else
@@ -422,13 +422,12 @@ namespace IceEditor
         #endregion
 
         public static Rect GetArea(this IceGraphNode node) => new(node.position, node.GetSize());
-        public static Vector2 GetSize(this IceGraphNode node) => node.folded ? node.GetSizeFolded() : node.GetSizeUnfolded();
+        public static Vector2 GetSize(this IceGraphNode node) => node.folded ? node.GetSizeTitle() : node.GetSizeUnfolded();
         public static Vector2 GetSizeUnfolded(this IceGraphNode node) => new
         (
-            Mathf.Max(node.GetSizeBody().x, node.GetSizeFolded().x),
-            Mathf.Max(node.GetSizeBody().y + node.GetSizeFolded().y, node.inports.Count * PORT_SIZE, node.outports.Count * PORT_SIZE)
+            Mathf.Max(node.GetSizeBody().x, node.GetSizeTitle().x),
+            Mathf.Max(node.GetSizeBody().y + node.GetSizeTitle().y, node.inports.Count * PORT_SIZE, node.outports.Count * PORT_SIZE)
         );
-        public static Vector2 GetSizeFolded(this IceGraphNode node) => node.GetSizeTitle();
         public static Vector2 GetSizeTitle(this IceGraphNode node) => node.GetDrawer().GetSizeTitle(node);
         public static Vector2 GetSizeBody(this IceGraphNode node) => node.GetDrawer().GetSizeBody(node);
         #endregion

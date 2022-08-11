@@ -7,6 +7,7 @@ using IceEngine;
 using IceEngine.Graph;
 using static IceEditor.IceGUI;
 using static IceEditor.IceGUIAuto;
+using System;
 
 namespace IceEditor.Framework
 {
@@ -14,10 +15,12 @@ namespace IceEditor.Framework
     {
         public IceGraph Graph { get; private set; } = null;
         public string Key { get; private set; } = null;
-        public IceGraphDrawer(IceGraph graph, string keyOverride = null)
+        Action repaintAction;
+        public IceGraphDrawer(IceGraph graph, Action repaintAction, string keyOverride = null)
         {
             Graph = graph;
             Key = keyOverride ?? "GraphView";
+            this.repaintAction = repaintAction;
         }
 
         #region Port
@@ -61,6 +64,8 @@ namespace IceEditor.Framework
 
         #region GUI
 
+        void Repaint() => repaintAction?.Invoke();
+
         /// <summary>
         /// 一个Graph操作区
         /// </summary>
@@ -78,6 +83,24 @@ namespace IceEditor.Framework
         {
             using var viewport = ViewportGrid(Key, area, gridSize, defaultScale, minScale, maxScale, null, IceGUIUtility.CurrentThemeColor * 0.5f, stlBackGround, inUtilityWindow);
 
+            // 强制刷新
+            if (E.type == EventType.MouseMove) Repaint();
+
+            // 快捷键
+            if (E.type == EventType.KeyDown)
+            {
+                if (E.keyCode == KeyCode.Delete)
+                {
+                    foreach (var node in selectedNodes)
+                    {
+                        Graph.RemoveNode(node);
+                    }
+                    selectedNodes.Clear();
+                    Repaint();
+                }
+            }
+
+            // 画node
             foreach (var node in Graph.nodeList)
             {
                 var drawer = node.GetDrawer();
@@ -85,7 +108,7 @@ namespace IceEditor.Framework
 
                 // Rect Calculation
                 var nodeRect = node.GetArea();
-                var titleRect = new Rect(nodeRect.x, nodeRect.y, nodeRect.width, node.GetSizeTitle().y);
+                var titleRect = new Rect(nodeRect) { height = node.GetSizeTitle().y };
 
                 // DoubleClick To Fold
                 if (E.type == EventType.MouseDown)
@@ -175,10 +198,7 @@ namespace IceEditor.Framework
                 // Draw
                 StyleBox(nodeRect, bSelected ? drawer.StlGraphNodeBackgroundSelected : drawer.StlGraphNodeBackground);
                 drawer.OnGUI_Title(node, titleRect);
-                if (!node.folded)
-                {
-                    drawer.OnGUI_Body(node, new Rect(node.position, node.GetSizeBody()).Move(y: node.GetSizeFolded().y));
-                }
+                if (!node.folded) drawer.OnGUI_Body(node, new Rect(node.position, node.GetSizeBody()).Move(y: node.GetSizeTitle().y));
             }
 
             int idDragPort = GetControlID();

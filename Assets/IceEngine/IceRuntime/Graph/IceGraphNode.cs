@@ -6,8 +6,7 @@ using UnityEngine;
 namespace IceEngine.Graph
 {
     [IcePacket]
-    [Serializable]
-    public class IceGraphNode
+    public abstract class IceGraphNode
     {
         #region Cache
         [NonSerialized] public IceGraph graph;
@@ -18,6 +17,10 @@ namespace IceEngine.Graph
 
         #region Serialized Data
         public List<List<IceGraphInportData>> connectionData = new();
+
+        // GUI
+        public Vector2 position;
+        public bool folded;
         #endregion
 
         #region Interface
@@ -32,7 +35,7 @@ namespace IceEngine.Graph
                 id = inports.Count,
             };
             port.data.nodeId = id;
-            port.data.portId = inports.Count;
+            port.data.portId = port.id;
             inports.Add(port);
         }
         protected void AddInport<T>(string name, bool allowMultiple = true) => AddInport(name, allowMultiple, typeof(T));
@@ -46,28 +49,14 @@ namespace IceEngine.Graph
                 node = this,
                 id = outports.Count,
             };
-            connectionData.Add(port.connectedPorts);
+            if (connectionData.Count == port.id) connectionData.Add(port.connectedPorts);
             outports.Add(port);
         }
         protected void AddOutport<T>(string name, bool allowMultiple = true) => AddOutport(name, allowMultiple, typeof(T));
-
-        public IceGraphNode()
-        {
-            AddOutport<float>("out10", false);
-            AddOutport<int>("testOut2", false);
-            AddInport<float>("V", false);
-            AddInport<int>("F", false);
-        }
         #endregion
 
-
-        #region GUI
-
-        #region 基本字段
-        public Vector2 position;
-        public bool folded;
-        #endregion
-
+        #region Configuration
+        public abstract void InitializePorts();
         #endregion
     }
 }

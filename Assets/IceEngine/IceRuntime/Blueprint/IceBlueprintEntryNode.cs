@@ -14,5 +14,10 @@ namespace IceEngine.Blueprint
     public class IceBlueprintEntryNode : IceGraphNode
     {
         public int testInt = 0;
+
+        public override void InitializePorts()
+        {
+
+        }
     }
 }

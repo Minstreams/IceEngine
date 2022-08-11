@@ -25,7 +25,7 @@ namespace IceEditor
         {
             base.OnEnable();
             wantsMouseMove = true;
-            drawer = new IceGraphDrawer(g);
+            drawer = new IceGraphDrawer(g, Repaint);
         }
 
 
@@ -35,29 +35,6 @@ namespace IceEditor
 
         protected override void OnWindowGUI(Rect position)
         {
-            using (DOCK)
-            {
-                if (IceButton("New Node"))
-                {
-                    var node = new IceGraphNode();
-                    g.AddNode(node);
-                }
-                Space();
-                Label($"Node Count: {g.nodeList.Count}");
-            }
-
-            using (DOCK)
-            {
-                if (IceButton("New Node"))
-                {
-                    var node = new IceGraphNode();
-                    g.AddNode(node);
-                }
-                Space();
-                Label($"Node Count: {g.nodeList.Count}");
-            }
-
-
             using (HORIZONTAL)
             {
                 using (VERTICAL)

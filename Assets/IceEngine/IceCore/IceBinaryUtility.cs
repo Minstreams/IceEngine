@@ -781,10 +781,13 @@ namespace IceEngine
             }
             if (type.IsCollection())
             {
-                var ic = (ICollection)Activator.CreateInstance(type);
+                var ic = (ICollection)(instance ?? Activator.CreateInstance(type));
                 Type iType = ic.AsQueryable().ElementType;
                 var cType = TypeDefinitions.iCollectionType.MakeGenericType(iType);
                 var addMethod = cType.GetMethod("Add");
+                var clearMethod = cType.GetMethod("Clear");
+
+                clearMethod.Invoke(ic, null);
 
                 int count = bytes.ReadInt(ref offset);
                 bool hasHeader = iType.HasHeader();
@@ -871,7 +874,6 @@ namespace IceEngine
             if (target is null) throw new ArgumentException("Target is null!");
 
             if (type == null) type = target.GetType();
-            if (type.IsEnum || type.IsArray || type.IsCollection() || (!type.IsClass && !type.IsValueType)) throw new ArgumentException($"Unsupported type {type}");
 
             if (withHeader)
             {
@@ -879,6 +881,7 @@ namespace IceEngine
             }
             else
             {
+                if (type.IsEnum || type.IsArray || type.IsCollection() || (!type.IsClass && !type.IsValueType)) throw new ArgumentException($"Unsupported type {type}");
                 bytes.ReadObjectOverride(ref offset, target, type);
             }
         }

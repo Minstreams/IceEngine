@@ -5,13 +5,20 @@ using UnityEngine;
 
 namespace IceEngine.Graph
 {
-    [IcePacket]
+    [Serializable]
     public class IceGraph
     {
         #region Cache
-        public virtual void OnDeserialized()
+        [NonSerialized] public List<IceGraphNode> nodeList = new();
+        protected virtual void OnDeserialized()
         {
-            // Step1: redirect outport data
+            // Step1: initialize ports
+            foreach (var node in nodeList)
+            {
+                node.InitializePorts();
+            }
+
+            // Step2: repair connection references
             foreach (var node in nodeList)
             {
                 for (int i = 0; i < node.outports.Count; ++i)
@@ -28,40 +35,37 @@ namespace IceEngine.Graph
                 }
             }
 
-            // Step2: do update cache
+            // Step3: update node cache
             for (int ni = 0; ni < nodeList.Count; ++ni) UpdateNodeCache(nodeList[ni], ni);
         }
         void UpdateNodeCache(IceGraphNode node, int id)
         {
             node.graph = this;
             node.id = id;
-            for (int pi = 0; pi < node.inports.Count; ++pi)
-            {
-                var port = node.inports[pi];
-                //port.node = node;
-                //port.id = pi;
-
-                var pd = port.data;
-                pd.nodeId = id;
-                //pd.portId = pi;
-            }
-            //for (int pi = 0; pi < node.outports.Count; ++pi)
-            //{
-            //    var port = node.outports[pi];
-            //    port.node = node;
-            //    port.id = pi;
-            //}
+            foreach (var ip in node.inports) ip.data.nodeId = id;
         }
         #endregion
 
         #region Serialized Data
-        [SerializeField] public List<IceGraphNode> nodeList = new();
+        public byte[] data = null;
+        public void Serialize()
+        {
+            data = IceBinaryUtility.ToBytes(nodeList, withHeader: true);
+        }
+        public void Deserialize()
+        {
+            IceBinaryUtility.FromBytesOverride(data, nodeList, withHeader: true);
+            OnDeserialized();
+        }
         #endregion
 
         #region Interface
-        public void AddNode(IceGraphNode node)
+        public void AddNode(Type nodeType) => AddNode(Activator.CreateInstance(nodeType) as IceGraphNode);
+        public void AddNode<Node>() where Node : IceGraphNode => AddNode(Activator.CreateInstance<Node>());
+        void AddNode(IceGraphNode node)
         {
             int index = nodeList.Count;
+            node.InitializePorts();
             UpdateNodeCache(node, index);
             nodeList.Add(node);
         }

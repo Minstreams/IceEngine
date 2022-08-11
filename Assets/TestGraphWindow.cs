@@ -9,10 +9,11 @@ using IceEditor;
 using static IceEditor.IceGUI;
 using static IceEditor.IceGUIAuto;
 using IceEditor.Framework;
+using IceEngine.Blueprint;
 
 public class TestGraphWindow : IceEditorWindow, ISerializationCallbackReceiver
 {
-    IceGraph graph = new IceGraph();
+    IceBlueprint graph = new IceBlueprint();
     public IceGraphDrawer drawer;
     public byte[] buffer = null;
 
@@ -23,7 +24,7 @@ public class TestGraphWindow : IceEditorWindow, ISerializationCallbackReceiver
     {
         base.OnEnable();
         wantsMouseMove = true;
-        drawer = new IceGraphDrawer(graph);
+        drawer = new IceGraphDrawer(graph, Repaint);
     }
     protected override void OnWindowGUI(Rect position)
     {
@@ -33,19 +34,20 @@ public class TestGraphWindow : IceEditorWindow, ISerializationCallbackReceiver
             {
                 using (DOCK)
                 {
-                    if (IceButton("New Node"))
+                    if (IceButton("InputNode"))
                     {
-                        var node = new IceGraphNode();
-                        graph.AddNode(node);
+                        graph.AddNode<InputNode>();
+                    }
+                    if (IceButton("OutputNode"))
+                    {
+                        graph.AddNode<OutputNode>();
                     }
                     Space();
                     Label($"Node Count: {graph.nodeList.Count}");
                 }
 
                 drawer.OnGUI(stlBackGround: StlDock);
-                if (E.type == EventType.MouseMove) Repaint();
 
-                bool withHeader = Toggle("WithHeader");
                 using (HORIZONTAL)
                 {
                     if (Button("Serialize!"))
@@ -53,13 +55,12 @@ public class TestGraphWindow : IceEditorWindow, ISerializationCallbackReceiver
                         SetString("Console", "");
                         using (new IceBinaryUtility.LogScope(OnLog))
                         {
-                            buffer = IceBinaryUtility.ToBytes(graph, withHeader);
+                            graph.Serialize();
                         }
                     }
                     if (Button("Read!"))
                     {
-                        IceBinaryUtility.FromBytesOverride(buffer, graph, null, withHeader);
-                        graph.OnDeserialized();
+                        graph.Deserialize();
                     }
                 }
 
