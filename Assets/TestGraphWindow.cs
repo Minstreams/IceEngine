@@ -16,6 +16,7 @@ public class TestGraphWindow : IceEditorWindow, ISerializationCallbackReceiver
     IceBlueprint graph = new IceBlueprint();
     public IceGraphDrawer drawer;
     public byte[] buffer = null;
+    public byte[] diff = null;
 
     [MenuItem("测试/Graph")]
     static void OpenWindow() => GetWindow<TestGraphWindow>();
@@ -61,6 +62,29 @@ public class TestGraphWindow : IceEditorWindow, ISerializationCallbackReceiver
                     if (Button("Read!"))
                     {
                         graph.Deserialize();
+                    }
+                }
+                using (HORIZONTAL)
+                {
+                    if (Button("Save Bytes[]"))
+                    {
+                        buffer = graph.data;
+                    }
+                    if (Button("Get Diff"))
+                    {
+                        SetString("Console", "");
+                        using (new IceBinaryUtility.LogScope(OnLog))
+                        {
+                            diff = IceBinaryUtility.GetDiff(graph.data, buffer);
+                        }
+                    }
+                    if (Button("Apply Diff"))
+                    {
+                        graph.data = IceBinaryUtility.ApplyDiff(graph.data, diff);
+                    }
+                    if (Button("Reverse Diff"))
+                    {
+                        graph.data = IceBinaryUtility.ReverseDiff(graph.data, diff);
                     }
                 }
 

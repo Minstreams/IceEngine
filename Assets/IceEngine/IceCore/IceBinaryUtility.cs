@@ -888,5 +888,275 @@ namespace IceEngine
         #endregion
 
         #endregion
+
+        #region Difference
+        enum DiffStatus
+        {
+            start,
+            preserve,
+            diff,
+        }
+        public static byte[] GetDiff(byte[] oldBytes, byte[] newBytes)
+        {
+            Log("\nOld");
+            Log("\n数据: ");
+            Log(oldBytes.Hex(oldBytes.Length).Color("#FA0"));
+            Log("\n长度: ");
+            Log($"{oldBytes.Length}".Color("#0AB"));
+
+            Log("\n");
+
+            Log("\nNew");
+            Log("\n数据: ");
+            Log(newBytes.Hex(newBytes.Length).Color("#FA0"));
+            Log("\n长度: ");
+            Log($"{newBytes.Length}".Color("#0AB"));
+
+            List<byte> buffer = new();
+
+            int po = 0;
+            int pn = 0;
+
+            DiffStatus status = DiffStatus.start;
+            ushort count = 0;
+
+            void Skip(ushort count)
+            {
+                if (count == 0) return;
+                Log("\n");
+                buffer.AddHeader(DiffHeaderDefinitions.skip);
+                buffer.AddBytes(GetBytes(count));
+
+                ushort tCount = count;
+                while (count > 0)
+                {
+                    buffer.Add(oldBytes[po++]);
+                    --count;
+                }
+                buffer.LogBlock(tCount);
+            }
+            void SkipAll()
+            {
+                int l = oldBytes.Length - po;
+                while (l > 0)
+                {
+                    count = l > ushort.MaxValue ? ushort.MaxValue : (ushort)l;
+                    Skip(count);
+                    l -= ushort.MaxValue;
+                }
+            }
+            void Insert(ushort count)
+            {
+                if (count == 0) return;
+                Log("\n");
+                buffer.AddHeader(DiffHeaderDefinitions.insert);
+                buffer.AddBytes(GetBytes(count));
+
+                ushort tCount = count;
+                while (count > 0)
+                {
+                    buffer.Add(newBytes[pn++]);
+                    --count;
+                }
+                buffer.LogBlock(tCount);
+            }
+            void InsertAll()
+            {
+                int l = newBytes.Length - pn;
+                while (l > 0)
+                {
+                    count = l > ushort.MaxValue ? ushort.MaxValue : (ushort)l;
+                    Insert(count);
+                    l -= ushort.MaxValue;
+                }
+            }
+            void Preserve(ushort count)
+            {
+                Log("\n");
+                buffer.AddHeader(DiffHeaderDefinitions.preserve);
+                buffer.AddBytes(GetBytes(count));
+            }
+            void Next()
+            {
+                ++po;
+                ++pn;
+                ++count;
+            }
+
+            while (true)
+            {
+                if (pn >= newBytes.Length)
+                {
+                    if (status == DiffStatus.preserve) Preserve(count);
+                    else if (status == DiffStatus.diff)
+                    {
+                        // insert current
+                        po -= count;
+                        pn -= count;
+                        Insert(count);
+                    }
+
+                    SkipAll();
+                    break;
+                }
+                else if (po >= oldBytes.Length)
+                {
+                    if (status == DiffStatus.preserve) Preserve(count);
+                    else if (status == DiffStatus.diff)
+                    {
+                        // skip current
+                        po -= count;
+                        pn -= count;
+                        Skip(count);
+                    }
+
+                    InsertAll();
+                    break;
+                }
+
+                if (status == DiffStatus.start)
+                {
+                    if (oldBytes[po] == newBytes[pn])
+                    {
+                        // start preserve
+                        status = DiffStatus.preserve;
+                        count = 0;
+                    }
+                    else
+                    {
+                        // start diff
+                        status = DiffStatus.diff;
+                        count = 0;
+                    }
+                }
+                else if (status == DiffStatus.preserve)
+                {
+                    if (oldBytes[po] == newBytes[pn])
+                    {
+                        // keep preserve
+                        if (count == ushort.MaxValue)
+                        {
+                            Preserve(count);
+                            count = 0;
+                        }
+                    }
+                    else
+                    {
+                        // preserve current
+                        Preserve(count);
+
+                        // start diff
+                        status = DiffStatus.diff;
+                        count = 0;
+                    }
+                }
+                else if (status == DiffStatus.diff)
+                {
+                    if (count == ushort.MaxValue)
+                    {
+                        // skip and insert
+                        po -= count;
+                        pn -= count;
+                        Skip(count);
+                        Insert(count);
+
+                        count = 0;
+                    }
+
+                    for (ushort oi = 0; oi <= count; ++oi)
+                    {
+                        ushort ni = (ushort)(count - oi);
+                        if (oldBytes[po - oi] == newBytes[pn - ni])
+                        {
+                            // skip [ni], insert [oi]
+                            po -= count;
+                            pn -= count;
+                            Skip(ni);
+                            Insert(oi);
+
+                            // start preserve
+                            status = DiffStatus.preserve;
+                            count = 0;
+
+                            break;
+                        }
+                    }
+                }
+
+                Next();
+            }
+
+            Log("\n");
+            Log("\n数据: ");
+            Log(buffer.Hex(buffer.Count).Color("#FA0"));
+            Log("\n长度: ");
+            Log($"{buffer.Count}".Color("#0AB"));
+
+            return buffer.ToArray();
+        }
+        class DiffHeaderDefinitions
+        {
+            public const byte preserve = 0x01;
+            public const byte skip = 0x02;
+            public const byte insert = 0x03;
+        }
+        public static byte[] ApplyDiff(byte[] bytes, byte[] diff)
+        {
+            List<byte> buffer = new();
+
+            int p = 0;
+            int offset = 0;
+            while (offset < diff.Length)
+            {
+                var header = diff.ReadByte(ref offset);
+                ushort length = diff.ReadUShort(ref offset);
+                switch (header)
+                {
+                    case DiffHeaderDefinitions.preserve:
+                        for (int i = 0; i < length; ++i) buffer.Add(bytes[p++]);
+                        break;
+                    case DiffHeaderDefinitions.skip:
+                        for (int i = 0; i < length; ++i) if (bytes[p++] != diff[offset++]) throw new Exception($"Bytes can not match the diff!");
+                        break;
+                    case DiffHeaderDefinitions.insert:
+                        for (int i = 0; i < length; ++i) buffer.Add(diff[offset++]);
+                        break;
+                    default:
+                        throw new Exception($"Unsupported diff header! {header}");
+                }
+            }
+
+            return buffer.ToArray();
+        }
+        public static byte[] ReverseDiff(byte[] bytes, byte[] diff)
+        {
+            List<byte> buffer = new();
+
+            int p = 0;
+            int offset = 0;
+            while (offset < diff.Length)
+            {
+                var header = diff.ReadByte(ref offset);
+                ushort length = diff.ReadUShort(ref offset);
+                switch (header)
+                {
+                    case DiffHeaderDefinitions.preserve:
+                        for (int i = 0; i < length; ++i) buffer.Add(bytes[p++]);
+                        break;
+                    case DiffHeaderDefinitions.skip:
+                        for (int i = 0; i < length; ++i) buffer.Add(diff[offset++]);
+                        break;
+                    case DiffHeaderDefinitions.insert:
+                        for (int i = 0; i < length; ++i) if (bytes[p++] != diff[offset++]) throw new Exception($"Bytes can not match the diff!");
+                        break;
+                    default:
+                        throw new Exception($"Unsupported diff header! {header}");
+                }
+            }
+
+            return buffer.ToArray();
+        }
+
+        #endregion
     }
 }
