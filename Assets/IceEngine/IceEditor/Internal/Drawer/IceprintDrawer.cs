@@ -2,6 +2,7 @@
 using UnityEngine;
 
 using IceEngine;
+using IceEngine.Internal;
 using static IceEditor.IceGUI;
 using static IceEditor.IceGUIAuto;
 

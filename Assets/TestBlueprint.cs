@@ -4,7 +4,7 @@ using UnityEngine;
 
 using IceEngine;
 
-public class TestBlueprint : Iceprint
+public class TestBlueprint : MonoBehaviour
 {
     public float tfloat;
 
