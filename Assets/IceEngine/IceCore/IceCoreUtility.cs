@@ -2,6 +2,8 @@
 using System.Collections;
 using System.Collections.Generic;
 
+using IceEngine.Framework;
+
 namespace IceEngine
 {
     /// <summary>
@@ -50,7 +52,8 @@ namespace IceEngine
         static readonly Type objectType = typeof(object);
         static readonly Type nullableType = typeof(Nullable<>);
         static readonly Type iCollectionType = typeof(ICollection);
-        static readonly Type icePacketType = typeof(IcePacketAttribute);
+        static readonly Type icePacketBaseType = typeof(IcePacketBase);
+        static readonly Type icePacketAttributeType = typeof(IcePacketAttribute);
         static readonly HashSet<Type> serializableCollection = new()
         {
             GetType("UnityEngine.Vector2"),
@@ -103,17 +106,28 @@ namespace IceEngine
                 var ts = a.GetTypes();
                 foreach (var t in ts)
                 {
-                    var packetAttributes = t.GetCustomAttributes(icePacketType, false);
+                    var packetAttributes = t.GetCustomAttributes(icePacketAttributeType, false);
                     if (packetAttributes.Length > 0)
                     {
                         var attr = (IcePacketAttribute)packetAttributes[0];
                         ushort hash = attr.Hashcode;
                         if (hash == 0) hash = t.GetShortHashCode();
 
+                        TryRecordPacket(t, hash, attr.IsNullable);
+                    }
+                    else if (!t.IsAbstract && t.IsSubclassOf(icePacketBaseType))
+                    {
+                        ushort hash = t.GetShortHashCode();
+
+                        TryRecordPacket(t, hash, false);
+                    }
+
+                    void TryRecordPacket(Type t, ushort hash, bool isNullable)
+                    {
                         if (_hash2PktMap.TryAdd(hash, t))
                         {
                             _pkt2HashMap.Add(t, hash);
-                            if (!attr.IsNullable && t.IsSealed) _pktNotNullSet.Add(t);
+                            if (isNullable && t.IsSealed) _pktNotNullSet.Add(t);
                         }
                         else
                         {

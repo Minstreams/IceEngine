@@ -11,12 +11,12 @@ using System;
 
 namespace IceEditor.Framework
 {
-    public class IceGraphDrawer
+    public class IceGraphDrawer<BaseNode> where BaseNode : IceGraphNode
     {
-        public IceGraph Graph { get; private set; } = null;
+        public IceGraph<BaseNode> Graph { get; private set; } = null;
         public string Key { get; private set; } = null;
         Action repaintAction;
-        public IceGraphDrawer(IceGraph graph, Action repaintAction, string keyOverride = null)
+        public IceGraphDrawer(IceGraph<BaseNode> graph, Action repaintAction, string keyOverride = null)
         {
             Graph = graph;
             Key = keyOverride ?? "GraphView";
@@ -60,7 +60,7 @@ namespace IceEditor.Framework
         }
         #endregion
 
-        HashSet<IceGraphNode> selectedNodes = new();
+        HashSet<BaseNode> selectedNodes = new();
 
         #region GUI
 

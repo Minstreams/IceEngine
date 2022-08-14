@@ -13,8 +13,9 @@ using IceEngine.Blueprint;
 
 public class TestGraphWindow : IceEditorWindow, ISerializationCallbackReceiver
 {
-    IceBlueprint graph = new IceBlueprint();
-    public IceGraphDrawer drawer;
+    IceprintGraph graph = new IceprintGraph();
+    public IceGraphDrawer<IceprintNode> drawer;
+    public byte[] data = null;
     public byte[] buffer = null;
     public byte[] diff = null;
 
@@ -25,7 +26,7 @@ public class TestGraphWindow : IceEditorWindow, ISerializationCallbackReceiver
     {
         base.OnEnable();
         wantsMouseMove = true;
-        drawer = new IceGraphDrawer(graph, Repaint);
+        drawer = new(graph, Repaint);
     }
     protected override void OnWindowGUI(Rect position)
     {
@@ -37,11 +38,7 @@ public class TestGraphWindow : IceEditorWindow, ISerializationCallbackReceiver
                 {
                     if (IceButton("InputNode"))
                     {
-                        graph.AddNode<InputNode>();
-                    }
-                    if (IceButton("OutputNode"))
-                    {
-                        graph.AddNode<OutputNode>();
+                        graph.AddNode<TestprintNode>();
                     }
                     Space();
                     Label($"Node Count: {graph.nodeList.Count}");
@@ -56,35 +53,35 @@ public class TestGraphWindow : IceEditorWindow, ISerializationCallbackReceiver
                         SetString("Console", "");
                         using (new IceBinaryUtility.LogScope(OnLog))
                         {
-                            graph.Serialize();
+                            data = graph.Serialize();
                         }
                     }
                     if (Button("Read!"))
                     {
-                        graph.Deserialize();
+                        graph.Deserialize(data);
                     }
                 }
                 using (HORIZONTAL)
                 {
                     if (Button("Save Bytes[]"))
                     {
-                        buffer = graph.data;
+                        buffer = data;
                     }
                     if (Button("Get Diff"))
                     {
                         SetString("Console", "");
                         using (new IceBinaryUtility.LogScope(OnLog))
                         {
-                            diff = IceBinaryUtility.GetDiff(graph.data, buffer);
+                            diff = IceBinaryUtility.GetDiff(data, buffer);
                         }
                     }
                     if (Button("Apply Diff"))
                     {
-                        graph.data = IceBinaryUtility.ApplyDiff(graph.data, diff);
+                        data = IceBinaryUtility.ApplyDiff(data, diff);
                     }
                     if (Button("Reverse Diff"))
                     {
-                        graph.data = IceBinaryUtility.ReverseDiff(graph.data, diff);
+                        data = IceBinaryUtility.ReverseDiff(data, diff);
                     }
                 }
 

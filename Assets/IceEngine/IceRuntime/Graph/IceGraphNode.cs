@@ -3,10 +3,12 @@ using System.Collections.Generic;
 
 using UnityEngine;
 
+using IceEngine.Graph.Internal;
+using IceEngine.Framework;
+
 namespace IceEngine.Graph
 {
-    [IcePacket]
-    public abstract class IceGraphNode
+    public abstract class IceGraphNode : IcePacketBase
     {
         #region Cache
         [NonSerialized] public IceGraph graph;

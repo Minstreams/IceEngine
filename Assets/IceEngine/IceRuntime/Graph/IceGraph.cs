@@ -5,11 +5,18 @@ using UnityEngine;
 
 namespace IceEngine.Graph
 {
-    [Serializable]
-    public class IceGraph
+    namespace Internal
+    {
+        public class IceGraph
+        {
+
+        }
+    }
+    public class IceGraph<BaseNode> : Internal.IceGraph where BaseNode : IceGraphNode
     {
         #region Cache
-        [NonSerialized] public List<IceGraphNode> nodeList = new();
+        [NonSerialized] public List<BaseNode> nodeList = new();
+
         protected virtual void OnDeserialized()
         {
             // Step1: initialize ports
@@ -38,7 +45,7 @@ namespace IceEngine.Graph
             // Step3: update node cache
             for (int ni = 0; ni < nodeList.Count; ++ni) UpdateNodeCache(nodeList[ni], ni);
         }
-        void UpdateNodeCache(IceGraphNode node, int id)
+        void UpdateNodeCache(BaseNode node, int id)
         {
             node.graph = this;
             node.id = id;
@@ -47,12 +54,8 @@ namespace IceEngine.Graph
         #endregion
 
         #region Serialized Data
-        public byte[] data = null;
-        public void Serialize()
-        {
-            data = IceBinaryUtility.ToBytes(nodeList, withHeader: true);
-        }
-        public void Deserialize()
+        public byte[] Serialize() => IceBinaryUtility.ToBytes(nodeList, withHeader: true);
+        public void Deserialize(byte[] data)
         {
             IceBinaryUtility.FromBytesOverride(data, nodeList, withHeader: true);
             OnDeserialized();
@@ -60,16 +63,16 @@ namespace IceEngine.Graph
         #endregion
 
         #region Interface
-        public void AddNode(Type nodeType) => AddNode(Activator.CreateInstance(nodeType) as IceGraphNode);
-        public void AddNode<Node>() where Node : IceGraphNode => AddNode(Activator.CreateInstance<Node>());
-        void AddNode(IceGraphNode node)
+        public void AddNode(Type nodeType) => AddNode(Activator.CreateInstance(nodeType) as BaseNode);
+        public void AddNode<Node>() where Node : BaseNode => AddNode(Activator.CreateInstance<Node>());
+        void AddNode(BaseNode node)
         {
             int index = nodeList.Count;
             node.InitializePorts();
             UpdateNodeCache(node, index);
             nodeList.Add(node);
         }
-        public void RemoveNode(IceGraphNode node) => RemoveNodeAt(node.id);
+        public void RemoveNode(BaseNode node) => RemoveNodeAt(node.id);
         public void RemoveNodeAt(int i)
         {
             var node = nodeList[i];
@@ -104,6 +107,8 @@ namespace IceEngine.Graph
 
             (IceGraphPort pin, IceGraphPort pout) = p1.IsOutport ? (p2, p1) : (p1, p2);
             if ((pin as IceGraphInport).connectedPorts.Contains(pout as IceGraphOutport)) return false;
+            if (pin.valueType == pout.valueType) return true;
+            if (pin.valueType is null || pout.valueType is null) return false;
             if (pin.valueType.IsAssignableFrom(pout.valueType)) return true;
 
             return false;
