@@ -3,22 +3,22 @@ using System.Collections.Generic;
 
 using UnityEngine;
 
-using IceEngine.Graph.Internal;
 using IceEngine.Framework;
+using IceEngine.Internal;
 
-namespace IceEngine.Graph
+namespace IceEngine
 {
-    public abstract class IceGraphNode : IcePacketBase
+    public abstract class IceprintNode : IcePacketBase
     {
         #region Cache
-        [NonSerialized] public IceGraph graph;
+        [NonSerialized] public IceprintGraph graph;
         [NonSerialized] public int id;
-        [NonSerialized] public List<IceGraphInport> inports = new();
-        [NonSerialized] public List<IceGraphOutport> outports = new();
+        [NonSerialized] public List<IceprintInport> inports = new();
+        [NonSerialized] public List<IceprintOutport> outports = new();
         #endregion
 
         #region Serialized Data
-        public List<List<IceGraphInportData>> connectionData = new();
+        public List<List<IceprintInportData>> connectionData = new();
 
         // GUI
         public Vector2 position;
@@ -28,7 +28,7 @@ namespace IceEngine.Graph
         #region Interface
         protected void AddInport(string name, bool allowMultiple = true, Type valueType = null)
         {
-            var port = new IceGraphInport
+            var port = new IceprintInport
             {
                 valueType = valueType,
                 name = name,
@@ -43,7 +43,7 @@ namespace IceEngine.Graph
         protected void AddInport<T>(string name, bool allowMultiple = true) => AddInport(name, allowMultiple, typeof(T));
         protected void AddOutport(string name, bool allowMultiple = true, Type valueType = null)
         {
-            var port = new IceGraphOutport
+            var port = new IceprintOutport
             {
                 valueType = valueType,
                 name = name,

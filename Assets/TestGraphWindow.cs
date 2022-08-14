@@ -4,17 +4,15 @@ using UnityEngine;
 using UnityEditor;
 
 using IceEngine;
-using IceEngine.Graph;
 using IceEditor;
 using static IceEditor.IceGUI;
 using static IceEditor.IceGUIAuto;
 using IceEditor.Framework;
-using IceEngine.Blueprint;
 
 public class TestGraphWindow : IceEditorWindow, ISerializationCallbackReceiver
 {
     IceprintGraph graph = new IceprintGraph();
-    public IceGraphDrawer<IceprintNode> drawer;
+    public IceGraphDrawer drawer;
     public byte[] data = null;
     public byte[] buffer = null;
     public byte[] diff = null;
@@ -38,7 +36,6 @@ public class TestGraphWindow : IceEditorWindow, ISerializationCallbackReceiver
                 {
                     if (IceButton("InputNode"))
                     {
-                        graph.AddNode<TestprintNode>();
                     }
                     Space();
                     Label($"Node Count: {graph.nodeList.Count}");

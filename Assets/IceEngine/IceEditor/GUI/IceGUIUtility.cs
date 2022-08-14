@@ -7,10 +7,10 @@ using UnityEngine;
 using UnityEditor;
 
 using IceEngine;
-using IceEngine.Graph;
 using IceEngine.Framework.Internal;
-using IceEditor.Internal;
+using IceEngine.Internal;
 using IceEditor.Framework.Internal;
+using IceEditor.Internal;
 using static IceEditor.IceGUI;
 using static IceEditor.IceGUIAuto;
 
@@ -368,7 +368,7 @@ namespace IceEditor
         public const float PORT_SIZE = 16;
         public const float PORT_RADIUS = PORT_SIZE * 0.5f;
 
-        public static Vector2 GetPos(this IceGraphPort port)
+        public static Vector2 GetPos(this IceprintPort port)
         {
             var node = port.node;
             Vector2 res = node.position;
@@ -392,44 +392,44 @@ namespace IceEditor
             }
             return res;
         }
-        public static Vector2 GetTangent(this IceGraphPort self) => self.IsOutport ? Vector2.right : Vector2.left;
+        public static Vector2 GetTangent(this IceprintPort self) => self.IsOutport ? Vector2.right : Vector2.left;
         #endregion
 
         #region IceGraphNode
 
         #region Drawer
-        static readonly IceGraphNodeDrawer _defaultDrawer = new IceGraphNodeDrawer();
-        static Dictionary<Type, IceGraphNodeDrawer> _nodeDrawerMap = null;
-        static Dictionary<Type, IceGraphNodeDrawer> NodeDrawerMap
+        static readonly IceprintNodeDrawer _defaultDrawer = new IceprintNodeDrawer();
+        static Dictionary<Type, IceprintNodeDrawer> _nodeDrawerMap = null;
+        static Dictionary<Type, IceprintNodeDrawer> NodeDrawerMap
         {
             get
             {
                 if (_nodeDrawerMap == null)
                 {
                     _nodeDrawerMap = new();
-                    var drawers = TypeCache.GetTypesDerivedFrom<IceGraphNodeDrawer>();
+                    var drawers = TypeCache.GetTypesDerivedFrom<IceprintNodeDrawer>();
                     foreach (var dt in drawers)
                     {
                         if (dt.IsGenericType) continue;
-                        var drawer = (IceGraphNodeDrawer)Activator.CreateInstance(dt);
+                        var drawer = (IceprintNodeDrawer)Activator.CreateInstance(dt);
                         if (!_nodeDrawerMap.TryAdd(drawer.NodeType, drawer)) throw new Exception($"Collecting drawer [{dt.FullName}] failed! [{drawer.NodeType}] already has a drawer [{_nodeDrawerMap[drawer.NodeType]}]");
                     }
                 }
                 return _nodeDrawerMap;
             }
         }
-        public static IceGraphNodeDrawer GetDrawer(this IceGraphNode node) => NodeDrawerMap.TryGetValue(node.GetType(), out var drawer) ? drawer : _defaultDrawer;
+        public static IceprintNodeDrawer GetDrawer(this IceprintNode node) => NodeDrawerMap.TryGetValue(node.GetType(), out var drawer) ? drawer : _defaultDrawer;
         #endregion
 
-        public static Rect GetArea(this IceGraphNode node) => new(node.position, node.GetSize());
-        public static Vector2 GetSize(this IceGraphNode node) => node.folded ? node.GetSizeTitle() : node.GetSizeUnfolded();
-        public static Vector2 GetSizeUnfolded(this IceGraphNode node) => new
+        public static Rect GetArea(this IceprintNode node) => new(node.position, node.GetSize());
+        public static Vector2 GetSize(this IceprintNode node) => node.folded ? node.GetSizeTitle() : node.GetSizeUnfolded();
+        public static Vector2 GetSizeUnfolded(this IceprintNode node) => new
         (
             Mathf.Max(node.GetSizeBody().x, node.GetSizeTitle().x),
             Mathf.Max(node.GetSizeBody().y + node.GetSizeTitle().y, node.inports.Count * PORT_SIZE, node.outports.Count * PORT_SIZE)
         );
-        public static Vector2 GetSizeTitle(this IceGraphNode node) => node.GetDrawer().GetSizeTitle(node);
-        public static Vector2 GetSizeBody(this IceGraphNode node) => node.GetDrawer().GetSizeBody(node);
+        public static Vector2 GetSizeTitle(this IceprintNode node) => node.GetDrawer().GetSizeTitle(node);
+        public static Vector2 GetSizeBody(this IceprintNode node) => node.GetDrawer().GetSizeBody(node);
         #endregion
     }
 }

@@ -35,9 +35,13 @@ namespace IceEditor.Internal
         {
             pack = null;
         }
-        public override void OnInspectorGUI()
+        public sealed override void OnInspectorGUI()
         {
-            using (UsePack(pack)) using (LabelWidth(labelWidth)) IceGUIUtility.DrawSerializedObject(serializedObject);
+            using (UsePack(pack)) using (LabelWidth(labelWidth)) OnGUI();
+        }
+        protected virtual void OnGUI()
+        {
+            IceGUIUtility.DrawSerializedObject(serializedObject);
         }
     }
 }

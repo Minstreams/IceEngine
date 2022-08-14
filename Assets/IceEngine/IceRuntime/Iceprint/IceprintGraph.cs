@@ -3,19 +3,14 @@ using System.Collections.Generic;
 
 using UnityEngine;
 
-namespace IceEngine.Graph
-{
-    namespace Internal
-    {
-        public class IceGraph
-        {
+using IceEngine.Internal;
 
-        }
-    }
-    public class IceGraph<BaseNode> : Internal.IceGraph where BaseNode : IceGraphNode
+namespace IceEngine
+{
+    public class IceprintGraph
     {
         #region Cache
-        [NonSerialized] public List<BaseNode> nodeList = new();
+        [NonSerialized] public List<IceprintNode> nodeList = new();
 
         protected virtual void OnDeserialized()
         {
@@ -45,7 +40,7 @@ namespace IceEngine.Graph
             // Step3: update node cache
             for (int ni = 0; ni < nodeList.Count; ++ni) UpdateNodeCache(nodeList[ni], ni);
         }
-        void UpdateNodeCache(BaseNode node, int id)
+        void UpdateNodeCache(IceprintNode node, int id)
         {
             node.graph = this;
             node.id = id;
@@ -63,16 +58,16 @@ namespace IceEngine.Graph
         #endregion
 
         #region Interface
-        public void AddNode(Type nodeType) => AddNode(Activator.CreateInstance(nodeType) as BaseNode);
-        public void AddNode<Node>() where Node : BaseNode => AddNode(Activator.CreateInstance<Node>());
-        void AddNode(BaseNode node)
+        public void AddNode(Type nodeType) => AddNode(Activator.CreateInstance(nodeType) as IceprintNode);
+        public void AddNode<Node>() where Node : IceprintNode => AddNode(Activator.CreateInstance<Node>());
+        void AddNode(IceprintNode node)
         {
             int index = nodeList.Count;
             node.InitializePorts();
             UpdateNodeCache(node, index);
             nodeList.Add(node);
         }
-        public void RemoveNode(BaseNode node) => RemoveNodeAt(node.id);
+        public void RemoveNode(IceprintNode node) => RemoveNodeAt(node.id);
         public void RemoveNodeAt(int i)
         {
             var node = nodeList[i];
@@ -92,21 +87,21 @@ namespace IceEngine.Graph
         #endregion
 
         #region Configuration
-        public virtual Color GetPortColor(IceGraphPort port)
+        public virtual Color GetPortColor(IceprintPort port)
         {
             Type t = port.valueType;
             if (t == typeof(int)) return Color.cyan;
             return Color.white;
         }
-        public virtual bool IsConnectable(IceGraphPort p1, IceGraphPort p2)
+        public virtual bool IsConnectable(IceprintPort p1, IceprintPort p2)
         {
             if (p1.node == p2.node) return false;
             if (p1.IsOutport == p2.IsOutport) return false;
             if (!p1.isMultiple && p1.IsConnected) return false;
             if (!p2.isMultiple && p2.IsConnected) return false;
 
-            (IceGraphPort pin, IceGraphPort pout) = p1.IsOutport ? (p2, p1) : (p1, p2);
-            if ((pin as IceGraphInport).connectedPorts.Contains(pout as IceGraphOutport)) return false;
+            (IceprintPort pin, IceprintPort pout) = p1.IsOutport ? (p2, p1) : (p1, p2);
+            if ((pin as IceprintInport).connectedPorts.Contains(pout as IceprintOutport)) return false;
             if (pin.valueType == pout.valueType) return true;
             if (pin.valueType is null || pout.valueType is null) return false;
             if (pin.valueType.IsAssignableFrom(pout.valueType)) return true;

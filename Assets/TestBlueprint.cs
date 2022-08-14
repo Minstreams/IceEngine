@@ -3,20 +3,18 @@ using System.Collections.Generic;
 using UnityEngine;
 
 using IceEngine;
-using IceEngine.Blueprint;
 
-[DisallowMultipleComponent]
-public class TestBlueprint : IceBlueprintBehaviour
+public class TestBlueprint : Iceprint
 {
     public float tfloat;
 
-    [Port]
+    [IceprintInport]
     public void TestIn()
     {
 
     }
 
-    [Port]
+    [IceprintInport]
     public void TestIn2()
     {
 

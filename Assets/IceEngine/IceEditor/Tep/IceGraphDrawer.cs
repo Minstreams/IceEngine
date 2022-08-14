@@ -4,19 +4,19 @@ using UnityEditor;
 using UnityEngine;
 
 using IceEngine;
-using IceEngine.Graph;
+using IceEngine.Internal;
 using static IceEditor.IceGUI;
 using static IceEditor.IceGUIAuto;
 using System;
 
 namespace IceEditor.Framework
 {
-    public class IceGraphDrawer<BaseNode> where BaseNode : IceGraphNode
+    public class IceGraphDrawer
     {
-        public IceGraph<BaseNode> Graph { get; private set; } = null;
+        public IceprintGraph Graph { get; private set; } = null;
         public string Key { get; private set; } = null;
         Action repaintAction;
-        public IceGraphDrawer(IceGraph<BaseNode> graph, Action repaintAction, string keyOverride = null)
+        public IceGraphDrawer(IceprintGraph graph, Action repaintAction, string keyOverride = null)
         {
             Graph = graph;
             Key = keyOverride ?? "GraphView";
@@ -37,10 +37,10 @@ namespace IceEditor.Framework
             DrawBezierLine(position, center, tangentPoint, startColor, centerColor, width, edge);
         }
 
-        public IceGraphPort DraggingPort { get; private set; }
-        public HashSet<IceGraphPort> AvailablePorts = new();
+        public IceprintPort DraggingPort { get; private set; }
+        public HashSet<IceprintPort> AvailablePorts = new();
 
-        public void BeginDragPort(IceGraphPort port)
+        public void BeginDragPort(IceprintPort port)
         {
             DraggingPort = port;
 
@@ -60,7 +60,7 @@ namespace IceEditor.Framework
         }
         #endregion
 
-        HashSet<BaseNode> selectedNodes = new();
+        HashSet<IceprintNode> selectedNodes = new();
 
         #region GUI
 
@@ -265,7 +265,7 @@ namespace IceEditor.Framework
                 foreach (var port in node.inports) DrawLine(port);
                 foreach (var port in node.outports) DrawLine(port);
             }
-            void DrawLine(IceGraphPort port)
+            void DrawLine(IceprintPort port)
             {
                 if (E.type == EventType.Repaint && port.IsConnected)
                 {
@@ -273,11 +273,11 @@ namespace IceEditor.Framework
                     var color = Graph.GetPortColor(port);
 
                     var tagent = port.GetTangent();
-                    if (port is IceGraphInport pin)
+                    if (port is IceprintInport pin)
                     {
                         foreach (var pp in pin.connectedPorts) DrawPortLine(pos, pp.GetPos(), tagent, color, this.Graph.GetPortColor(pp));
                     }
-                    else if (port is IceGraphOutport pout)
+                    else if (port is IceprintOutport pout)
                     {
                         foreach (var pp in pout.connectedPorts) DrawPortLine(pos, pp.port.GetPos(), tagent, color, this.Graph.GetPortColor(pp.port));
                     }
@@ -289,7 +289,7 @@ namespace IceEditor.Framework
                 foreach (var port in node.inports) OnGUI_Port(port);
                 foreach (var port in node.outports) OnGUI_Port(port);
             }
-            void OnGUI_Port(IceGraphPort port)
+            void OnGUI_Port(IceprintPort port)
             {
                 if (port.node.folded) return;
 
