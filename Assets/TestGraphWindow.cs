@@ -4,14 +4,15 @@ using UnityEngine;
 using UnityEditor;
 
 using IceEngine;
+using IceEngine.Internal;
 using IceEditor;
+using IceEditor.Framework;
 using static IceEditor.IceGUI;
 using static IceEditor.IceGUIAuto;
-using IceEditor.Framework;
 
 public class TestGraphWindow : IceEditorWindow, ISerializationCallbackReceiver
 {
-    IceprintGraph graph = new IceprintGraph();
+    Iceprint graph;
     public IceGraphDrawer drawer;
     public byte[] data = null;
     public byte[] buffer = null;
@@ -32,6 +33,14 @@ public class TestGraphWindow : IceEditorWindow, ISerializationCallbackReceiver
         {
             using (Area(main))
             {
+                using (GUICHECK)
+                {
+                    ObjectField(ref graph, true);
+                    if (GUIChanged)
+                    {
+                        drawer = new(graph, Repaint);
+                    }
+                }
                 using (DOCK)
                 {
                     if (IceButton("InputNode"))

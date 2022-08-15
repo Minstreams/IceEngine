@@ -13,29 +13,17 @@ namespace IceEditor.Framework
 {
     public class IceGraphDrawer
     {
-        public IceprintGraph Graph { get; private set; } = null;
-        public string Key { get; private set; } = null;
+        public Iceprint Graph { get; private set; } = null;
+        public string GRAPH_KEY { get; private set; } = null;
         Action repaintAction;
-        public IceGraphDrawer(IceprintGraph graph, Action repaintAction, string keyOverride = null)
+        public IceGraphDrawer(Iceprint graph, Action repaintAction, string keyOverride = null)
         {
             Graph = graph;
-            Key = keyOverride ?? "GraphView";
+            GRAPH_KEY = keyOverride ?? "GraphView";
             this.repaintAction = repaintAction;
         }
 
         #region Port
-        public static void DrawPortLine(Vector2 position, Vector2 target, Vector2 tangent, Color startColor, Color endColor, float width = 1.5f, float edge = 1)
-        {
-            if (E.type != EventType.Repaint) return;
-
-            Vector2 center = 0.5f * (position + target);
-            Color centerColor = 0.5f * (startColor + endColor);
-
-            float tangentLength = Mathf.Clamp(Vector2.Dot(tangent, center - position) * 0.6f, 8, 32);
-            Vector2 tangentPoint = position + tangent * tangentLength;
-
-            DrawBezierLine(position, center, tangentPoint, startColor, centerColor, width, edge);
-        }
 
         public IceprintPort DraggingPort { get; private set; }
         public HashSet<IceprintPort> AvailablePorts = new();
@@ -81,7 +69,7 @@ namespace IceEditor.Framework
         /// <param name="gridSize">grid块的尺寸</param>
         public void OnGUI(Rect area, float gridSize = 32, float defaultScale = 1, float minScale = 0.4f, float maxScale = 4.0f, GUIStyle stlBackGround = null, bool inUtilityWindow = false)
         {
-            using var viewport = ViewportGrid(Key, area, gridSize, defaultScale, minScale, maxScale, null, IceGUIUtility.CurrentThemeColor * 0.5f, stlBackGround, inUtilityWindow);
+            using var viewport = ViewportGrid(GRAPH_KEY, area, gridSize, defaultScale, minScale, maxScale, null, IceGUIUtility.CurrentThemeColor * 0.5f, stlBackGround, inUtilityWindow);
 
             // 强制刷新
             if (E.type == EventType.MouseMove) Repaint();
@@ -222,8 +210,8 @@ namespace IceEditor.Framework
                         var pos = DraggingPort.GetPos();
                         var tagent = DraggingPort.GetTangent();
                         var color = Graph.GetPortColor(DraggingPort);
-                        DrawPortLine(pos, E.mousePosition, tagent, color, color);
-                        DrawPortLine(E.mousePosition, pos, -tagent, color, color);
+                        IceGUIUtility.DrawPortLine(pos, E.mousePosition, tagent, color, color);
+                        IceGUIUtility.DrawPortLine(E.mousePosition, pos, -tagent, color, color);
                         break;
                 }
             }
@@ -275,11 +263,11 @@ namespace IceEditor.Framework
                     var tagent = port.GetTangent();
                     if (port is IceprintInport pin)
                     {
-                        foreach (var pp in pin.connectedPorts) DrawPortLine(pos, pp.GetPos(), tagent, color, this.Graph.GetPortColor(pp));
+                        foreach (var pp in pin.connectedPorts) IceGUIUtility.DrawPortLine(pos, pp.GetPos(), tagent, color, this.Graph.GetPortColor(pp));
                     }
                     else if (port is IceprintOutport pout)
                     {
-                        foreach (var pp in pout.connectedPorts) DrawPortLine(pos, pp.port.GetPos(), tagent, color, this.Graph.GetPortColor(pp.port));
+                        foreach (var pp in pout.connectedPorts) IceGUIUtility.DrawPortLine(pos, pp.port.GetPos(), tagent, color, this.Graph.GetPortColor(pp.port));
                     }
                 }
             }

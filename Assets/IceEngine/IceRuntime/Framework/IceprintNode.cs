@@ -11,7 +11,7 @@ namespace IceEngine
     public abstract class IceprintNode : IcePacketBase
     {
         #region Cache
-        [NonSerialized] public IceprintGraph graph;
+        [NonSerialized] public Iceprint graph;
         [NonSerialized] public int id;
         [NonSerialized] public List<IceprintInport> inports = new();
         [NonSerialized] public List<IceprintOutport> outports = new();
@@ -60,5 +60,14 @@ namespace IceEngine
         #region Configuration
         public abstract void InitializePorts();
         #endregion
+    }
+
+    public class TestNode : IceprintNode
+    {
+        public override void InitializePorts()
+        {
+            AddInport("In");
+            AddOutport("Out");
+        }
     }
 }

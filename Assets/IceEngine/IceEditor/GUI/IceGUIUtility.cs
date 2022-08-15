@@ -393,6 +393,18 @@ namespace IceEditor
             return res;
         }
         public static Vector2 GetTangent(this IceprintPort self) => self.IsOutport ? Vector2.right : Vector2.left;
+        public static void DrawPortLine(Vector2 position, Vector2 target, Vector2 tangent, Color startColor, Color endColor, float width = 1.5f, float edge = 1)
+        {
+            if (E.type != EventType.Repaint) return;
+
+            Vector2 center = 0.5f * (position + target);
+            Color centerColor = 0.5f * (startColor + endColor);
+
+            float tangentLength = Mathf.Clamp(Vector2.Dot(tangent, center - position) * 0.6f, 8, 32);
+            Vector2 tangentPoint = position + tangent * tangentLength;
+
+            DrawBezierLine(position, center, tangentPoint, startColor, centerColor, width, edge);
+        }
         #endregion
 
         #region IceGraphNode
