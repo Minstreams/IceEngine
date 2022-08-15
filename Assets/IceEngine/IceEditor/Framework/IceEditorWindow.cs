@@ -64,6 +64,7 @@ namespace IceEditor.Framework
         }
         protected virtual void OnEnable()
         {
+            wantsLessLayoutEvents = true;
             Input.imeCompositionMode = IMECompositionMode.On;
             RefreshTitleContent();
         }

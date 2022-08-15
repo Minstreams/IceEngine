@@ -454,6 +454,9 @@ namespace IceEditor
                 }
             }
         }
+
+        // TODO: 这里整一个带基础控制的工作视图scope，就叫ViewportScope，原本的Viewscope改为CanvasScope
+
         /// <summary>
         /// 暂时改变 GUI.Color
         /// </summary>
@@ -588,6 +591,9 @@ namespace IceEditor
             Rect clipRect = viewport.ClipRect;
             Rect canvasRect = viewport.CanvasRect;
 
+            // TODO: 在这里放一个GUI回调
+
+
             // 基础控件：移动，缩放
             switch (E.type)
             {
@@ -610,6 +616,7 @@ namespace IceEditor
                     {
                         GUIHotControl = moveViewControl;
                         _cache_drag = E.mousePosition;
+                        E.Use();
                     }
                     break;
                 case EventType.MouseUp:

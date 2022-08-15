@@ -69,9 +69,18 @@ namespace IceEditor.Internal
         #endregion
 
         #region Node
+
+        #region Create Node Menu
+        void ShowCreateNodeMenu()
+        {
+            SetBool("isCreateNodeMenuOn", true);
+        }
+        #endregion
         HashSet<IceprintNode> selectedNodes = new();
 
         #endregion
+
+
 
         protected override void OnWindowGUI(Rect position)
         {
@@ -104,8 +113,8 @@ namespace IceEditor.Internal
                     OnGraphGUI();
                 }
             }
-        }
 
+        }
         void OnGraphGUI()
         {
             var area = GetRect(GUILayout.ExpandWidth(true), GUILayout.ExpandHeight(true));
@@ -151,9 +160,18 @@ namespace IceEditor.Internal
 
 
             }
+
+
+            // 内部鼠标事件
+            if (viewport.ClipRect.Contains(E.mousePosition))
+            {
+                // 右键菜单
+                if (E.type == EventType.MouseDown && E.button == 1)
+                {
+                    ShowCreateNodeMenu();
+                }
+            }
         }
-
-
 
         #region 定制
         [MenuItem("IceEngine/Iceprint Box")]
