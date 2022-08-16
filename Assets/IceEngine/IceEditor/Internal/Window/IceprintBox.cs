@@ -9,6 +9,7 @@ using static IceEditor.IceGUI;
 using static IceEditor.IceGUIAuto;
 using IceEditor.Framework;
 using UnityEditor;
+using System;
 
 namespace IceEditor.Internal
 {
@@ -16,15 +17,13 @@ namespace IceEditor.Internal
     {
         #region 配置
         const string GRAPH_KEY = "GraphView";
-        const float MIN_SCALE = 0.4f;
-        const float MAX_SCALE = 4.0f;
-        const float GRID_SIZE = 32;
 
-        Color GridColor => ThemeColor * 0.5f;
+        EditorSettingIceprintBox Setting => EditorSettingIceprintBox.Setting;
         GUIStyle StlGraphBackgroud => StlDock;
         #endregion
 
         #region Graph
+        byte[] buffer = null;
         public static void OpenPrint(Iceprint print) => GetWindow<IceprintBox>().Graph = print;
         public Iceprint Graph
         {
@@ -33,14 +32,84 @@ namespace IceEditor.Internal
             {
                 if (_graph != value)
                 {
-                    _graph = value;
                     // On Change
-                    // ...
+                    selectedNodes.Clear();
+                    buffer = null;
+                    undoList.Clear();
+                    redoList.Clear();
+                    if (value != null)
+                    {
+                        buffer = value.graphData;
+                        if (buffer == null || buffer.Length == 0)
+                        {
+                            using (LOG)
+                            {
+                                buffer = value.Serialize();
+                            }
+                        }
+                        if (!EditorApplication.isPlaying)
+                        {
+                            value.Deserialize();
+                        }
+                    }
                 }
+                _graph = value;
             }
         }
         Iceprint _graph;
+
+        #region Undo & Redo
+        readonly LinkedList<byte[]> undoList = new();
+        readonly LinkedList<byte[]> redoList = new();
+
+        void RecordForUndo()
+        {
+            Repaint();
+            using (LOG)
+            {
+                byte[] cur = Graph.Serialize();
+                if (undoList.Count >= Setting.maxUndoCount) undoList.RemoveFirst();
+                undoList.AddLast(IceBinaryUtility.GetDiff(buffer, cur));
+                redoList.Clear();
+                buffer = cur;
+            }
+        }
+        void Undo()
+        {
+            if (undoList.Count == 0) return;
+            var diff = undoList.Last.Value;
+            undoList.RemoveLast();
+            buffer = IceBinaryUtility.ReverseDiff(buffer, diff);
+            redoList.AddLast(diff);
+            Graph.Deserialize(buffer);
+        }
+        void Redo()
+        {
+            if (redoList.Count == 0) return;
+            var diff = redoList.Last.Value;
+            redoList.RemoveLast();
+            buffer = IceBinaryUtility.ApplyDiff(buffer, diff);
+            undoList.AddLast(diff);
+            Graph.Deserialize(buffer);
+        }
         #endregion
+
+        #region Copy & Paste
+        byte[] copyBuffer = null;
+        void CopyBuffer()
+        {
+            copyBuffer = buffer;
+        }
+        void PasteBuffer()
+        {
+            Graph.Deserialize(copyBuffer);
+            RecordForUndo();
+        }
+        #endregion
+
+        #endregion
+
+
 
         #region Port
         int idDragPort;
@@ -70,34 +139,147 @@ namespace IceEditor.Internal
 
         #region Node
 
+        #region Runtime Const
+        HashSet<Type> _runtimeConstNodeTypeSet = null;
+        HashSet<Type> RuntimeConstNodeTypeSet
+        {
+            get
+            {
+                if (_runtimeConstNodeTypeSet == null)
+                {
+                    _runtimeConstNodeTypeSet = new();
+                    Type runtimeConstType = typeof(RuntimeConstAttribute);
+                    foreach (var node in TypeCache.GetTypesDerivedFrom<IceprintNode>())
+                    {
+                        if (node.GetCustomAttributes(runtimeConstType, false).Length > 0)
+                        {
+                            _runtimeConstNodeTypeSet.Add(node);
+                        }
+                    }
+                }
+                return _runtimeConstNodeTypeSet;
+            }
+        }
+        public bool IsRuntimeConst(Type nodeType) => Setting.allowRuntimeConst && RuntimeConstNodeTypeSet.Contains(nodeType);
+        public bool IsRuntimeConst(IceprintNode node) => Setting.allowRuntimeConst && RuntimeConstNodeTypeSet.Contains(node.GetType());
+        #endregion
+
         #region Create Node Menu
+        List<(GUIContent path, Type node)> _nodeMenu = null;
+        List<(GUIContent path, Type node)> NodeMenu
+        {
+            get
+            {
+                if (_nodeMenu == null)
+                {
+                    _nodeMenu = new();
+                    Type menuItemType = typeof(IceprintMenuItem);
+                    foreach (var node in TypeCache.GetTypesDerivedFrom<IceprintNode>())
+                    {
+                        foreach (IceprintMenuItem item in node.GetCustomAttributes(menuItemType, false))
+                        {
+                            _nodeMenu.Add((new GUIContent(item.Path), node));
+                        }
+                    }
+                }
+                return _nodeMenu;
+            }
+        }
         void ShowCreateNodeMenu()
         {
             SetBool("isCreateNodeMenuOn", true);
+            GenericMenu gm = new GenericMenu();
+            gm.allowDuplicateNames = true;
+            foreach (var nm in NodeMenu)
+            {
+                if (EditorApplication.isPlaying && IsRuntimeConst(nm.node))
+                {
+                    gm.AddDisabledItem(nm.path);
+                }
+                else
+                {
+                    gm.AddItem(nm.path, false, () =>
+                    {
+                        Graph.AddNode(nm.node);
+                        RecordForUndo();
+                    });
+                }
+            }
+            gm.ShowAsContext();
         }
         #endregion
-        HashSet<IceprintNode> selectedNodes = new();
 
+        #region Selection & Drag
+        int idSelectNode;
+        int idDragNode;
+        readonly HashSet<IceprintNode> selectedNodes = new();
+
+        void DeleteSelectedNodes()
+        {
+            foreach (var node in selectedNodes)
+            {
+                if (EditorApplication.isPlaying && IsRuntimeConst(node)) continue;
+                Graph.RemoveNode(node);
+            }
+            selectedNodes.Clear();
+            RecordForUndo();
+        }
         #endregion
 
-
+        #endregion
 
         protected override void OnWindowGUI(Rect position)
         {
             using (DOCK)
             {
                 Graph = _ObjectField(Graph, true, GUILayout.Width(20));
-
+                if (IceButton("<", undoList.Count > 0) || (E.type == EventType.KeyDown && E.keyCode == KeyCode.Z && E.control))
+                {
+                    Undo();
+                    E.Use();
+                }
+                if (IceButton(">", redoList.Count > 0) || (E.type == EventType.KeyDown && E.keyCode == KeyCode.Y && E.control))
+                {
+                    Redo();
+                    E.Use();
+                }
+                if (IceButton("Copy")) CopyBuffer();
+                if (IceButton("Paste")) PasteBuffer();
                 Space();
 
-                if (IceButton("重置视图"))
+                if (selectedNodes.Count > 1)
                 {
-                    SetFloat($"{GRAPH_KEY}_ViewScale", 1);
-                    SetVector2($"{GRAPH_KEY}_ViewOffset", Vector2.zero);
+                    // 批量操作
+                    Label($"当前选择{selectedNodes.Count}个Node");
+                    if (IceButton("删除") || (E.type == EventType.KeyDown && E.keyCode == KeyCode.Delete)) DeleteSelectedNodes();
                 }
-                if (IceButton("Test"))
+                else if (selectedNodes.Count == 1)
                 {
-                    Graph.AddNode<TestNode>();
+                    // 单个操作
+                    var itr = selectedNodes.GetEnumerator();
+                    itr.MoveNext();
+                    Label($"当前选择{itr.Current.GetType().Name}");
+                    if (IceButton("删除") || (E.type == EventType.KeyDown && E.keyCode == KeyCode.Delete)) DeleteSelectedNodes();
+                }
+                else
+                {
+                    // 未选择任何
+                    if (IceButton("重置视图"))
+                    {
+                        SetFloat($"{GRAPH_KEY}_ViewScale", 1);
+                        SetVector2($"{GRAPH_KEY}_ViewOffset", Vector2.zero);
+                    }
+                }
+
+                if (EditorApplication.isPlaying)
+                {
+                    if (Graph != null)
+                    {
+                        if (!Setting.allowRuntimeConst && IceButton("刷新"))
+                        {
+                            Graph.ReloadGraph();
+                        }
+                    }
                 }
             }
 
@@ -105,7 +287,7 @@ namespace IceEditor.Internal
                 if (Graph == null)
                 {
                     var area = GetRect(GUILayout.ExpandWidth(true), GUILayout.ExpandHeight(true));
-                    using (var viewport = ViewportGrid(GRAPH_KEY, area, GRID_SIZE, 1, MIN_SCALE, MAX_SCALE, null, GridColor * 0.7f, StlGraphBackgroud, false)) { }
+                    using (var viewport = ViewportGrid(GRAPH_KEY, area, Setting.gridSize, 1, Setting.minScale, Setting.maxScale, null, Setting.gridColor * 0.7f, StlGraphBackgroud, false)) { }
                     StyleBox(area, StlBackground, "Null");
                 }
                 else
@@ -113,31 +295,100 @@ namespace IceEditor.Internal
                     OnGraphGUI();
                 }
             }
-
         }
         void OnGraphGUI()
         {
             var area = GetRect(GUILayout.ExpandWidth(true), GUILayout.ExpandHeight(true));
-            using var viewport = ViewportGrid(GRAPH_KEY, area, GRID_SIZE, 1, MIN_SCALE, MAX_SCALE, null, GridColor, StlGraphBackgroud, false);
+            using var viewport = ViewportGrid(GRAPH_KEY, area, Setting.gridSize, 1, Setting.minScale, Setting.maxScale, null, Setting.gridColor, StlGraphBackgroud, false);
 
             // 强制刷新
             if (E.type == EventType.MouseMove) Repaint();
 
-            // 快捷键
-            if (E.type == EventType.KeyDown)
+            // Control
+            idSelectNode = GetControlID();
+            idDragNode = GetControlID();
+            idDragPort = GetControlID();
+            switch (E.type)
             {
-                //if (E.keyCode == KeyCode.Delete)
-                //{
-                //    foreach (var node in selectedNodes)
-                //    {
-                //        Graph.RemoveNode(node);
-                //    }
-                //    selectedNodes.Clear();
-                //    Repaint();
-                //}
+                case EventType.MouseUp:
+                    if (E.button == 0)
+                    {
+                        if (GUIHotControl == idSelectNode)
+                        {
+                            GUIHotControl = 0;
+                            E.Use();
+                        }
+                        else if (GUIHotControl == idDragNode)
+                        {
+                            GUIHotControl = 0;
+                            if (_cache_pos != E.mousePosition)
+                            {
+                                RecordForUndo();
+                            }
+                            E.Use();
+                        }
+                    }
+                    else if (GUIHotControl == idSelectNode || GUIHotControl == idDragNode || GUIHotControl == idDragPort)
+                    {
+                        E.Use();
+                    }
+                    break;
+                case EventType.MouseDrag:
+                    if (GUIHotControl == idSelectNode)
+                    {
+                        // 选择逻辑
+                        selectedNodes.Clear();
+                        Rect selectionRect = _cache_drag.RangeRect(E.mousePosition);
+                        foreach (var node in Graph.nodeList)
+                        {
+                            var nodeArea = node.GetArea();
+
+                            if (Setting.mustContainOnSelect ? selectionRect.Contains(nodeArea) : nodeArea.Overlaps(selectionRect)) selectedNodes.Add(node);
+                        }
+                        E.Use();
+                    }
+                    else if (GUIHotControl == idDragNode)
+                    {
+                        // 拖动逻辑
+                        var pos = E.mousePosition;
+
+                        if (E.shift)
+                        {
+                            // 平移操作
+                            var offset = pos - _cache_pos;
+                            if (Mathf.Abs(offset.x) > Mathf.Abs(offset.y))
+                            {
+                                // 沿x轴平移
+                                pos.y = _cache_pos.y;
+                            }
+                            else
+                            {
+                                // 沿y轴平移
+                                pos.x = _cache_pos.x;
+                            }
+                        }
+                        if (E.control)
+                        {
+                            // 网格吸附操作
+                            pos = (pos - _cache_offset).Snap(Setting.gridSize) + _cache_offset;
+                        }
+
+                        foreach (var node in selectedNodes)
+                        {
+                            node.position += pos - _cache_drag;
+                        }
+                        _cache_drag = pos;
+
+                        E.Use();
+                    }
+                    else if (GUIHotControl == idDragPort)
+                    {
+                        E.Use();
+                    }
+                    break;
             }
 
-            // 画node
+            // Node
             foreach (var node in Graph.nodeList)
             {
                 var drawer = node.GetDrawer();
@@ -145,6 +396,12 @@ namespace IceEditor.Internal
 
                 // 背景
                 var nodeRect = node.GetArea();
+                if (bSelected && E.type == EventType.Repaint && GUIHotControl == idDragNode)
+                {
+                    // 在原始位置画一个残影
+                    var holderRect = nodeRect.Move(_cache_pos - _cache_drag);
+                    using (GUIColor(Color.white * 0.6f)) StyleBox(holderRect, drawer.StlGraphNodeBackground);
+                }
                 StyleBox(nodeRect, bSelected ? drawer.StlGraphNodeBackgroundSelected : drawer.StlGraphNodeBackground);
 
                 // 标题
@@ -158,17 +415,314 @@ namespace IceEditor.Internal
                     drawer.OnGUI_Body(node, bodyRect);
                 }
 
+                // 拖动
+                if (nodeRect.Contains(E.mousePosition) && E.type == EventType.MouseDown && E.button == 0)
+                {
+                    // 拖动
+                    double t = EditorApplication.timeSinceStartup;
+                    if (t - _cache_time < 0.2)
+                    {
+                        // 双击折叠
+                        _cache_time = 0;
+                        node.folded = !node.folded;
+                        RecordForUndo();
+                        E.Use();
+                    }
+                    else
+                    {
+                        _cache_time = t;
+                        E.Use();
 
+                        // 开始拖动
+                        if (GUIHotControl == 0)
+                        {
+                            if (!bSelected)
+                            {
+                                if (!E.control && !E.shift)
+                                {
+                                    selectedNodes.Clear();
+                                }
+                                selectedNodes.Add(node);
+                            }
+
+                            GUIHotControl = idDragNode;
+                            _cache_drag = E.mousePosition;
+                            _cache_pos = E.mousePosition;
+                            _cache_offset = E.mousePosition - node.position;
+                        }
+                    }
+                }
             }
 
+            // Port
+            if (E.type == EventType.Repaint && GUIHotControl == idDragPort)
+            {
+                var pos = DraggingPort.GetPos();
+                var tagent = DraggingPort.GetTangent();
+                var color = Graph.GetPortColor(DraggingPort);
+                IceGUIUtility.DrawPortLine(pos, E.mousePosition, tagent, color, color);
+                IceGUIUtility.DrawPortLine(E.mousePosition, pos, -tagent, color, color);
+            }
+            foreach (var node in Graph.nodeList)
+            {
+                foreach (var port in node.inports) DrawLine(port);
+                foreach (var port in node.outports) DrawLine(port);
+            }
+            void DrawLine(IceprintPort port)
+            {
+                if (E.type == EventType.Repaint && port.IsConnected)
+                {
+                    Vector2 pos = port.GetPos();
+                    var color = Graph.GetPortColor(port);
+
+                    var tagent = port.GetTangent();
+                    if (port is IceprintInport pin)
+                    {
+                        foreach (var pp in pin.connectedPorts) IceGUIUtility.DrawPortLine(pos, pp.GetPos(), tagent, color, this.Graph.GetPortColor(pp));
+                    }
+                    else if (port is IceprintOutport pout)
+                    {
+                        foreach (var pp in pout.connectedPorts) IceGUIUtility.DrawPortLine(pos, pp.port.GetPos(), tagent, color, this.Graph.GetPortColor(pp.port));
+                    }
+                }
+            }
+            foreach (var node in Graph.nodeList)
+            {
+                if (node.folded) continue;
+                foreach (var port in node.inports) OnGUI_Port(port);
+                foreach (var port in node.outports) OnGUI_Port(port);
+            }
+            void OnGUI_Port(IceprintPort port)
+            {
+                Vector2 pos = port.GetPos();
+                var color = Graph.GetPortColor(port);
+
+                Rect rPort = pos.ExpandToRect(IceGUIUtility.PORT_RADIUS);
+                bool bHover = rPort.Contains(E.mousePosition);
+
+                switch (E.type)
+                {
+                    case EventType.MouseDown:
+                        if (bHover)
+                        {
+                            if (GUIHotControl == 0 && E.button == 0)
+                            {
+                                // Begin drag Control
+                                _cache_offset = rPort.center;
+                                GUIHotControl = idDragPort;
+                                if (!port.isMultiple && port.IsConnected)
+                                {
+                                    port.DisconnectAll();
+                                    RecordForUndo();
+                                }
+                                BeginDragPort(port);
+                                E.Use();
+                            }
+                            else if (E.button == 1)
+                            {
+                                // Disconnect port
+                                if (port.IsConnected)
+                                {
+                                    port.DisconnectAll();
+                                    RecordForUndo();
+                                }
+                                E.Use();
+                            }
+                        }
+                        break;
+                    case EventType.MouseUp:
+                        if (bHover && GUIHotControl == idDragPort && E.button == 0 && AvailablePorts.Contains(port))
+                        {
+                            // Connect ports
+                            DraggingPort.ConnectTo(port);
+                            RecordForUndo();
+                            GUIHotControl = 0;
+                            EndDragPort();
+                            E.Use();
+                        }
+                        break;
+                    case EventType.Repaint:
+                        // Port
+                        {
+                            if (GUIHotControl == idDragPort)
+                            {
+                                // 拖拽状态
+                                if (DraggingPort == port)
+                                {
+                                    // 被拖拽的 Port
+                                    DiscSolid(0.15f, color);
+                                }
+                                else
+                                {
+                                    // 其他 Port
+                                    if (port.IsConnected)
+                                    {
+                                        // 连接状态
+                                        DiscSolid(0.3f, color);
+                                    }
+
+                                    if (AvailablePorts.Contains(port))
+                                    {
+                                        // 备选状态
+                                        DiscWire(0.2f, color * 0.8f);
+                                        DiscWire(0.8f, color * 0.7f);
+
+                                        if (bHover)
+                                        {
+                                            // hover
+                                            DiscWire(0.8f, IceGUIUtility.CurrentThemeColor);
+                                        }
+                                        else
+                                        {
+                                            // 未hover
+                                            DiscWire(0.8f, IceGUIUtility.CurrentThemeColor * 0.7f);
+                                        }
+                                    }
+                                    else
+                                    {
+                                        // 非备选直接隐藏
+                                    }
+                                }
+                            }
+                            else
+                            {
+                                if (port.IsConnected)
+                                {
+                                    // 连接状态
+                                    DiscSolid(0.3f, color);
+                                }
+                                else
+                                {
+                                    // 普通
+                                    DiscWire(0.3f, color * 0.8f);
+                                }
+
+                                if (bHover)
+                                {
+                                    // hover
+                                    DiscWire(0.6f, color);
+                                }
+                            }
+
+
+                            // 画 Port 内圈
+                            void DiscWire(float radius, Color color)
+                            {
+                                radius *= IceGUIUtility.PORT_RADIUS;
+                                using (HandlesColor(color)) Handles.DrawWireDisc(pos, Vector3.forward, radius);
+                                // 柔化边缘
+                                color.a *= 0.4f;
+                                using (HandlesColor(color))
+                                {
+                                    float off = 0.3f / GUI.matrix[0];
+                                    Handles.DrawWireDisc(pos, Vector3.forward, radius + off);
+                                    Handles.DrawWireDisc(pos, Vector3.forward, radius - off);
+                                }
+                            }
+                            // 画 Port
+                            void DiscSolid(float radius, Color color)
+                            {
+                                radius *= IceGUIUtility.PORT_RADIUS;
+                                using (HandlesColor(color)) Handles.DrawSolidDisc(pos, Vector3.forward, radius);
+                                // 柔化边缘
+                                color.a *= 0.4f;
+                                using (HandlesColor(color)) Handles.DrawWireDisc(pos, Vector3.forward, radius + 0.3f / GUI.matrix[0]);
+                            }
+                        }
+
+                        // Text
+                        {
+                            if (GUIHotControl == 0)
+                            {
+                                if (bHover) DrawTextWithType(false);
+                                else DrawText();
+                            }
+                            else if (GUIHotControl == idDragPort)
+                            {
+                                if (port == DraggingPort) DrawTextWithType(true);
+                                else if (AvailablePorts.Contains(port)) DrawTextWithType(bHover);
+                                else DrawText(false);
+                            }
+                            else DrawText(false);
+
+                            void DrawText(bool? hover = null)
+                            {
+                                Vector2 sText = StlGraphPortName.CalcSize(TempContent(port.name));
+                                Rect rText = new(port.IsOutport ? rPort.xMax + StlGraphPortName.margin.left : rPort.x - sText.x - StlGraphPortName.margin.right, rPort.y + 0.5f * (rPort.height - sText.y), sText.x, sText.y);
+                                StyleBox(rText, StlGraphPortName, port.name, isHover: hover);
+                            }
+
+                            void DrawTextWithType(bool focus)
+                            {
+                                string tType = port.valueType?.Name ?? "void";
+                                tType = tType switch
+                                {
+                                    "Single" => "float",
+                                    "Int32" => "int",
+                                    _ => tType,
+                                };
+                                tType = tType.Color(color);
+                                Vector2 sType = StlGraphPortLabel.CalcSize(TempContent(tType));
+                                Rect rType = new(port.IsOutport ? rPort.x - sType.x - StlGraphPortLabel.margin.right : rPort.xMax + StlGraphPortLabel.margin.left, rPort.y + 0.5f * (rPort.height - sType.y), sType.x, sType.y);
+                                StyleBox(rType, StlGraphPortLabel, tType, hasKeyboardFocus: focus);
+
+                                DrawText(true);
+                            }
+                        }
+                        break;
+                }
+            }
+
+            // 结束拖拽
+            if (E.type == EventType.MouseUp && GUIHotControl == idDragPort && E.button == 0)
+            {
+                GUIHotControl = 0;
+                EndDragPort();
+                E.Use();
+            }
+
+            // 画选择框
+            if (E.type == EventType.Repaint && GUIHotControl == idSelectNode)
+            {
+                Vector2 p0 = E.mousePosition;
+                Vector2 p1 = new Vector2(_cache_drag.x, p0.y);
+                Vector2 p2 = new Vector2(p0.x, _cache_drag.y);
+                Handles.DrawLine(_cache_drag, p1);
+                Handles.DrawLine(_cache_drag, p2);
+                Handles.DrawLine(p0, p1);
+                Handles.DrawLine(p0, p2);
+            }
 
             // 内部鼠标事件
             if (viewport.ClipRect.Contains(E.mousePosition))
             {
                 // 右键菜单
-                if (E.type == EventType.MouseDown && E.button == 1)
+                switch (E.type)
                 {
-                    ShowCreateNodeMenu();
+                    case EventType.MouseDown:
+                        if (E.button == 0 && GUIHotControl == 0)
+                        {
+                            // 开始选择
+                            GUIHotControl = idSelectNode;
+                            _cache_drag = E.mousePosition;
+                            selectedNodes.Clear();
+                            Repaint();
+                            E.Use();
+                        }
+                        if (E.button == 1)
+                        {
+                            _cache_click = E.mousePosition;
+                        }
+                        break;
+                    case EventType.MouseUp:
+                        if (E.button == 1 && E.mousePosition == _cache_click)
+                        {
+                            // OnClick
+                            ShowCreateNodeMenu();
+                            GUIHotControl = 0;
+                            E.Use();
+                        }
+                        break;
                 }
             }
         }
@@ -176,20 +730,83 @@ namespace IceEditor.Internal
         #region 定制
         [MenuItem("IceEngine/Iceprint Box")]
         static void OpenWindow() => GetWindow<IceprintBox>();
+        protected override bool HasScrollScopeOnWindowGUI => false;
+        protected override Color DefaultThemeColor => Setting.themeColor;
 
         protected override void OnEnable()
         {
             base.OnEnable();
             wantsMouseMove = true;
+
+            if (Graph != null) Graph.Deserialize(buffer);
+
+            EditorApplication.playModeStateChanged -= OnPlayModeChange;
+            EditorApplication.playModeStateChanged += OnPlayModeChange;
+        }
+        void OnDisable()
+        {
+            EditorApplication.playModeStateChanged -= OnPlayModeChange;
+        }
+
+        void OnPlayModeChange(PlayModeStateChange mode)
+        {
+            Graph = null;
         }
         #endregion
 
         #region Debug
+        static string Hex(IList<byte> buffer)
+        {
+            string res = "";
+            for (int i = 0; i < buffer.Count; ++i)
+            {
+                var b = buffer[i];
+                res += $"{b:x2}";
+                if (i < buffer.Count - 1)
+                {
+                    if (((i + 1) & 3) == 0) res += " |";
+                    res += " ";
+                }
+            }
+            res = "[" + buffer.Count.ToString().Color("#0AB") + "]\n" + res.Color("#FA0");
+            return res;
+        }
         protected override void OnDebugGUI(Rect position)
         {
-            using (GROUP)
+            using (DOCK)
             {
-                Label("Console:");
+                if (IceButton("Serialize")) buffer = Graph.Serialize();
+                if (IceButton("Deserialize")) Graph.Deserialize();
+                Space();
+                if (IceButton("ClearUndo"))
+                {
+                    undoList.Clear();
+                    redoList.Clear();
+                }
+                if (IceButton("刷新"))
+                {
+                    Graph.ReloadGraph();
+                }
+            }
+            using (GROUP) using (SectionFolder("Buffer", changeWidth: false))
+            {
+                if (buffer != null)
+                {
+                    Label(Hex(buffer));
+                }
+                Header($"Undo[{undoList.Count}]");
+                foreach (var bts in undoList)
+                {
+                    Label(Hex(bts));
+                }
+                Header($"Redo[{redoList.Count}]");
+                foreach (var bts in redoList)
+                {
+                    Label(Hex(bts));
+                }
+            }
+            using (GROUP) using (SectionFolder("Console", changeWidth: false))
+            {
                 Label(GetString("Console"));
             }
             base.OnDebugGUI(position);
@@ -197,7 +814,7 @@ namespace IceEditor.Internal
         int? baseStack = null;
         void OnLog(string log)
         {
-            string curLog = GetString("Console");
+            string curLog = Pack.GetString("Console");
 
             string prefix = "";
             System.Diagnostics.StackTrace st = new();
@@ -230,13 +847,15 @@ namespace IceEditor.Internal
 
             curLog += log;
 
-            SetString("Console", curLog);
+            Pack.SetString("Console", curLog);
         }
         IceBinaryUtility.LogScope LOG
         {
             get
             {
-                SetString("Console", "");
+                if (!DebugMode) return null;
+                baseStack = null;
+                Pack.SetString("Console", "");
                 return new IceBinaryUtility.LogScope(OnLog);
             }
         }

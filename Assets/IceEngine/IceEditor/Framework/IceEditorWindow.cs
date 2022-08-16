@@ -81,6 +81,10 @@ namespace IceEditor.Framework
         /// </summary>
         protected virtual bool HasStatusUI => true;
         /// <summary>
+        /// OnWindowGUI是否有默认Scroll区域
+        /// </summary>
+        protected virtual bool HasScrollScopeOnWindowGUI => true;
+        /// <summary>
         /// 主题颜色改变事件
         /// </summary>
         protected virtual void OnThemeColorChange() { }
@@ -338,7 +342,7 @@ namespace IceEditor.Framework
             using (SubAreaScope area = DebugMode ? SubArea(rBack, out var _, out var _, "Debug Area", 432, DebugGUIDirection) : null)
             {
                 Rect rMain = (area?.mainRect ?? rBack);
-                using (Area(rMain)) using (ScrollInvisible("Main Content Area", StlBackground))
+                using (Area(rMain)) using (HasScrollScopeOnWindowGUI ? ScrollInvisible("Main Content Area", StlBackground) : null)
                 {
                     // 开始检测controlId重复
                     drawingWindowGUI = true;

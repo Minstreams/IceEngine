@@ -12,3 +12,4 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d278c137886be6248b4bd2b33a3861ff, type: 3}
   m_Name: EditorSettingGlobal
   m_EditorClassIdentifier: 
+  shouldContains: 1

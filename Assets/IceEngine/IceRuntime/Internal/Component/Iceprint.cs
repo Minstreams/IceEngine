@@ -48,9 +48,11 @@ namespace IceEngine.Internal
         #endregion
 
         #region Serialized Data
-        public byte[] Serialize() => IceBinaryUtility.ToBytes(nodeList, withHeader: true);
-        public void Deserialize(byte[] data)
+        public byte[] graphData = null;
+        public byte[] Serialize() => graphData = IceBinaryUtility.ToBytes(nodeList, withHeader: true);
+        public void Deserialize(byte[] data = null)
         {
+            if (data == null) data = graphData;
             IceBinaryUtility.FromBytesOverride(data, nodeList, withHeader: true);
             OnDeserialized();
         }
@@ -90,6 +92,7 @@ namespace IceEngine.Internal
         {
             Type t = port.valueType;
             if (t == typeof(int)) return Color.cyan;
+            if (t == typeof(float)) return new Color(1.0f, 0.6f, 0.2f);
             return Color.white;
         }
         public bool IsConnectable(IceprintPort p1, IceprintPort p2)
@@ -102,10 +105,45 @@ namespace IceEngine.Internal
             (IceprintPort pin, IceprintPort pout) = p1.IsOutport ? (p2, p1) : (p1, p2);
             if ((pin as IceprintInport).connectedPorts.Contains(pout as IceprintOutport)) return false;
             if (pin.valueType == pout.valueType) return true;
-            if (pin.valueType is null || pout.valueType is null) return false;
+            if (pin.valueType is null) return true;
+            if (pout.valueType is null) return false;
             if (pin.valueType.IsAssignableFrom(pout.valueType)) return true;
 
             return false;
+        }
+        #endregion
+
+        #region Runtime
+        public void ReloadGraph()
+        {
+            UnloadGraph();
+            LoadGraph();
+        }
+
+        Action onUpdate;
+        void LoadGraph()
+        {
+            Deserialize();
+            foreach (var node in nodeList)
+            {
+                if (node is UpdateNode un)
+                {
+                    onUpdate += () => un.InvokeOutput(0);
+                }
+            }
+        }
+        void UnloadGraph()
+        {
+            onUpdate = null;
+        }
+
+        void Awake()
+        {
+            LoadGraph();
+        }
+        void Update()
+        {
+            onUpdate?.Invoke();
         }
         #endregion
     }

@@ -55,6 +55,11 @@ namespace IceEngine
         /// </summary>
         public static Rect Move(this Rect self, float x = 0, float y = 0) => new Rect(self.x + x, self.y + y, self.width, self.height);
         /// <summary>
+        /// 移动
+        /// </summary>
+        public static Rect Move(this Rect self, Vector2 offset) => new Rect(self.x + offset.x, self.y + offset.y, self.width, self.height);
+
+        /// <summary>
         /// 采样
         /// </summary>
         public static Vector2 Sample(this Rect self, Vector2 uv, bool inverseY = false) => new Vector2(Mathf.LerpUnclamped(self.xMin, self.xMax, uv.x), Mathf.LerpUnclamped(self.yMin, self.yMax, inverseY ? 1 - uv.y : uv.y));

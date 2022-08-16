@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-
+using System.Reflection;
 using IceEngine.Internal;
 
 namespace IceEngine
@@ -17,7 +17,7 @@ namespace IceEngine
             #region Serialized Data
             // Runtime
             public Type valueType;
-            public bool isMultiple;
+            public bool isMultiple => true;
 
             // Editor
             public string name;
@@ -37,6 +37,7 @@ namespace IceEngine
         {
             #region Cache
             [NonSerialized] public IceprintInport port;
+            [NonSerialized] public object action;
             #endregion
 
             public int nodeId;

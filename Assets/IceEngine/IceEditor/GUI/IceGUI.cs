@@ -381,6 +381,7 @@ namespace IceEditor
             bool inUtilityWindow = false;
             Matrix4x4 originMatrix;
             Vector2 screenSize;
+            public Action onCloseScope;
 
             public static int clipStackCount = 0;
             public static Stack<Rect> areaStack = new Stack<Rect>();
@@ -389,7 +390,6 @@ namespace IceEditor
             /// <summary>
             /// 一个可缩放可移动的工作视图
             /// </summary>
-            /// <param name="baseScreenRect">所在GUI空间的屏幕区域</param>
             /// <param name="workspace">工作区Rect</param>
             /// <param name="workspaceSize">工作区的尺寸</param>
             /// <param name="canvasSize">画布的尺寸</param>
@@ -440,6 +440,8 @@ namespace IceEditor
             }
             void IDisposable.Dispose()
             {
+                onCloseScope?.Invoke();
+
                 GUI.EndClip();
                 GUI.matrix = originMatrix;
 
@@ -454,8 +456,6 @@ namespace IceEditor
                 }
             }
         }
-
-        // TODO: 这里整一个带基础控制的工作视图scope，就叫ViewportScope，原本的Viewscope改为CanvasScope
 
         /// <summary>
         /// 暂时改变 GUI.Color
@@ -561,6 +561,8 @@ namespace IceEditor
         /// <returns></returns>
         public static ViewportScope Viewport(Rect workspace, float canvasSize, ref float viewScale, ref Vector2 viewOffset, float minScale = 0.5f, float maxScale = 2.0f, bool? useWidthOrHeightOfWorkspaceAsSize = null, bool useAbsoluteScale = false, bool useLimitedOffset = true, Color? gridColor = null, GUIStyle styleBackground = null, GUIStyle styleCanvas = null, bool inUtilityWindow = false)
         {
+            if (workspace == Rect.zero) return null;
+
             // 数学运算
             float workspaceSize = useWidthOrHeightOfWorkspaceAsSize == null ? Mathf.Min(workspace.height, workspace.width) : useWidthOrHeightOfWorkspaceAsSize.Value ? workspace.width : workspace.height;
             var scale = Mathf.Clamp(viewScale, minScale, maxScale);
@@ -578,61 +580,49 @@ namespace IceEditor
                 offset.y = Mathf.Clamp(offset.y, -borderY, borderY);
             }
 
-            // Control
-            int preMoveViewControl = GetControlID();
-            int moveViewControl = GetControlID();
-            if (E.type == EventType.Repaint && (GUIHotControl == moveViewControl || GUIHotControl == preMoveViewControl)) EditorGUIUtility.AddCursorRect(workspace, MouseCursor.Pan);
-
             // 背景
             if (styleBackground != null) StyleBox(workspace, styleBackground);
 
+            // Control
+            int preMoveViewControl = GetControlID();
+            int moveViewControl = GetControlID();
+
+            // CursorRect
+            if (E.type == EventType.Repaint && (GUIHotControl == moveViewControl || GUIHotControl == preMoveViewControl)) EditorGUIUtility.AddCursorRect(workspace, MouseCursor.Pan);
+
             // 生成Scope对象
             var viewport = new ViewportScope(workspace, workspaceSize, canvasSize, scale, offset, inUtilityWindow);
+
             Rect clipRect = viewport.ClipRect;
-            Rect canvasRect = viewport.CanvasRect;
 
-            // TODO: 在这里放一个GUI回调
+            // 绘制前景和Grid
+            if (E.type == EventType.Repaint)
+            {
+                // 前景
+                if (styleCanvas != null) StyleBox(viewport.CanvasRect, styleCanvas);
 
+                // Grid
+                if (gridColor != null)
+                {
+                    Handles.color = gridColor.Value;
 
-            // 基础控件：移动，缩放
+                    float xMin = clipRect.xMin;
+                    float xMax = clipRect.xMax;
+                    float yMin = clipRect.yMin;
+                    float yMax = clipRect.yMax;
+                    float wGrid = canvasSize;
+                    for (float x = wGrid; x < xMax; x += wGrid) Handles.DrawLine(new Vector3(x, yMin), new Vector3(x, yMax));
+                    for (float x = 0; x > xMin; x -= wGrid) Handles.DrawLine(new Vector3(x, yMin), new Vector3(x, yMax));
+                    for (float y = wGrid; y < yMax; y += wGrid) Handles.DrawLine(new Vector3(xMin, y), new Vector3(xMax, y));
+                    for (float y = 0; y > yMin; y -= wGrid) Handles.DrawLine(new Vector3(xMin, y), new Vector3(xMax, y));
+
+                    Handles.color = Color.white;
+                }
+            }
+
+            // 移动和缩放
             switch (E.type)
             {
-                case EventType.KeyDown:
-                    if (GUIHotControl == 0 && E.keyCode == KeyCode.Space)
-                    {
-                        GUIHotControl = preMoveViewControl;
-                        E.Use();
-                    }
-                    break;
-                case EventType.KeyUp:
-                    if (GUIHotControl == preMoveViewControl && E.keyCode == KeyCode.Space)
-                    {
-                        GUIHotControl = 0;
-                        E.Use();
-                    }
-                    break;
-                case EventType.MouseDown:
-                    if ((GUIHotControl == preMoveViewControl || (GUIHotControl == 0 && E.button != 0)))
-                    {
-                        GUIHotControl = moveViewControl;
-                        _cache_drag = E.mousePosition;
-                        E.Use();
-                    }
-                    break;
-                case EventType.MouseUp:
-                    if (GUIHotControl == moveViewControl && E.button != 0)
-                    {
-                        GUIHotControl = 0;
-                        E.Use();
-                    }
-                    break;
-                case EventType.MouseDrag:
-                    if (GUIHotControl == moveViewControl)
-                    {
-                        viewOffset = offset += E.mousePosition - _cache_drag;
-                        E.Use();
-                    }
-                    break;
                 case EventType.ScrollWheel:
                     if (viewport.ClipRect.Contains(E.mousePosition))
                     {
@@ -648,29 +638,54 @@ namespace IceEditor
                         E.Use();
                     }
                     break;
-                case EventType.Repaint:
-                    // 前景
-                    if (styleCanvas != null) StyleBox(canvasRect, styleCanvas);
-
-                    // Grid
-                    if (gridColor != null)
+                case EventType.MouseDrag:
+                    if (GUIHotControl == preMoveViewControl) GUIHotControl = moveViewControl;
+                    if (GUIHotControl == moveViewControl)
                     {
-                        Handles.color = gridColor.Value;
-
-                        float xMin = clipRect.xMin;
-                        float xMax = clipRect.xMax;
-                        float yMin = clipRect.yMin;
-                        float yMax = clipRect.yMax;
-                        float wGrid = canvasSize;
-                        for (float x = wGrid; x < xMax; x += wGrid) Handles.DrawLine(new Vector3(x, yMin), new Vector3(x, yMax));
-                        for (float x = 0; x > xMin; x -= wGrid) Handles.DrawLine(new Vector3(x, yMin), new Vector3(x, yMax));
-                        for (float y = wGrid; y < yMax; y += wGrid) Handles.DrawLine(new Vector3(xMin, y), new Vector3(xMax, y));
-                        for (float y = 0; y > yMin; y -= wGrid) Handles.DrawLine(new Vector3(xMin, y), new Vector3(xMax, y));
-
-                        Handles.color = Color.white;
+                        viewOffset = offset += E.mousePosition - _cache_drag;
+                        E.Use();
+                    }
+                    break;
+                case EventType.MouseUp:
+                    if (GUIHotControl == moveViewControl && E.button != 0)
+                    {
+                        GUIHotControl = 0;
+                        E.Use();
+                    }
+                    break;
+                case EventType.KeyUp:
+                    if (GUIHotControl == preMoveViewControl && E.keyCode == KeyCode.Space)
+                    {
+                        GUIHotControl = 0;
+                        E.Use();
                     }
                     break;
             }
+
+            viewport.onCloseScope += () =>
+            {
+                if (clipRect.Contains(E.mousePosition))
+                {
+                    switch (E.type)
+                    {
+                        case EventType.KeyDown:
+                            if (GUIHotControl == 0 && E.keyCode == KeyCode.Space)
+                            {
+                                GUIHotControl = preMoveViewControl;
+                                E.Use();
+                            }
+                            break;
+                        case EventType.MouseDown:
+                            if (GUIHotControl == preMoveViewControl || (GUIHotControl == 0 && E.button != 0))
+                            {
+                                _cache_drag = E.mousePosition;
+                                GUIHotControl = preMoveViewControl;
+                            }
+                            break;
+                    }
+                }
+            };
+
             return viewport;
         }
         /// <summary>
@@ -785,8 +800,10 @@ namespace IceEditor
         public static Event E => Event.current;
 
         // Internal Caches
+        internal static Vector2 _cache_click;
         internal static Vector2 _cache_drag;
         internal static Vector2 _cache_offset;
+        internal static Vector2 _cache_pos;
         internal static double _cache_time;
         #endregion
 

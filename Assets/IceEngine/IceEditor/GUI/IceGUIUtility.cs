@@ -338,7 +338,7 @@ namespace IceEditor
             }
 
             // 选择的项目字段
-            string selectedSetting = iceSettingSOMap.First().Key;
+            string selectedSetting = null;
 
 
             // GUI
@@ -346,11 +346,26 @@ namespace IceEditor
             {
                 guiHandler = filter =>
                 {
-                    var so = iceSettingSOMap[selectedSetting];
-                    using (GROUP)
+                    if (selectedSetting == null)
                     {
-                        Header(selectedSetting);
-                        DrawSerializedObject(so);
+                        foreach ((string setting, SerializedObject so) in iceSettingSOMap)
+                        {
+                            using (GROUP)
+                            {
+                                Header(setting);
+                                DrawSerializedObject(so);
+                            }
+                        }
+                        return;
+                    }
+                    else
+                    {
+                        var so = iceSettingSOMap[selectedSetting];
+                        using (GROUP)
+                        {
+                            Header(selectedSetting);
+                            DrawSerializedObject(so);
+                        }
                     }
                 },
                 titleBarGuiHandler = () =>
@@ -359,6 +374,7 @@ namespace IceEditor
                     {
                         if (IceButton(so.Key, so.Key == selectedSetting)) selectedSetting = so.Key;
                     }
+                    if (IceButton("All", selectedSetting == null)) selectedSetting = null;
                 },
             };
         }

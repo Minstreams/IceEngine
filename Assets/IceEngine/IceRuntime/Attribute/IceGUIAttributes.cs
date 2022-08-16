@@ -41,9 +41,9 @@ namespace IceEngine
     }
 
     /// <summary>
-    /// 字段运行时不可更改
+    /// 字段或IceprintNode运行时不可更改
     /// </summary>
-    [AttributeUsage(AttributeTargets.Field, AllowMultiple = false)]
+    [AttributeUsage(AttributeTargets.Field | AttributeTargets.Class, AllowMultiple = false)]
     public sealed class RuntimeConstAttribute : Attribute { }
     #endregion
 
