@@ -40,6 +40,10 @@ namespace IceEditor.Internal
                     redoList.Clear();
                     if (value != null)
                     {
+                        if (!EditorApplication.isPlaying)
+                        {
+                            value.Deserialize();
+                        }
                         buffer = value.graphData;
                         if (buffer == null || buffer.Length == 0)
                         {
@@ -47,10 +51,6 @@ namespace IceEditor.Internal
                             {
                                 buffer = value.Serialize();
                             }
-                        }
-                        if (!EditorApplication.isPlaying)
-                        {
-                            value.Deserialize();
                         }
                     }
                 }

@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 using IceEngine.Framework;
+using IceEngine.IceprintNodes;
 using IceEngine.Internal;
 
 namespace IceEngine
@@ -55,8 +56,17 @@ namespace IceEngine
         public void Deserialize(byte[] data = null)
         {
             if (data == null) data = graphData;
-            IceBinaryUtility.FromBytesOverride(data, nodeList, withHeader: true);
-            OnDeserialized();
+            try
+            {
+                IceBinaryUtility.FromBytesOverride(data, nodeList, withHeader: true);
+                OnDeserialized();
+            }
+            catch (Exception ex)
+            {
+                nodeList = new();
+                Serialize();
+                Debug.LogException(ex);
+            }
         }
         #endregion
 
@@ -122,15 +132,21 @@ namespace IceEngine
             LoadGraph();
         }
 
-        Action onUpdate;
+        public Action onAwake;
+        public Action onStart;
+        public Action onUpdate;
+        public Action onDestroy;
         void LoadGraph()
         {
             Deserialize();
             foreach (var node in nodeList)
             {
-                if (node is UpdateNode un)
+                if (node is NodeBaseEvents nbe)
                 {
-                    onUpdate += un.onUpdate;
+                    onAwake += nbe.onAwake;
+                    onStart += nbe.onStart;
+                    onUpdate += nbe.onUpdate;
+                    onDestroy += nbe.onDestroy;
                 }
             }
         }
@@ -142,10 +158,19 @@ namespace IceEngine
         void Awake()
         {
             LoadGraph();
+            onAwake?.Invoke();
+        }
+        void Start()
+        {
+            onStart?.Invoke();
         }
         void Update()
         {
             onUpdate?.Invoke();
+        }
+        void OnDestroy()
+        {
+            onDestroy?.Invoke();
         }
         #endregion
     }

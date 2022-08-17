@@ -58,21 +58,6 @@ namespace IceEngine.Framework
             outports.Add(port);
             return port;
         }
-
-        public void InvokeOutput(int id)
-        {
-            var port = outports[id];
-            foreach (var pd in port.connectedPorts) (pd.action as Action)?.Invoke();
-        }
-        public void InvokeOutput(int id, object value)
-        {
-            var port = outports[id];
-            foreach (var pd in port.connectedPorts)
-            {
-                if (pd.action is Action act) act?.Invoke();
-                else (pd.action as Action<object>)?.Invoke(value);
-            }
-        }
         #endregion
 
         #region Configuration
@@ -132,7 +117,7 @@ namespace IceEngine.Framework
                 if (attr == null) continue;
 
                 var fName = f.Name;
-                if (fName.StartsWith("out")) fName = fName.Substring(3);
+                if (fName.StartsWith("on")) fName = fName.Substring(2);
 
                 var at = f.FieldType;
                 if (at == actionType)
@@ -168,46 +153,5 @@ namespace IceEngine.Framework
             }
         }
         #endregion
-    }
-}
-
-namespace IceEngine
-{
-    [IceprintMenuItem("Test/asdas")]
-    public class TestNode : IceprintNode
-    {
-        [IceprintPort]
-        Action outOO;
-
-        [IceprintPort]
-        public void InTest()
-        {
-            Debug.Log("Yes!");
-        }
-        [IceprintPort]
-        public void InTest2(float f)
-        {
-            Debug.Log($"No!{f}");
-        }
-    }
-
-    [IceprintMenuItem("Test/UpdateNode"), RuntimeConst]
-    public class UpdateNode : IceprintNode
-    {
-        [IceprintPort]
-        public Action onUpdate;
-    }
-
-    [IceprintMenuItem("Test/TestMidNode")]
-    public class TestMidNode : IceprintNode
-    {
-        [IceprintPort]
-        Action<float> outGo2;
-
-        [IceprintPort]
-        public void InGo()
-        {
-            outGo2?.Invoke(3.232323f);
-        }
     }
 }
