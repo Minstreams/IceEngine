@@ -4,8 +4,12 @@ using System.Reflection;
 
 using UnityEngine;
 
+using IceEngine;
 using IceEngine.Framework;
 using IceEngine.Internal;
+
+using static IceEngine.IceprintUtility;
+using System.Linq.Expressions;
 
 namespace IceEngine.Framework
 {
@@ -27,21 +31,7 @@ namespace IceEngine.Framework
         #endregion
 
         #region Interface
-        protected void AddInport(string name, Action action)
-        {
-            var port = new IceprintInport
-            {
-                valueType = null,
-                name = name,
-                node = this,
-                id = inports.Count,
-            };
-            port.data.action = action;
-            port.data.nodeId = id;
-            port.data.portId = port.id;
-            inports.Add(port);
-        }
-        protected void AddInport(string name, Type valueType, Action<object> action)
+        protected IceprintInport AddInport(string name, Type valueType = null)
         {
             var port = new IceprintInport
             {
@@ -50,10 +40,10 @@ namespace IceEngine.Framework
                 node = this,
                 id = inports.Count,
             };
-            port.data.action = action;
             port.data.nodeId = id;
             port.data.portId = port.id;
             inports.Add(port);
+            return port;
         }
         protected IceprintOutport AddOutport(string name, Type valueType = null)
         {
@@ -68,7 +58,6 @@ namespace IceEngine.Framework
             outports.Add(port);
             return port;
         }
-        protected IceprintOutport AddOutport<T>(string name) => AddOutport(name, typeof(T));
 
         public void InvokeOutput(int id)
         {
@@ -87,8 +76,6 @@ namespace IceEngine.Framework
         #endregion
 
         #region Configuration
-        readonly static Type actionType = typeof(Action);
-        readonly static Type actionGenericType = typeof(Action<>);
         public virtual void InitializePorts()
         {
             var t = GetType();
@@ -113,12 +100,29 @@ namespace IceEngine.Framework
 
                     if (ps.Length == 0)
                     {
-                        AddInport(m.Name, () => m.Invoke(this, null));
+                        var port = AddInport(m.Name);
+
+                        var exp = Expression.Lambda(
+                            actionType,
+                            Expression.Call(Expression.Constant(this), m)
+                            );
+
+                        port.data.action = exp.Compile();
                     }
                     else
                     {
-                        //var d = m.CreateDelegate(typeof(Action<>).MakeGenericType(ps[0].ParameterType), this);
-                        AddInport(m.Name, ps[0].ParameterType, param => m.Invoke(this, new object[] { param }));
+                        var pt = ps[0].ParameterType;
+                        var port = AddInport(m.Name, pt);
+
+                        var at = actionGenericType.MakeGenericType(pt);
+                        var param = Expression.Parameter(pt);
+                        var exp = Expression.Lambda(
+                            at,
+                            Expression.Call(Expression.Constant(this), m, param),
+                            param
+                            );
+
+                        port.data.action = exp.Compile();
                     }
                 }
             }
@@ -127,12 +131,40 @@ namespace IceEngine.Framework
                 var attr = f.GetCustomAttribute<IceprintPortAttribute>();
                 if (attr == null) continue;
 
-                var ft = f.FieldType;
-                if (ft == actionType)
+                var fName = f.Name;
+                if (fName.StartsWith("out")) fName = fName.Substring(3);
+
+                var at = f.FieldType;
+                if (at == actionType)
                 {
                     var port = AddOutport(f.Name);
-                    //f.SetValue(this, () => { port });
+
+                    var m = typeof(IceprintUtility).GetMethod("InvokeVoid");
+                    var exp = Expression.Lambda(
+                        actionType,
+                        Expression.Call(null, m, Expression.Constant(port))
+                        );
+
+                    f.SetValue(this, exp.Compile());
                 }
+                else if (at.IsGenericType && at.GetGenericTypeDefinition().Equals(actionGenericType))
+                {
+                    var ps = at.GetGenericArguments();
+                    if (ps.Length > 1) throw new Exception($"Invalid IceprintPort! {at.Name} {f.Name}");
+
+                    var pt = ps[0];
+                    var port = AddOutport(f.Name, pt);
+
+                    var m = typeof(IceprintUtility).GetMethod("InvokeValue").MakeGenericMethod(pt);
+                    var param = Expression.Parameter(pt);
+                    var exp = Expression.Lambda(
+                            at,
+                            Expression.Call(null, m, Expression.Constant(port), param),
+                            param);
+
+                    f.SetValue(this, exp.Compile());
+                }
+                else throw new Exception($"Invalid IceprintPort! {at.Name} {f.Name}");
             }
         }
         #endregion
@@ -145,46 +177,37 @@ namespace IceEngine
     public class TestNode : IceprintNode
     {
         [IceprintPort]
+        Action outOO;
+
+        [IceprintPort]
         public void InTest()
         {
             Debug.Log("Yes!");
         }
         [IceprintPort]
-        public void InTest2(float f, float f2 = 1.5f)
+        public void InTest2(float f)
         {
-            Debug.Log($"No!{f}|{f2}");
-        }
-        public override void InitializePorts()
-        {
-            base.InitializePorts();
-            AddOutport("Out");
+            Debug.Log($"No!{f}");
         }
     }
 
     [IceprintMenuItem("Test/UpdateNode"), RuntimeConst]
     public class UpdateNode : IceprintNode
     {
-        public override void InitializePorts()
-        {
-            base.InitializePorts();
-            AddOutport("Update");
-        }
+        [IceprintPort]
+        public Action onUpdate;
     }
 
     [IceprintMenuItem("Test/TestMidNode")]
     public class TestMidNode : IceprintNode
     {
-        Action<float> Go2;
+        [IceprintPort]
+        Action<float> outGo2;
 
         [IceprintPort]
         public void InGo()
         {
-            InvokeOutput(0, 1.2f);
-        }
-        public override void InitializePorts()
-        {
-            base.InitializePorts();
-            AddOutport<float>("Go");
+            outGo2?.Invoke(3.232323f);
         }
     }
 }

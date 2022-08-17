@@ -589,6 +589,7 @@ namespace IceEngine
                         var fType = f.FieldType;
                         if (f.IsNotSerialized) continue;
                         if (!fType.IsSerialzableType() && !fType.IsPacketType()) continue;
+                        if (fType.IsDelegate()) continue;
                         if (!type.IsValueType && TypeDefinitions.serializeFieldType != null && f.IsPrivate && f.GetCustomAttribute(TypeDefinitions.serializeFieldType) == null) continue;
 
                         var fobj = f.GetValue(obj);
@@ -841,6 +842,7 @@ namespace IceEngine
                 var fType = f.FieldType;
                 if (f.IsNotSerialized) continue;
                 if (!fType.IsSerialzableType() && !fType.IsPacketType()) continue;
+                if (fType.IsDelegate()) continue;
                 if (!type.IsValueType && TypeDefinitions.serializeFieldType != null && f.IsPrivate && f.GetCustomAttribute(TypeDefinitions.serializeFieldType) == null) continue;
 
                 bool bHeader = fType.HasHeader();

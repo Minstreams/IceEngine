@@ -52,6 +52,7 @@ namespace IceEngine
         static readonly Type objectType = typeof(object);
         static readonly Type nullableType = typeof(Nullable<>);
         static readonly Type iCollectionType = typeof(ICollection);
+        static readonly Type delegateType = typeof(Delegate);
         static readonly Type icePacketBaseType = typeof(IcePacketBase);
         static readonly Type icePacketAttributeType = typeof(IcePacketAttribute);
         static readonly HashSet<Type> serializableCollection = new()
@@ -171,6 +172,7 @@ namespace IceEngine
 
         public static bool IsNullable(this Type type) => (type.IsGenericType && type.GetGenericTypeDefinition().Equals(nullableType));
         public static bool IsCollection(this Type type) => iCollectionType.IsAssignableFrom(type);
+        public static bool IsDelegate(this Type type) => delegateType.IsAssignableFrom(type);
         public static ushort GetShortHashCode(this Type type)
         {
             string key = type.FullName;

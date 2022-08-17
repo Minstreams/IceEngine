@@ -130,7 +130,7 @@ namespace IceEngine
             {
                 if (node is UpdateNode un)
                 {
-                    onUpdate += () => un.InvokeOutput(0);
+                    onUpdate += un.onUpdate;
                 }
             }
         }
