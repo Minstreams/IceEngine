@@ -439,7 +439,7 @@ namespace IceEditor
                     var drawers = TypeCache.GetTypesDerivedFrom<IceprintNodeDrawer>();
                     foreach (var dt in drawers)
                     {
-                        if (dt.IsGenericType) continue;
+                        if (dt.IsAbstract) continue;
                         var drawer = (IceprintNodeDrawer)Activator.CreateInstance(dt);
                         if (!_nodeDrawerMap.TryAdd(drawer.NodeType, drawer)) throw new Exception($"Collecting drawer [{dt.FullName}] failed! [{drawer.NodeType}] already has a drawer [{_nodeDrawerMap[drawer.NodeType]}]");
                     }
