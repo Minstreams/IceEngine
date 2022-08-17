@@ -8,13 +8,13 @@ public class TestBlueprint : MonoBehaviour
 {
     public float tfloat;
 
-    [IceprintInport]
+    [IceprintPort]
     public void TestIn()
     {
 
     }
 
-    [IceprintInport]
+    [IceprintPort]
     public void TestIn2()
     {
 
