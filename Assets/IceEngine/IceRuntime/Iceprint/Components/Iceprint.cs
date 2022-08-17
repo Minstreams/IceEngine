@@ -105,6 +105,7 @@ namespace IceEngine
             Type t = port.valueType;
             if (t == typeof(int)) return Color.cyan;
             if (t == typeof(float)) return new Color(1.0f, 0.6f, 0.2f);
+            if (t == typeof(string)) return new Color(1.0f, 0.7f, 0.1f);
             return Color.white;
         }
         public bool IsConnectable(IceprintPort p1, IceprintPort p2)

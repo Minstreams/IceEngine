@@ -1,6 +1,5 @@
 ﻿using System;
-using System.Linq.Expressions;
-using IceEngine.Framework;
+using System.Text.RegularExpressions;
 
 namespace IceEngine
 {
@@ -20,6 +19,13 @@ namespace IceEngine
                 if (pd.action is Action act) act?.Invoke();
                 else (pd.action as Action<T>)?.Invoke(value);
             }
+        }
+
+        readonly static Regex upperAlphaRegex = new Regex("(?<!^)[A-Z]");
+        internal static string GetNodeDisplayName(string name)
+        {
+            if (name.StartsWith("Node")) name = name.Substring(4);
+            return upperAlphaRegex.Replace(name, " $0");
         }
     }
 }

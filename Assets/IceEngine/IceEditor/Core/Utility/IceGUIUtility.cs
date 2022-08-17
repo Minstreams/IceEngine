@@ -455,7 +455,7 @@ namespace IceEditor
         public static Vector2 GetSizeUnfolded(this IceprintNode node) => new
         (
             Mathf.Max(node.GetSizeBody().x, node.GetSizeTitle().x),
-            Mathf.Max(node.GetSizeBody().y + node.GetSizeTitle().y, node.inports.Count * PORT_SIZE, node.outports.Count * PORT_SIZE)
+            node.GetSizeBody().y + node.GetSizeTitle().y
         );
         public static Vector2 GetSizeTitle(this IceprintNode node) => node.GetDrawer().GetSizeTitle(node);
         public static Vector2 GetSizeBody(this IceprintNode node) => node.GetDrawer().GetSizeBody(node);

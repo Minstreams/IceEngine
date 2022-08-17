@@ -61,6 +61,9 @@ namespace IceEngine.Framework
         #endregion
 
         #region Configuration
+        string _displayName = null;
+        protected virtual string GetDisplayName() => GetNodeDisplayName(GetType().Name);
+        public string DisplayName => _displayName ??= GetDisplayName();
         public virtual void InitializePorts()
         {
             var t = GetType();
@@ -122,7 +125,7 @@ namespace IceEngine.Framework
                 var at = f.FieldType;
                 if (at == actionType)
                 {
-                    var port = AddOutport(f.Name);
+                    var port = AddOutport(fName);
 
                     var m = typeof(IceprintUtility).GetMethod("InvokeVoid");
                     var exp = Expression.Lambda(
@@ -138,7 +141,7 @@ namespace IceEngine.Framework
                     if (ps.Length > 1) throw new Exception($"Invalid IceprintPort! {at.Name} {f.Name}");
 
                     var pt = ps[0];
-                    var port = AddOutport(f.Name, pt);
+                    var port = AddOutport(fName, pt);
 
                     var m = typeof(IceprintUtility).GetMethod("InvokeValue").MakeGenericMethod(pt);
                     var param = Expression.Parameter(pt);

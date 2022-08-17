@@ -83,6 +83,8 @@ namespace IceEditor.Internal
             buffer = IceBinaryUtility.ReverseDiff(buffer, diff);
             redoList.AddLast(diff);
             Graph.Deserialize(buffer);
+
+            GUIUtility.keyboardControl = 0;
         }
         void Redo()
         {
@@ -92,6 +94,8 @@ namespace IceEditor.Internal
             buffer = IceBinaryUtility.ApplyDiff(buffer, diff);
             undoList.AddLast(diff);
             Graph.Deserialize(buffer);
+
+            GUIUtility.keyboardControl = 0;
         }
         #endregion
 
@@ -259,7 +263,7 @@ namespace IceEditor.Internal
                     // 单个操作
                     var itr = selectedNodes.GetEnumerator();
                     itr.MoveNext();
-                    Label($"当前选择{itr.Current.GetType().Name}");
+                    Label($"当前选择 {itr.Current.DisplayName}");
                     if (IceButton("删除") || (E.type == EventType.KeyDown && E.keyCode == KeyCode.Delete)) DeleteSelectedNodes();
                 }
                 else
@@ -405,15 +409,23 @@ namespace IceEditor.Internal
                 }
                 StyleBox(nodeRect, bSelected ? drawer.StlGraphNodeBackgroundSelected : drawer.StlGraphNodeBackground);
 
-                // 标题
-                var titleRect = new Rect(nodeRect) { height = node.GetSizeTitle().y };
-                drawer.OnGUI_Title(node, titleRect);
-
-                // 主体
-                if (!node.folded)
+                using (GUICHECK)
                 {
-                    var bodyRect = new Rect(node.position, node.GetSizeBody()).Move(y: node.GetSizeTitle().y);
-                    drawer.OnGUI_Body(node, bodyRect);
+                    // 标题
+                    var titleRect = new Rect(nodeRect) { height = node.GetSizeTitle().y };
+                    drawer.OnGUI_Title(node, titleRect);
+
+                    // 主体
+                    if (!node.folded)
+                    {
+                        var bodyRect = new Rect(node.position, node.GetSizeBody()).Move(y: node.GetSizeTitle().y);
+                        drawer.OnGUI_Body(node, bodyRect);
+                    }
+
+                    if (GUIChanged)
+                    {
+                        RecordForUndo();
+                    }
                 }
 
                 // 拖动
@@ -707,6 +719,7 @@ namespace IceEditor.Internal
                             GUIHotControl = idSelectNode;
                             _cache_drag = E.mousePosition;
                             selectedNodes.Clear();
+                            GUIUtility.keyboardControl = 0;
                             Repaint();
                             E.Use();
                         }
@@ -776,7 +789,13 @@ namespace IceEditor.Internal
         {
             using (DOCK)
             {
-                if (IceButton("Serialize")) buffer = Graph.Serialize();
+                if (IceButton("Serialize"))
+                {
+                    using (LOG)
+                    {
+                        buffer = Graph.Serialize();
+                    }
+                }
                 if (IceButton("Deserialize")) Graph.Deserialize();
                 Space();
                 if (IceButton("ClearUndo"))
