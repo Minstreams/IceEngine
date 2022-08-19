@@ -21,6 +21,5 @@ namespace IceEngine.IceprintNodes
         {
             Debug.Log(msg);
         }
-
     }
 }

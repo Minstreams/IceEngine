@@ -25,7 +25,8 @@ namespace IceEngine
             // Step2: repair connection references
             foreach (var node in nodeList)
             {
-                for (int i = 0; i < node.outports.Count; ++i)
+                int opCount = node.outports.Count;
+                for (int i = 0; i < opCount; ++i)
                 {
                     var op = node.outports[i];
                     op.connectedPorts = node.connectionData[i];
@@ -36,6 +37,12 @@ namespace IceEngine
                         op.connectedPorts[pi] = ip.data;
                         ip.connectedPorts.Add(op);
                     }
+                }
+
+                // remove redundant connectionData
+                for (int i = node.connectionData.Count - 1; i >= opCount; --i)
+                {
+                    node.connectionData.RemoveAt(i);
                 }
             }
 
