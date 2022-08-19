@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Text.RegularExpressions;
 
+using IceEngine.Internal;
+
 namespace IceEngine
 {
     public static class IceprintUtility

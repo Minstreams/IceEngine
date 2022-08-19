@@ -1,8 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using IceEngine.Internal;
 
-namespace IceEngine
+namespace IceEngine.Internal
 {
     public sealed class IceprintInport : IceprintPort
     {

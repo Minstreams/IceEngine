@@ -52,7 +52,14 @@ namespace IceEngine
 
         #region Serialized Data
         public byte[] graphData = null;
-        public byte[] Serialize() => graphData = IceBinaryUtility.ToBytes(nodeList, withHeader: true);
+        public byte[] Serialize()
+        {
+            graphData = IceBinaryUtility.ToBytes(nodeList, withHeader: true);
+#if UNITY_EDITOR
+            UnityEditor.EditorUtility.SetDirty(this);
+#endif
+            return graphData;
+        }
         public void Deserialize(byte[] data = null)
         {
             if (data == null) data = graphData;
@@ -100,13 +107,29 @@ namespace IceEngine
         #endregion
 
         #region Configuration
-        public Color GetPortColor(IceprintPort port)
+        public Color GetColor(IceprintPort port)
         {
-            Type t = port.valueType;
-            if (t == typeof(int)) return Color.cyan;
-            if (t == typeof(float)) return new Color(1.0f, 0.6f, 0.2f);
-            if (t == typeof(string)) return new Color(1.0f, 0.7f, 0.1f);
+            Color c = Color.white;
+            for (int i = 0; i < port.ParamsList.Count; ++i)
+            {
+                c = Color.LerpUnclamped(GetColor(port.ParamsList[i]), c, i / ((float)(i + 1)));
+            }
+            return c;
+        }
+        public Color GetColor(Type paramType)
+        {
+            if (paramType == typeof(int)) return Color.cyan;
+            if (paramType == typeof(float)) return new Color(1.0f, 0.6f, 0.2f);
+            if (paramType == typeof(string)) return new Color(1.0f, 0.7f, 0.1f);
             return Color.white;
+        }
+        public string GetParamTypeName(Type paramType)
+        {
+            if (paramType is null) return "void";
+            if (paramType == typeof(int)) return "int";
+            if (paramType == typeof(float)) return "float";
+            if (paramType == typeof(string)) return "string";
+            return paramType.Name;
         }
         public bool IsConnectable(IceprintPort p1, IceprintPort p2)
         {
@@ -117,11 +140,17 @@ namespace IceEngine
 
             (IceprintPort pin, IceprintPort pout) = p1.IsOutport ? (p2, p1) : (p1, p2);
             if ((pin as IceprintInport).connectedPorts.Contains(pout as IceprintOutport)) return false;
-            if (pin.valueType == pout.valueType) return true;
-            if (pin.valueType is null) return true;
-            if (pout.valueType is null) return false;
-            if (pin.valueType.IsAssignableFrom(pout.valueType)) return true;
-
+            if (pin.paramsHash == pout.paramsHash) return true;
+            if (pin.paramsHash == 0) return true;
+            if (pout.paramsHash == 0) return false;
+            if (pin.ParamsList.Count == pout.ParamsList.Count)
+            {
+                for (int i = 0; i < pin.ParamsList.Count; i++)
+                {
+                    if (!pin.ParamsList[i].IsAssignableFrom(pout.ParamsList[i])) return false;
+                }
+                return true;
+            }
             return false;
         }
         #endregion

@@ -15,12 +15,12 @@ namespace IceEditor.Internal
     {
         public override Vector2 GetSizeBody(NodeLogger node)
         {
-            return new(Mathf.Max(128, StlIce.CalcSize(TempContent(node.defaultMessage)).x + 12), 48);
+            return new(Mathf.Max(96, StlIce.CalcSize(TempContent(node.message)).x + 12), 48);
         }
         public override Vector2 GetSizeTitle(NodeLogger node)
         {
-            if (!node.folded) return base.GetSizeTitle(node);
-            return new(StlLabel.CalcSize(TempContent(node.defaultMessage)).x + 58, 22);
+            if (!node.folded) return new(96, 16);
+            return new(StlLabel.CalcSize(TempContent(node.message)).x + 58, 22);
         }
         public override void OnGUI_Title(NodeLogger node, Rect rect)
         {
@@ -29,7 +29,7 @@ namespace IceEditor.Internal
                 using (Area(rect)) using (HORIZONTAL)
                 {
                     Label("Logger".Bold(), StlIce);
-                    Label(node.defaultMessage);
+                    Label(node.message);
                 }
             }
             else
@@ -41,8 +41,8 @@ namespace IceEditor.Internal
         {
             using (Area(rect)) using (LabelWidth(56))
             {
-                Label("Default Message");
-                TextField(ref node.defaultMessage);
+                Label("Message");
+                TextField(ref node.message);
             }
         }
     }

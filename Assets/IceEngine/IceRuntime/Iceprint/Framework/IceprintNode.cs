@@ -31,11 +31,11 @@ namespace IceEngine.Framework
         #endregion
 
         #region Interface
-        protected IceprintInport AddInport(string name, Type valueType = null)
+        protected IceprintInport AddInport(string name, params Type[] paramTypes)
         {
             var port = new IceprintInport
             {
-                valueType = valueType,
+                ParamsList = new(paramTypes),
                 name = name,
                 node = this,
                 id = inports.Count,
@@ -45,11 +45,11 @@ namespace IceEngine.Framework
             inports.Add(port);
             return port;
         }
-        protected IceprintOutport AddOutport(string name, Type valueType = null)
+        protected IceprintOutport AddOutport(string name, params Type[] paramTypes)
         {
             var port = new IceprintOutport
             {
-                valueType = valueType,
+                ParamsList = new(paramTypes),
                 name = name,
                 node = this,
                 id = outports.Count,

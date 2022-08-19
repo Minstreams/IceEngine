@@ -472,7 +472,7 @@ namespace IceEditor.Internal
             {
                 var pos = DraggingPort.GetPos();
                 var tagent = DraggingPort.GetTangent();
-                var color = Graph.GetPortColor(DraggingPort);
+                var color = Graph.GetColor(DraggingPort);
                 IceGUIUtility.DrawPortLine(pos, E.mousePosition, tagent, color, color);
                 IceGUIUtility.DrawPortLine(E.mousePosition, pos, -tagent, color, color);
             }
@@ -486,16 +486,16 @@ namespace IceEditor.Internal
                 if (E.type == EventType.Repaint && port.IsConnected)
                 {
                     Vector2 pos = port.GetPos();
-                    var color = Graph.GetPortColor(port);
+                    var color = Graph.GetColor(port);
 
                     var tagent = port.GetTangent();
                     if (port is IceprintInport pin)
                     {
-                        foreach (var pp in pin.connectedPorts) IceGUIUtility.DrawPortLine(pos, pp.GetPos(), tagent, color, Graph.GetPortColor(pp));
+                        foreach (var pp in pin.connectedPorts) IceGUIUtility.DrawPortLine(pos, pp.GetPos(), tagent, color, Graph.GetColor(pp));
                     }
                     else if (port is IceprintOutport pout)
                     {
-                        foreach (var pp in pout.connectedPorts) IceGUIUtility.DrawPortLine(pos, pp.port.GetPos(), tagent, color, Graph.GetPortColor(pp.port));
+                        foreach (var pp in pout.connectedPorts) IceGUIUtility.DrawPortLine(pos, pp.port.GetPos(), tagent, color, Graph.GetColor(pp.port));
                     }
                 }
             }
@@ -508,7 +508,7 @@ namespace IceEditor.Internal
             void OnGUI_Port(IceprintPort port)
             {
                 Vector2 pos = port.GetPos();
-                var color = Graph.GetPortColor(port);
+                var color = Graph.GetColor(port);
 
                 Rect rPort = pos.ExpandToRect(IceGUIUtility.PORT_RADIUS);
                 bool bHover = rPort.Contains(E.mousePosition);
@@ -667,14 +667,14 @@ namespace IceEditor.Internal
 
                             void DrawTextWithType(bool focus)
                             {
-                                string tType = port.valueType?.Name ?? "void";
-                                tType = tType switch
+                                string tType = port.ParamsList.Count == 0 ? Graph.GetParamTypeName(null) : "";
+                                for (int i = 0; i < port.ParamsList.Count; ++i)
                                 {
-                                    "Single" => "float",
-                                    "Int32" => "int",
-                                    _ => tType,
-                                };
-                                tType = tType.Color(color);
+                                    var param = port.ParamsList[i];
+                                    tType += Graph.GetParamTypeName(param).Color(Graph.GetColor(param));
+                                    if (i < port.ParamsList.Count - 1) tType += ", ";
+                                }
+
                                 Vector2 sType = StlGraphPortLabel.CalcSize(TempContent(tType));
                                 Rect rType = new(port.IsOutport ? rPort.x - sType.x - StlGraphPortLabel.margin.right : rPort.xMax + StlGraphPortLabel.margin.left, rPort.y + 0.5f * (rPort.height - sType.y), sType.x, sType.y);
                                 StyleBox(rType, StlGraphPortLabel, tType, hasKeyboardFocus: focus);

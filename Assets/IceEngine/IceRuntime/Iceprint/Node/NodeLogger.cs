@@ -8,32 +8,19 @@ namespace IceEngine.IceprintNodes
     public class NodeLogger : IceprintNode
     {
         // Field
-        public string defaultMessage;
-
-        // Cache
-        string Message => message ??= defaultMessage;
-        [NonSerialized] string message = null;
+        public string message;
 
         // Ports
         [IceprintPort]
-        public void SetMessage(string message)
-        {
-            this.message = message;
-        }
-        [IceprintPort]
         public void Log()
         {
-            Debug.Log(Message);
+            Debug.Log(message);
         }
         [IceprintPort]
-        public void LogWarning()
+        public void Log(string msg)
         {
-            Debug.LogWarning(Message);
+            Debug.Log(msg);
         }
-        [IceprintPort]
-        public void LogError()
-        {
-            Debug.LogError(Message);
-        }
+
     }
 }

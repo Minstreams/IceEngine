@@ -1,5 +1,5 @@
 ﻿using System;
-
+using System.Collections.Generic;
 using IceEngine.Framework;
 
 namespace IceEngine.Internal
@@ -13,8 +13,21 @@ namespace IceEngine.Internal
 
         #region Serialized Data
         // Runtime
-        public Type valueType;
-        public bool isMultiple => true;
+        public int paramsHash = 0;
+        public List<Type> ParamsList
+        {
+            get => _paramsList; set
+            {
+                _paramsList = value;
+
+                paramsHash = 0;
+                foreach (var pt in _paramsList)
+                {
+                    paramsHash ^= pt.GetHashCode();
+                }
+            }
+        }
+        List<Type> _paramsList;
 
         // Editor
         public string name;
@@ -26,6 +39,11 @@ namespace IceEngine.Internal
         public abstract void ConnectTo(IceprintPort other);
         public abstract void DisconnectFrom(IceprintPort other);
         public abstract void DisconnectAll();
+        #endregion
+
+        #region 未来扩展点
+        // 未来扩展到其他Graph可能会用到的特性，目前先不动
+        public bool isMultiple => true;
         #endregion
     }
 }
