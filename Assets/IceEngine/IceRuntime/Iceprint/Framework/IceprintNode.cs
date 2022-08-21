@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Linq.Expressions;
 using System.Reflection;
 
 using UnityEngine;
@@ -9,7 +11,6 @@ using IceEngine.Framework;
 using IceEngine.Internal;
 
 using static IceEngine.IceprintUtility;
-using System.Linq.Expressions;
 
 namespace IceEngine.Framework
 {
@@ -84,7 +85,7 @@ namespace IceEngine.Framework
                 {
                     var ps = m.GetParameters();
 
-                    if (ps.Length > 1) throw new Exception($"Iceprint Inport can not have more than 1 parameter! node:[{t.FullName}] port:[{m.Name}]");
+                    if (ps.Length > 2) throw new Exception($"Iceprint Inport can not have more than 2 parameter! node:[{t.FullName}] port:[{m.Name}]");
 
                     if (ps.Length == 0)
                     {
@@ -99,15 +100,15 @@ namespace IceEngine.Framework
                     }
                     else
                     {
-                        var pt = ps[0].ParameterType;
-                        var port = AddInport(m.Name, pt);
+                        var pts = ps.Select(p => p.ParameterType).ToArray();
+                        var port = AddInport(m.Name, pts);
 
-                        var at = actionGenericType.MakeGenericType(pt);
-                        var param = Expression.Parameter(pt);
+                        var at = actionGenericType.MakeGenericType(pts);
+                        var prs = pts.Select(pt => Expression.Parameter(pt));
                         var exp = Expression.Lambda(
                             at,
-                            Expression.Call(Expression.Constant(this), m, param),
-                            param
+                            Expression.Call(Expression.Constant(this), m, prs),
+                            prs
                             );
 
                         port.data.action = exp.Compile();
@@ -137,18 +138,17 @@ namespace IceEngine.Framework
                 }
                 else if (at.IsGenericType && at.GetGenericTypeDefinition().Equals(actionGenericType))
                 {
-                    var ps = at.GetGenericArguments();
-                    if (ps.Length > 1) throw new Exception($"Invalid IceprintPort! {at.Name} {f.Name}");
+                    var pts = at.GetGenericArguments();
+                    if (pts.Length > 2) throw new Exception($"Invalid IceprintPort! {at.Name} {f.Name}");
 
-                    var pt = ps[0];
-                    var port = AddOutport(fName, pt);
+                    var port = AddOutport(fName, pts);
 
-                    var m = typeof(IceprintUtility).GetMethod("InvokeValue").MakeGenericMethod(pt);
-                    var param = Expression.Parameter(pt);
+                    var m = typeof(IceprintOutport).GetMethod("InvokeValue").MakeGenericMethod(pts);
+                    var prs = pts.Select(pt => Expression.Parameter(pt));
                     var exp = Expression.Lambda(
                             at,
-                            Expression.Call(null, m, Expression.Constant(port), param),
-                            param);
+                            Expression.Call(Expression.Constant(port), m, prs),
+                            prs);
 
                     f.SetValue(this, exp.Compile());
                 }

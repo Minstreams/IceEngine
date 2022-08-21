@@ -29,12 +29,22 @@ namespace IceEngine
                 for (int i = 0; i < opCount; ++i)
                 {
                     var op = node.outports[i];
-                    op.connectedPorts = node.connectionData[i];
-                    for (int pi = 0; pi < op.connectedPorts.Count; ++pi)
+                    var cd = node.connectionData[i];
+                    op.connectedPorts = cd;
+                    for (int pi = 0; pi < cd.Count; ++pi)
                     {
-                        var pd = op.connectedPorts[pi];
+                        var pd = cd[pi];
                         var ip = nodeList[pd.nodeId].inports[pd.portId];
-                        op.connectedPorts[pi] = ip.data;
+
+                        // 去掉无效连接
+                        if (!IsConnectable(ip, op))
+                        {
+                            cd.RemoveAt(pi);
+                            --pi;
+                            continue;
+                        }
+
+                        cd[pi] = ip.data;
                         ip.connectedPorts.Add(op);
                     }
                 }

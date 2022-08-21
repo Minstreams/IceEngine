@@ -40,6 +40,23 @@ namespace IceEngine.Internal
             }
             connectedPorts.Clear();
         }
+
+        public void InvokeValue<T>(T value)
+        {
+            foreach (var pd in connectedPorts)
+            {
+                if (pd.action is Action act) act?.Invoke();
+                else (pd.action as Action<T>)?.Invoke(value);
+            }
+        }
+        public void InvokeValue<T1, T2>(T1 v1, T2 v2)
+        {
+            foreach (var pd in connectedPorts)
+            {
+                if (pd.action is Action act) act?.Invoke();
+                else (pd.action as Action<T1, T2>)?.Invoke(v1, v2);
+            }
+        }
         #endregion
     }
 }
