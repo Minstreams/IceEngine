@@ -24,6 +24,6 @@ namespace IceEditor.Internal
             }
         }
 
-        // TODO: Draw nodes in preview mode
+        // TODO: Draw nodes in preview area
     }
 }

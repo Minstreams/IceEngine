@@ -11,7 +11,10 @@ namespace IceEngine.Framework
         /// <summary>
         /// 冰屿系统的子系统基类，此类用于计算反射
         /// </summary>.
-        public abstract class IceSystem { }
+        public abstract class IceSystem
+        {
+            protected IceSystem() => throw new System.Exception("Ice System cannot be instantiated!");
+        }
     }
 
     /// <summary>
