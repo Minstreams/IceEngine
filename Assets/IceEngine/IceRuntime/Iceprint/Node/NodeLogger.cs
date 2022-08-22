@@ -21,31 +21,5 @@ namespace IceEngine.IceprintNodes
         {
             Debug.Log(obj);
         }
-        [IceprintPort]
-        public void Log(A obj, string s)
-        {
-            Debug.Log(obj.n + s);
-        }
-    }
-
-    [IceprintMenuItem("Test")]
-    public class NodeTest : IceprintNode
-    {
-        [IceprintPort]
-        public Action<B, string> onOut;
-        [IceprintPort]
-        public void GG()
-        {
-            onOut?.Invoke(new B() { n = "Asdadwadasdawdasd" }, "|AAA");
-        }
-    }
-
-    public class A
-    {
-        public string n;
-    }
-    public class B : A
-    {
-
     }
 }

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Reflection;
 using System.Text.RegularExpressions;
 
 using IceEngine.Internal;
@@ -7,8 +8,6 @@ namespace IceEngine
 {
     public static class IceprintUtility
     {
-        internal readonly static Type actionType = typeof(Action);
-        internal readonly static Type actionGenericType = typeof(Action<>);
         internal readonly static Type[] actionTypes = new Type[]
         {
             typeof(Action),
@@ -30,26 +29,34 @@ namespace IceEngine
             typeof(Action<,,,,,,,,,,,,,,,>),
         };
 
-        public static void InvokeVoid(this IceprintOutport port)
+        internal static MethodInfo[] OutportInvokeMethods
         {
-            foreach (var pd in port.connectedPorts) (pd.action as Action)?.Invoke();
+            get
+            {
+                if (_outportInvokeMethods is null)
+                {
+                    _outportInvokeMethods = new MethodInfo[17];
+                    var ms = typeof(IceprintOutport).GetMethods(BindingFlags.Instance | BindingFlags.Public);
+                    foreach (var m in ms)
+                    {
+                        if (m.Name == "Invoke")
+                        {
+                            if (!m.IsGenericMethodDefinition)
+                            {
+                                _outportInvokeMethods[0] = m;
+                            }
+                            else
+                            {
+                                _outportInvokeMethods[m.GetGenericArguments().Length] = m;
+                            }
+                        }
+                    }
+                }
+                return _outportInvokeMethods;
+            }
         }
-        //public static void InvokeValue<T>(this IceprintOutport port, T value)
-        //{
-        //    foreach (var pd in port.connectedPorts)
-        //    {
-        //        if (pd.action is Action act) act?.Invoke();
-        //        else (pd.action as Action<T>)?.Invoke(value);
-        //    }
-        //}
-        //public static void InvokeValue<T1, T2>(this IceprintOutport port, T1 v1, T2 v2)
-        //{
-        //    foreach (var pd in port.connectedPorts)
-        //    {
-        //        if (pd.action is Action act) act?.Invoke();
-        //        else (pd.action as Action<T1, T2>)?.Invoke(v1, v2);
-        //    }
-        //}
+        static MethodInfo[] _outportInvokeMethods = null;
+
 
         readonly static Regex upperAlphaRegex = new("(?<!^)[A-Z]");
         internal static string GetNodeDisplayName(string name)

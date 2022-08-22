@@ -84,15 +84,16 @@ namespace IceEngine.Framework
                 // 支持一下默认参数
                 {
                     var ps = m.GetParameters();
+                    int psCount = ps.Length;
 
-                    if (ps.Length > 2) throw new Exception($"Iceprint Inport can not have more than 2 parameter! node:[{t.FullName}] port:[{m.Name}]");
+                    if (psCount > 16) throw new Exception($"Iceprint Inport can not have more than 16 parameter! node:[{t.FullName}] port:[{m.Name}]");
 
-                    if (ps.Length == 0)
+                    if (psCount == 0)
                     {
                         var port = AddInport(m.Name);
 
                         var exp = Expression.Lambda(
-                            actionType,
+                            actionTypes[0],
                             Expression.Call(Expression.Constant(this), m)
                             );
 
@@ -103,8 +104,8 @@ namespace IceEngine.Framework
                         var pts = ps.Select(p => p.ParameterType).ToArray();
                         var port = AddInport(m.Name, pts);
 
-                        var at = actionGenericType.MakeGenericType(pts);
-                        var prs = pts.Select(pt => Expression.Parameter(pt));
+                        var at = actionTypes[psCount].MakeGenericType(pts);
+                        var prs = pts.Select(pt => Expression.Parameter(pt)).ToArray();
                         var exp = Expression.Lambda(
                             at,
                             Expression.Call(Expression.Constant(this), m, prs),
@@ -124,27 +125,29 @@ namespace IceEngine.Framework
                 if (fName.StartsWith("on")) fName = fName.Substring(2);
 
                 var at = f.FieldType;
-                if (at == actionType)
+                if (at == actionTypes[0])
                 {
                     var port = AddOutport(fName);
 
-                    var m = typeof(IceprintUtility).GetMethod("InvokeVoid");
+                    var m = OutportInvokeMethods[0];
                     var exp = Expression.Lambda(
-                        actionType,
-                        Expression.Call(null, m, Expression.Constant(port))
+                        actionTypes[0],
+                        Expression.Call(Expression.Constant(port), m)
                         );
 
                     f.SetValue(this, exp.Compile());
                 }
-                else if (at.IsGenericType && at.GetGenericTypeDefinition().Equals(actionGenericType))
+                else if (at.IsGenericType)
                 {
                     var pts = at.GetGenericArguments();
-                    if (pts.Length > 2) throw new Exception($"Invalid IceprintPort! {at.Name} {f.Name}");
+                    int psCount = pts.Length;
+
+                    if (pts.Length > 16 || !at.GetGenericTypeDefinition().Equals(actionTypes[psCount])) throw new Exception($"Invalid IceprintPort! {at.Name} {f.Name}");
 
                     var port = AddOutport(fName, pts);
 
-                    var m = typeof(IceprintOutport).GetMethod("InvokeValue").MakeGenericMethod(pts);
-                    var prs = pts.Select(pt => Expression.Parameter(pt));
+                    var m = OutportInvokeMethods[psCount].MakeGenericMethod(pts);
+                    var prs = pts.Select(pt => Expression.Parameter(pt)).ToArray();
                     var exp = Expression.Lambda(
                             at,
                             Expression.Call(Expression.Constant(port), m, prs),
