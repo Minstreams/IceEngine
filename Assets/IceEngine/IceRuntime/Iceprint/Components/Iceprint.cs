@@ -9,6 +9,7 @@ using IceEngine.Internal;
 
 namespace IceEngine
 {
+    [DisallowMultipleComponent]
     [AddComponentMenu("Ice/Iceprint")]
     public sealed class Iceprint : MonoBehaviour
     {

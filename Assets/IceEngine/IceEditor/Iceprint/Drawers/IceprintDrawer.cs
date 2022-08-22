@@ -14,6 +14,7 @@ namespace IceEditor.Internal
         Iceprint Target => target as Iceprint;
         protected override void OnGUI()
         {
+            Label(Target.gameObject.name, StlHeader);
             Label($"Node Count: {Target.nodeList.Count}");
             Label($"Data Length: {Target.graphData?.Length}");
 
