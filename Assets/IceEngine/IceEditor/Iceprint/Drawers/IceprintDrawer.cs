@@ -23,5 +23,7 @@ namespace IceEditor.Internal
                 IceprintBox.OpenPrint(Target);
             }
         }
+
+        // TODO: Draw nodes in preview mode
     }
 }
