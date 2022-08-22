@@ -26,7 +26,7 @@ namespace IceEditor.Internal
         {
             if (node.folded)
             {
-                using (Area(rect)) using (HORIZONTAL)
+                using (AreaRaw(rect.ApplyBorder(-2))) using (HORIZONTAL)
                 {
                     Label("Logger".Bold(), StlIce);
                     Label(node.message);

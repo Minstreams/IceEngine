@@ -14,13 +14,12 @@ namespace IceEditor.Internal
         Iceprint Target => target as Iceprint;
         protected override void OnGUI()
         {
+            Label($"Node Count: {Target.nodeList.Count}");
+            Label($"Data Length: {Target.graphData?.Length}");
+
             if (Button("编辑Blueprint"))
             {
-                //IceprintEditorWindow.Open(Target);
-            }
-            using (GROUP)
-            {
-                base.OnGUI();
+                IceprintBox.OpenPrint(Target);
             }
         }
     }

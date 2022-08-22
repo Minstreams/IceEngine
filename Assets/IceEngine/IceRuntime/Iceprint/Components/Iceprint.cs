@@ -9,6 +9,7 @@ using IceEngine.Internal;
 
 namespace IceEngine
 {
+    [AddComponentMenu("Ice/Iceprint")]
     public sealed class Iceprint : MonoBehaviour
     {
         #region Cache
@@ -80,6 +81,13 @@ namespace IceEngine
         public void Deserialize(byte[] data = null)
         {
             if (data == null) data = graphData;
+            if (graphData != data)
+            {
+                graphData = data;
+#if UNITY_EDITOR
+                UnityEditor.EditorUtility.SetDirty(this);
+#endif
+            }
             try
             {
                 IceBinaryUtility.FromBytesOverride(data, nodeList, withHeader: true);
@@ -89,20 +97,22 @@ namespace IceEngine
             {
                 nodeList = new();
                 Serialize();
-                Debug.LogException(ex);
+                Debug.LogWarning("Deserialize failed, node list is reset.\n" + ex.Message);
             }
         }
         #endregion
 
         #region Interface
-        public void AddNode(Type nodeType) => AddNode(Activator.CreateInstance(nodeType) as IceprintNode);
-        public void AddNode<Node>() where Node : IceprintNode => AddNode(Activator.CreateInstance<Node>());
-        void AddNode(IceprintNode node)
+        public IceprintNode AddNode(Type nodeType, Vector2 pos = default) => AddNode(Activator.CreateInstance(nodeType) as IceprintNode, pos);
+        public IceprintNode AddNode<Node>(Vector2 pos = default) where Node : IceprintNode => AddNode(Activator.CreateInstance<Node>(), pos);
+        IceprintNode AddNode(IceprintNode node, Vector2 pos = default)
         {
             int index = nodeList.Count;
             node.InitializePorts();
+            node.position = pos;
             UpdateNodeCache(node, index);
             nodeList.Add(node);
+            return node;
         }
         public void RemoveNode(IceprintNode node) => RemoveNodeAt(node.id);
         public void RemoveNodeAt(int i)

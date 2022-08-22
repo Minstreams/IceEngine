@@ -195,6 +195,7 @@ namespace IceEditor.Internal
             SetBool("isCreateNodeMenuOn", true);
             GenericMenu gm = new GenericMenu();
             gm.allowDuplicateNames = true;
+            Vector2 pos = E.mousePosition;
             foreach (var nm in NodeMenu)
             {
                 if (EditorApplication.isPlaying && IsRuntimeConst(nm.node))
@@ -205,7 +206,9 @@ namespace IceEditor.Internal
                 {
                     gm.AddItem(nm.path, false, () =>
                     {
-                        Graph.AddNode(nm.node);
+                        var node = Graph.AddNode(nm.node, pos);
+                        selectedNodes.Clear();
+                        selectedNodes.Add(node);
                         RecordForUndo();
                     });
                 }
