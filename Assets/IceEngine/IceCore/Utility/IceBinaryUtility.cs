@@ -276,21 +276,6 @@ namespace IceEngine
         // 内部接口
         [System.Diagnostics.Conditional("DEBUG")]
         static void Log(string message) => Logger?.Invoke(message);
-        static string Hex(this IList<byte> buffer, int count)
-        {
-            string res = "";
-            for (int i = buffer.Count - count; i < buffer.Count; ++i)
-            {
-                var b = buffer[i];
-                res += $"{b:x2}";
-                if (i < buffer.Count - 1)
-                {
-                    if (((i + 1) & 3) == 0) res += " |";
-                    res += " ";
-                }
-            }
-            return res;
-        }
         static string ASCII(this IList<byte> buffer, int count)
         {
             string res = "";
@@ -311,8 +296,6 @@ namespace IceEngine
             Log("] ");
         }
         #endregion
-
-        public readonly static Encoding DefaultEncoding = Encoding.UTF8;
 
         static class FieldBlockHeaderDefinitions
         {
@@ -453,7 +436,7 @@ namespace IceEngine
 
                 if (withHeader) buffer.AddHeader(FieldBlockHeaderDefinitions.stringField);
 
-                var bytes = DefaultEncoding.GetBytes(str);
+                var bytes = str.GetBytes();
                 var lengthBlock = GenLengthBlock(bytes);
 
                 buffer.AddBytes(lengthBlock);
@@ -480,7 +463,7 @@ namespace IceEngine
                     }
                 }
 
-                var bytes = DefaultEncoding.GetBytes(tName);
+                var bytes = tName.GetBytes();
                 var lengthBlock = GenLengthBlock(bytes);
 
                 buffer.AddBytes(lengthBlock);
@@ -590,7 +573,7 @@ namespace IceEngine
                         if (f.IsNotSerialized) continue;
                         if (!fType.IsSerialzableType() && !fType.IsPacketType()) continue;
                         if (fType.IsDelegate()) continue;
-                        if (!type.IsValueType && TypeDefinitions.serializeFieldType != null && f.IsPrivate && f.GetCustomAttribute(TypeDefinitions.serializeFieldType) == null) continue;
+                        if (!type.IsValueType && TypeDefinitions.serializeFieldType != null && f.IsPrivate && f.GetCustomAttribute(TypeDefinitions.serializeFieldType) is null) continue;
 
                         var fobj = f.GetValue(obj);
 
@@ -724,7 +707,7 @@ namespace IceEngine
         static string ReadString(this byte[] bytes, ref int offset)
         {
             var length = bytes.ReadUShort(ref offset);
-            var data = DefaultEncoding.GetString(bytes, offset, length);
+            var data = bytes.GetString(offset, length);
             offset += length;
             return data;
         }
@@ -734,7 +717,7 @@ namespace IceEngine
         }
         static object ReadValueOfType(this byte[] bytes, ref int offset, Type type, object instance = null)
         {
-            if (type == null) return null;
+            if (type is null) return null;
             if (type.IsNullable()) type = type.GetGenericArguments()[0];
             if (type == TypeDefinitions.byteType) return bytes.ReadByte(ref offset);
             if (type == TypeDefinitions.sbyteType) return bytes.ReadSByte(ref offset);
@@ -832,7 +815,7 @@ namespace IceEngine
         }
         static void ReadObjectOverride(this byte[] bytes, ref int offset, object obj, Type type = null)
         {
-            if (type == null) type = obj.GetType();
+            if (type is null) type = obj.GetType();
 
             List<FieldInfo> fieldList = new();
             fieldList.AddRange(type.GetFields(BindingFlags.Instance | BindingFlags.Public));
@@ -843,7 +826,7 @@ namespace IceEngine
                 if (f.IsNotSerialized) continue;
                 if (!fType.IsSerialzableType() && !fType.IsPacketType()) continue;
                 if (fType.IsDelegate()) continue;
-                if (!type.IsValueType && TypeDefinitions.serializeFieldType != null && f.IsPrivate && f.GetCustomAttribute(TypeDefinitions.serializeFieldType) == null) continue;
+                if (!type.IsValueType && TypeDefinitions.serializeFieldType != null && f.IsPrivate && f.GetCustomAttribute(TypeDefinitions.serializeFieldType) is null) continue;
 
                 bool bHeader = fType.HasHeader();
                 if (bHeader)
@@ -875,7 +858,7 @@ namespace IceEngine
             if (bytes.Length == 0) throw new ArgumentException("Bytes is null!");
             if (target is null) throw new ArgumentException("Target is null!");
 
-            if (type == null) type = target.GetType();
+            if (type is null) type = target.GetType();
 
             if (withHeader)
             {

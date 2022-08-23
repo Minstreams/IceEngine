@@ -81,7 +81,7 @@ namespace IceEngine
         }
         public void Deserialize(byte[] data = null)
         {
-            if (data == null) data = graphData;
+            if (data is null) data = graphData;
             if (graphData != data)
             {
                 graphData = data;

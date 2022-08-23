@@ -373,7 +373,7 @@ namespace IceEditor
             {
                 get
                 {
-                    if (_boundTranformed == null)
+                    if (_boundTranformed is null)
                     {
                         // 在这里对bound做变换
                         Rect r = _bound;
@@ -1305,7 +1305,7 @@ namespace IceEditor
                 {
                     counter = 0;
                     await Task.Delay(1);
-                    if (fulfillProgress == null) return;
+                    if (fulfillProgress is null) return;
                     fulfillProgress = (0.5f * y) / CanvasWidth;
                     Repaint();
                 }
@@ -1320,7 +1320,7 @@ namespace IceEditor
                 {
                     counter = 0;
                     await Task.Delay(1);
-                    if (fulfillProgress == null) return;
+                    if (fulfillProgress is null) return;
                     fulfillProgress = 1 - (0.5f * y) / CanvasWidth;
                     Repaint();
                 }
@@ -1373,7 +1373,7 @@ namespace IceEditor
         void OnImportResource(MeshPack p)
         {
             bool bImport = meshDropper != null || texDropper != null;
-            if (bImport && p == null) p = AddNewPack();
+            if (bImport && p is null) p = AddNewPack();
 
             // 导入Mesh
             if (meshDropper != null)
@@ -1499,7 +1499,7 @@ namespace IceEditor
                     // 切换行为
                     hoveringGroups.Clear();
                 }
-                if (value == null)
+                if (value is null)
                 {
                     // 切换到主工作台
                     inMainWorkspace = true;
@@ -1615,7 +1615,7 @@ namespace IceEditor
         void OnHierarchyGUI()
         {
             // 顶部信息
-            if (EditingPack == null)
+            if (EditingPack is null)
             {
                 using (Horizontal(StlHierarchyHeader))
                 {
@@ -1652,7 +1652,7 @@ namespace IceEditor
             // 下部信息
             using (ScrollInvisible("lRectScroll"))
             {
-                if (EditingPack == null)
+                if (EditingPack is null)
                 {
                     // 主面板
 
@@ -2462,7 +2462,7 @@ namespace IceEditor
             static void DockSeparator() => Label("|".Color(Color.gray), GUILayout.ExpandWidth(false));
 
             // 左侧导航区
-            if (EditingPack == null)
+            if (EditingPack is null)
             {
                 IceButton("主面板", true);
             }
@@ -2560,9 +2560,9 @@ namespace IceEditor
         }
         void OnInspectorGUI()
         {
-            if (EditingPack == null)
+            if (EditingPack is null)
             {
-                if (inspectingPack == null)
+                if (inspectingPack is null)
                 {
                     // 主面板
                     var count = selectedGroups.Count;

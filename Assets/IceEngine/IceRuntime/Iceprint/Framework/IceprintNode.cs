@@ -72,7 +72,7 @@ namespace IceEngine.Framework
             foreach (var m in t.GetMethods(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic))
             {
                 var attr = m.GetCustomAttribute<IceprintPortAttribute>();
-                if (attr == null) continue;
+                if (attr is null) continue;
 
                 // TODO: 支持一下模板函数
                 if (m.IsGenericMethodDefinition)
@@ -119,7 +119,7 @@ namespace IceEngine.Framework
             foreach (var f in t.GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic))
             {
                 var attr = f.GetCustomAttribute<IceprintPortAttribute>();
-                if (attr == null) continue;
+                if (attr is null) continue;
 
                 var fName = f.Name;
                 if (fName.StartsWith("on")) fName = fName.Substring(2);

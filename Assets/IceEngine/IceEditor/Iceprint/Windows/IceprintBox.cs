@@ -45,7 +45,7 @@ namespace IceEditor.Internal
                             value.Deserialize();
                         }
                         buffer = value.graphData;
-                        if (buffer == null || buffer.Length == 0)
+                        if (buffer is null || buffer.Length == 0)
                         {
                             using (LOG)
                             {
@@ -150,7 +150,7 @@ namespace IceEditor.Internal
         {
             get
             {
-                if (_runtimeConstNodeTypeSet == null)
+                if (_runtimeConstNodeTypeSet is null)
                 {
                     _runtimeConstNodeTypeSet = new();
                     Type runtimeConstType = typeof(RuntimeConstAttribute);
@@ -175,7 +175,7 @@ namespace IceEditor.Internal
         {
             get
             {
-                if (_nodeMenu == null)
+                if (_nodeMenu is null)
                 {
                     _nodeMenu = new();
                     Type menuItemType = typeof(IceprintMenuItemAttribute);
@@ -772,22 +772,6 @@ namespace IceEditor.Internal
         #endregion
 
         #region Debug
-        static string Hex(IList<byte> buffer)
-        {
-            string res = "";
-            for (int i = 0; i < buffer.Count; ++i)
-            {
-                var b = buffer[i];
-                res += $"{b:x2}";
-                if (i < buffer.Count - 1)
-                {
-                    if (((i + 1) & 3) == 0) res += " |";
-                    res += " ";
-                }
-            }
-            res = "[" + buffer.Count.ToString().Color("#0AB") + "]\n" + res.Color("#FA0");
-            return res;
-        }
         protected override void OnDebugGUI(Rect position)
         {
             using (DOCK)
@@ -815,17 +799,17 @@ namespace IceEditor.Internal
             {
                 if (buffer != null)
                 {
-                    Label(Hex(buffer));
+                    Label(buffer.Hex());
                 }
                 Header($"Undo[{undoList.Count}]");
                 foreach (var bts in undoList)
                 {
-                    Label(Hex(bts));
+                    Label(bts.Hex());
                 }
                 Header($"Redo[{redoList.Count}]");
                 foreach (var bts in redoList)
                 {
-                    Label(Hex(bts));
+                    Label(bts.Hex());
                 }
             }
             using (GROUP) using (SectionFolder("Console", changeWidth: false))
@@ -842,7 +826,7 @@ namespace IceEditor.Internal
             string prefix = "";
             System.Diagnostics.StackTrace st = new();
             int fc = st.FrameCount;
-            if (baseStack == null)
+            if (baseStack is null)
             {
                 baseStack = fc;
                 log = log.Replace("\n", "");

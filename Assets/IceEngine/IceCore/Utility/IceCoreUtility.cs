@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
-
+using System.Text;
 using IceEngine.Framework;
 
 namespace IceEngine
@@ -14,6 +14,10 @@ namespace IceEngine
         #region Extensions
 
         #region String
+        public readonly static Encoding DefaultEncoding = Encoding.UTF8;
+        public static byte[] GetBytes(this string str) => DefaultEncoding.GetBytes(str);
+        public static string GetString(this byte[] bytes) => Encoding.UTF8.GetString(bytes);
+        public static string GetString(this byte[] bytes, int index, int count) => Encoding.UTF8.GetString(bytes, index, count);
         public static bool IsNullOrEmpty(this string str) => string.IsNullOrEmpty(str);
         public static bool IsNullOrWhiteSpace(this string str) => string.IsNullOrWhiteSpace(str);
         /// <summary>
@@ -43,6 +47,52 @@ namespace IceEngine
         /// <param name="index">Bit的索引值(0-7)</param>
         /// <returns></returns>
         public static int GetBit(this byte self, short index) => (self >> index) & 1;
+        public static string Hex(this IList<byte> buffer, int start, int count)
+        {
+            string res = "";
+            for (int i = start; i < start + count; ++i)
+            {
+                var b = buffer[i];
+                res += $"{b:x2}";
+                if (i < buffer.Count - 1)
+                {
+                    if (((i + 1) & 3) == 0) res += " |";
+                    res += " ";
+                }
+            }
+            return res;
+        }
+        public static string Hex(this IList<byte> buffer, int count)
+        {
+            string res = "";
+            for (int i = buffer.Count - count; i < buffer.Count; ++i)
+            {
+                var b = buffer[i];
+                res += $"{b:x2}";
+                if (i < buffer.Count - 1)
+                {
+                    if (((i + 1) & 3) == 0) res += " |";
+                    res += " ";
+                }
+            }
+            return res;
+        }
+        public static string Hex(this IList<byte> buffer, bool printColorAndCount = true)
+        {
+            string res = "";
+            for (int i = 0; i < buffer.Count; ++i)
+            {
+                var b = buffer[i];
+                res += $"{b:x2}";
+                if (i < buffer.Count - 1)
+                {
+                    if (((i + 1) & 3) == 0) res += " |";
+                    res += " ";
+                }
+            }
+            if (printColorAndCount) res = "[" + buffer.Count.ToString().Color("#0AB") + "]\n" + res.Color("#FA0");
+            return res;
+        }
         #endregion
 
         #region Type
@@ -95,7 +145,7 @@ namespace IceEngine
             _pktNotNullSet = new();
             foreach ((ushort hash, Type t) in baseTypeCollection)
             {
-                if (t == null)
+                if (t is null)
                 {
                     throw new Exception($"No base type reference to hash {hash}!");
                 }
@@ -175,7 +225,7 @@ namespace IceEngine
         public static bool IsDelegate(this Type type) => delegateType.IsAssignableFrom(type);
         public static ushort GetShortHashCode(this Type type)
         {
-            string key = type.FullName;
+            string key = type.Name;
             const ushort pow = 3;
             ushort hashCode = 0;
             if (key != null && key.Length > 0)

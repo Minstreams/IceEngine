@@ -58,7 +58,7 @@ namespace Ice
         {
             get
             {
-                if (_subsystemList == null)
+                if (_subsystemList is null)
                 {
                     _subsystemList = new List<Type>();
                     static void CollectSubSystemFromAssembly(Assembly a) => _subsystemList.AddRange(a.GetTypes().Where(t => !t.IsGenericType && t.IsSubclassOf(typeof(IceSystem))));
@@ -154,7 +154,7 @@ namespace Ice
         /// <param name="node">要停止的协程对象</param>
         public static void StopCoroutine(IceCoroutine node)
         {
-            if (node == null || node.List == null) return;
+            if (node is null || node.List is null) return;
             Instance.StopCoroutine(node.Value);
             node.List.Remove(node);
         }
