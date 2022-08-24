@@ -8,27 +8,6 @@ namespace IceEngine
 {
     public static class IceprintUtility
     {
-        internal readonly static Type[] actionTypes = new Type[]
-        {
-            typeof(Action),
-            typeof(Action<>),
-            typeof(Action<,>),
-            typeof(Action<,,>),
-            typeof(Action<,,,>),
-            typeof(Action<,,,,>),
-            typeof(Action<,,,,,>),
-            typeof(Action<,,,,,,>),
-            typeof(Action<,,,,,,,>),
-            typeof(Action<,,,,,,,,>),
-            typeof(Action<,,,,,,,,,>),
-            typeof(Action<,,,,,,,,,,>),
-            typeof(Action<,,,,,,,,,,,>),
-            typeof(Action<,,,,,,,,,,,,>),
-            typeof(Action<,,,,,,,,,,,,,>),
-            typeof(Action<,,,,,,,,,,,,,,>),
-            typeof(Action<,,,,,,,,,,,,,,,>),
-        };
-
         internal static MethodInfo[] OutportInvokeMethods
         {
             get

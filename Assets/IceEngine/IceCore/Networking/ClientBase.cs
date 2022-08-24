@@ -128,7 +128,8 @@ namespace IceEngine.Networking.Framework
         }
         public void UDPSend(Pkt pkt, IPEndPoint remote)
         {
-            if (udpClient is null)
+            if (udpClient 
+                is null)
             {
                 Log("UDP not opened!");
                 return;

@@ -52,7 +52,7 @@ namespace IceEngine.Framework
         #endregion
 
         #region Log & Dialog
-        static string TypeName => _typeName ??= typeof(SubSetting).Name.Substring(7/*Setting的长度为7个字母*/); static string _typeName = null;
+        static string TypeName => _typeName ??= typeof(SubSetting).Name[7../*Setting的长度为7个字母*/]; static string _typeName = null;
         static string DebugPrefix => $"【{TypeName.Color(Setting.themeColor)}】";
         [System.Diagnostics.Conditional("DEBUG")]
         public static void Log(object message, Object context = null) => Island.Log(message, context, DebugPrefix);

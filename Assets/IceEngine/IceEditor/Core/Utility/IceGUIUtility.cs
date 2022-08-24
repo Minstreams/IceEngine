@@ -51,13 +51,14 @@ namespace IceEditor
 
             SerializedProperty itr = so.GetIterator();
             if (!itr.NextVisible(true)) return;
+
             // m_Script 是 Monobehavior 隐藏字段，没必要显示在面板上
-            if (itr.propertyPath == "m_Script" && !itr.NextVisible(false)) return;
-
-            // 正式绘制
-            DrawSerializedProperty(itr, info);
-
-            so.ApplyModifiedProperties();
+            if (itr.propertyPath != "m_Script" || itr.NextVisible(false))
+            {
+                // 正式绘制
+                DrawSerializedProperty(itr, info);
+                so.ApplyModifiedProperties();
+            }
 
             // 处理 Button
             foreach (var (text, action) in info.buttonList)
@@ -127,7 +128,7 @@ namespace IceEditor
                 }
 
                 // 只对根类型处理Methods
-                if (type.IsSubclassOf(typeof(MonoBehaviour)) || type.IsSubclassOf(typeof(ScriptableObject)))
+                if (typeof(MonoBehaviour).IsAssignableFrom(type) || typeof(ScriptableObject).IsAssignableFrom(type))
                 {
                     var methods = type.GetMethods();
                     foreach (var m in methods)

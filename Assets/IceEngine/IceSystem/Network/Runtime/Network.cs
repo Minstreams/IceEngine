@@ -7,7 +7,6 @@ using UnityEngine;
 using IceEngine.Framework;
 using IceEngine.Networking;
 using IceEngine.Networking.Framework;
-using IceEngine;
 
 namespace Ice
 {
@@ -53,7 +52,12 @@ namespace Ice
         static void Quitting()
         {
             Log("Quitting");
-            StopAllCoroutines();
+
+#if UNITY_EDITOR
+            if (UnityEditor.EditorApplication.isPlayingOrWillChangePlaymode)
+#endif
+                StopAllCoroutines();
+
             Server?.Destroy();
             Client?.Destroy();
         }
@@ -89,10 +93,10 @@ namespace Ice
         public static void ServerOpenTCP() => Server?.OpenTCP();
         public static void ServerCloseTCP() => Server?.CloseTCP();
         public static void ServerDisconnectAll() => Server?.DisconnectAll();
-        public static void ServerSendPacket(Pkt pkt, ServerBase.Connection connection) => connection.Send(pkt);
-        public static void ServerBroadcastPacket(Pkt pkt) => Server?.Broadcast(pkt);
-        public static void ServerUDPSendPacket(Pkt pkt, IPEndPoint endPoint) => Server?.UDPSend(pkt, endPoint);
-        public static void ServerUDPBroadcastPacket(Pkt pkt) => Server?.UDPBroadcast(pkt);
+        public static void ServerSend(Pkt pkt, ServerBase.Connection connection) => connection.Send(pkt);
+        public static void ServerBroadcast(Pkt pkt) => Server?.Broadcast(pkt);
+        public static void ServerUDPSend(Pkt pkt, IPEndPoint endPoint) => Server?.UDPSend(pkt, endPoint);
+        public static void ServerUDPBroadcast(Pkt pkt) => Server?.UDPBroadcast(pkt);
         #endregion
 
         #region Processors
@@ -116,15 +120,13 @@ namespace Ice
         public static event Action<ServerBase.Connection> OnServerConnection;
         public static event Action<ServerBase.Connection> OnServerDisconnection;
 
-        public static void ProcessUDPPacket<TPkt>(Action<Pkt, IPEndPoint> processor) where TPkt : Pkt
+        public static void ProcessUDPPacket(Type t, Action<Pkt, IPEndPoint> processor)
         {
-            Type t = typeof(TPkt);
             if (!udpProcessors.ContainsKey(t)) udpProcessors.Add(t, null);
             udpProcessors[t] += processor;
         }
-        public static void StopProcessUDPPacket<TPkt>(Action<Pkt, IPEndPoint> processor) where TPkt : Pkt
+        public static void StopProcessUDPPacket(Type t, Action<Pkt, IPEndPoint> processor)
         {
-            Type t = typeof(TPkt);
             if (udpProcessors.ContainsKey(t))
             {
                 udpProcessors[t] -= processor;
@@ -142,15 +144,13 @@ namespace Ice
                 udpIdProcessors[id] -= processor;
             }
         }
-        public static void ProcessPacket<TPkt>(Action<Pkt, ServerBase.Connection> processor) where TPkt : Pkt
+        public static void ProcessPacket(Type t, Action<Pkt, ServerBase.Connection> processor)
         {
-            Type t = typeof(TPkt);
             if (!tcpProcessors.ContainsKey(t)) tcpProcessors.Add(t, null);
             tcpProcessors[t] += processor;
         }
-        public static void StopProcessPacket<TPkt>(Action<Pkt, ServerBase.Connection> processor) where TPkt : Pkt
+        public static void StopProcessPacket(Type t, Action<Pkt, ServerBase.Connection> processor)
         {
-            Type t = typeof(TPkt);
             if (tcpProcessors.ContainsKey(t))
             {
                 tcpProcessors[t] -= processor;
@@ -248,13 +248,13 @@ namespace Ice
             Client?.StartTCPConnecting();
         }
         public static void ClientDisconnect() => Client?.StopTCPConnecting();
-        public static void ClientSendPacket(Pkt pkt)
+        public static void ClientSend(Pkt pkt)
         {
             if (Client is null || !Client.IsConnected) return;
             void Send() => Client.Send(pkt);
             CallDelay(Send);
         }
-        public static void ClientUDPSendPacket(Pkt pkt, IPEndPoint endPoint)
+        public static void ClientUDPSend(Pkt pkt, IPEndPoint endPoint)
         {
             if (Client is null) return;
             void Send() => Client.UDPSend(pkt, endPoint);
@@ -287,15 +287,13 @@ namespace Ice
         public static event Action OnConnection;
         public static event Action OnDisconnection;
 
-        public static void ListenUDPPacket<TPkt>(Action<Pkt, IPEndPoint> listener) where TPkt : Pkt
+        public static void ListenUDPPacket(Type t, Action<Pkt, IPEndPoint> listener)
         {
-            Type t = typeof(TPkt);
             if (!udpDistributors.ContainsKey(t)) udpDistributors.Add(t, null);
             udpDistributors[t] += listener;
         }
-        public static void StopListenUDPPacket<TPkt>(Action<Pkt, IPEndPoint> listener) where TPkt : Pkt
+        public static void StopListenUDPPacket(Type t, Action<Pkt, IPEndPoint> listener)
         {
-            Type t = typeof(TPkt);
             if (udpDistributors.ContainsKey(t))
             {
                 udpDistributors[t] -= listener;
@@ -313,15 +311,13 @@ namespace Ice
                 udpIdDistributors[id] -= listener;
             }
         }
-        public static void ListenPacket<TPkt>(Action<Pkt> listener) where TPkt : Pkt
+        public static void ListenPacket(Type t, Action<Pkt> listener)
         {
-            Type t = typeof(TPkt);
             if (!tcpDistributors.ContainsKey(t)) tcpDistributors.Add(t, null);
             tcpDistributors[t] += listener;
         }
-        public static void StopListenPacket<TPkt>(Action<Pkt> listener) where TPkt : Pkt
+        public static void StopListenPacket(Type t, Action<Pkt> listener)
         {
-            Type t = typeof(TPkt);
             if (tcpDistributors.ContainsKey(t))
             {
                 tcpDistributors[t] -= listener;
@@ -424,7 +420,7 @@ namespace Ice
 
         #endregion
 
-        #region latency simulation
+        #region Latency simulation
 
         public static float latencyOverride = 0;
 
@@ -457,50 +453,5 @@ namespace Ice
         #endregion
 
         #endregion
-    }
-}
-
-namespace IceEngine.Networking
-{
-    public sealed class Client : ClientBase
-    {
-        static IceEngine.Internal.SettingNetwork Setting => Ice.Network.Setting;
-
-        protected override IPAddress LocalIPAddress => Ice.Network.LocalIPAddress;
-        protected override IPAddress ServerIPAddress => Ice.Network.ServerIPAddress;
-        protected override int ServerTCPPort => Setting.serverTCPPort;
-        protected override int ClientUDPPort => Setting.clientUDPPort;
-        protected override int InitialBufferSize => Setting.initialBufferSize;
-        protected override byte MagicByte => Setting.magicByte;
-
-        protected override void CallLog(string message) => Ice.Network.CallLog(message);
-        protected override void CallShutdownClient() => Ice.Network.ShutdownClient();
-
-        protected override void CallConnection() => Ice.Network.CallConnection();
-        protected override void CallDisconnection() => Ice.Network.CallDisconnection();
-        protected override void CallReceive(Pkt pkt) => Ice.Network.CallReceive(pkt);
-        protected override void CallUDPReceive(Pkt pkt, IPEndPoint remote) => Ice.Network.CallUDPReceive(pkt, remote);
-    }
-
-    public sealed class Server : ServerBase
-    {
-        static IceEngine.Internal.SettingNetwork Setting => Ice.Network.Setting;
-
-        protected override IPAddress LocalIPAddress => Ice.Network.LocalIPAddress;
-        protected override IPAddress BroadcastAddress => Ice.Network.BroadcastAddress;
-        protected override int ServerUDPPort => Setting.serverUDPPort;
-        protected override int ServerTCPPort => Setting.serverTCPPort;
-        protected override int ClientUDPPort => Setting.clientUDPPort;
-        protected override int LocalTCPPort => Ice.Network.LocalTCPPort;
-        protected override int InitialBufferSize => Setting.initialBufferSize;
-        protected override byte MagicByte => Setting.magicByte;
-
-        protected override void CallLog(string message) => Ice.Network.CallLog(message);
-        protected override void CallShutdownServer() => Ice.Network.CallMainThread(Ice.Network.ShutdownServer);
-
-        protected override void CallUDPProcess(Pkt pkt, IPEndPoint remote) => Ice.Network.CallUDPProcess(pkt, remote);
-        protected override void CallProcess(Pkt pkt, Connection connection) => Ice.Network.CallProcess(pkt, connection);
-        protected override void CallServerConnection(Connection connection) => Ice.Network.CallServerConnection(connection);
-        protected override void CallServerDisconnection(Connection connection) => Ice.Network.CallServerDisconnection(connection);
     }
 }

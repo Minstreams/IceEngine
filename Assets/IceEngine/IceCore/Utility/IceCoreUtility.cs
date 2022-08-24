@@ -98,6 +98,27 @@ namespace IceEngine
         #region Type
 
         #region Cache
+        public static readonly Type[] actionTypes = new Type[]
+        {
+            typeof(Action),
+            typeof(Action<>),
+            typeof(Action<,>),
+            typeof(Action<,,>),
+            typeof(Action<,,,>),
+            typeof(Action<,,,,>),
+            typeof(Action<,,,,,>),
+            typeof(Action<,,,,,,>),
+            typeof(Action<,,,,,,,>),
+            typeof(Action<,,,,,,,,>),
+            typeof(Action<,,,,,,,,,>),
+            typeof(Action<,,,,,,,,,,>),
+            typeof(Action<,,,,,,,,,,,>),
+            typeof(Action<,,,,,,,,,,,,>),
+            typeof(Action<,,,,,,,,,,,,,>),
+            typeof(Action<,,,,,,,,,,,,,,>),
+            typeof(Action<,,,,,,,,,,,,,,,>),
+        };
+
         static readonly Dictionary<string, Type> _typeCacheMap = new();
         static readonly Type objectType = typeof(object);
         static readonly Type nullableType = typeof(Nullable<>);

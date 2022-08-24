@@ -93,7 +93,7 @@ namespace IceEngine.Framework
                         var port = AddInport(m.Name);
 
                         var exp = Expression.Lambda(
-                            actionTypes[0],
+                            IceCoreUtility.actionTypes[0],
                             Expression.Call(Expression.Constant(this), m)
                             );
 
@@ -104,7 +104,7 @@ namespace IceEngine.Framework
                         var pts = ps.Select(p => p.ParameterType).ToArray();
                         var port = AddInport(m.Name, pts);
 
-                        var at = actionTypes[psCount].MakeGenericType(pts);
+                        var at = IceCoreUtility.actionTypes[psCount].MakeGenericType(pts);
                         var prs = pts.Select(pt => Expression.Parameter(pt)).ToArray();
                         var exp = Expression.Lambda(
                             at,
@@ -125,13 +125,13 @@ namespace IceEngine.Framework
                 if (fName.StartsWith("on")) fName = fName.Substring(2);
 
                 var at = f.FieldType;
-                if (at == actionTypes[0])
+                if (at == IceCoreUtility.actionTypes[0])
                 {
                     var port = AddOutport(fName);
 
                     var m = OutportInvokeMethods[0];
                     var exp = Expression.Lambda(
-                        actionTypes[0],
+                        IceCoreUtility.actionTypes[0],
                         Expression.Call(Expression.Constant(port), m)
                         );
 
@@ -142,7 +142,7 @@ namespace IceEngine.Framework
                     var pts = at.GetGenericArguments();
                     int psCount = pts.Length;
 
-                    if (pts.Length > 16 || !at.GetGenericTypeDefinition().Equals(actionTypes[psCount])) throw new Exception($"Invalid IceprintPort! {at.Name} {f.Name}");
+                    if (pts.Length > 16 || !at.GetGenericTypeDefinition().Equals(IceCoreUtility.actionTypes[psCount])) throw new Exception($"Invalid IceprintPort! {at.Name} {f.Name}");
 
                     var port = AddOutport(fName, pts);
 
