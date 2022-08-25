@@ -407,7 +407,7 @@ namespace Ice
 
         #region PRIVATE
         readonly static Queue<Action> mainThreadActionQueue = new Queue<Action>();
-        static object threadLocker = new object();
+        readonly static object threadLocker = new();
         static IEnumerator MainThread()
         {
             while (true)
