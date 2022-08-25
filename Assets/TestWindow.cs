@@ -23,6 +23,11 @@ namespace IceEditor
         protected override string Title => "测试";
 
         IceGUIDirection dir;
+        protected override void OnEnable()
+        {
+            Pack.SetBool("开发者模式", EditorPrefs.GetBool("DeveloperMode"));
+            base.OnEnable();
+        }
         protected override void OnWindowGUI(Rect position)
         {
             using (SubArea(position, out var mainRect, out var subRect, "TTT", 64, dir))
@@ -51,6 +56,12 @@ namespace IceEditor
                     if (Button("TestString3"))
                     {
                         LogImportant(((string)null).IsNullOrEmpty() ? "true" : "false");
+                    }
+                    using (GUICHECK)
+                    {
+                        bool m = IceToggle("开发者模式");
+                        if (GUIChanged)
+                            EditorPrefs.SetBool("DeveloperMode", m);
                     }
                 }
             }

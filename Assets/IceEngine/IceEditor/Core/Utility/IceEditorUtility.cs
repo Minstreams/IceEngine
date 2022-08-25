@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text.RegularExpressions;
 using UnityEngine;
+using UnityEditor;
 
 namespace IceEditor
 {
@@ -26,6 +27,31 @@ namespace IceEditor
                 else if (regClass.IsMatch(content)) content = regClass.Replace(content, $"$0$1    #region {regionName}$3$1    {string.Join("$3$1    ", lines)}$3$1    #endregion$3$3", 1);
             }
             File.WriteAllText(filePath, content);
+        }
+
+        /// <summary>
+        /// 获取当前选择的路径
+        /// </summary>
+        public static string GetSelectPath()
+        {
+            //默认路径为Assets
+            string selectedPath = "Assets";
+
+            //获取选中的资源
+            Object[] selection = Selection.GetFiltered(typeof(Object), SelectionMode.Assets);
+
+            //遍历选中的资源以返回路径
+            foreach (Object obj in selection)
+            {
+                selectedPath = AssetDatabase.GetAssetPath(obj);
+                if (!string.IsNullOrEmpty(selectedPath) && File.Exists(selectedPath))
+                {
+                    selectedPath = Path.GetDirectoryName(selectedPath);
+                    break;
+                }
+            }
+
+            return selectedPath;
         }
     }
 }

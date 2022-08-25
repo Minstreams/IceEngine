@@ -45,6 +45,15 @@ namespace IceEditor
         #region General Implementation
         public static void DrawSerializedObject(SerializedObject so)
         {
+            if (so.targetObject == null)
+            {
+                using (GROUP)
+                {
+                    LabelError("脚本已丢失");
+                }
+                return;
+            }
+
             var info = IceAttributesInfo.GetInfo(so.targetObject.GetType());
 
             so.UpdateIfRequiredOrScript();

@@ -285,7 +285,7 @@ namespace IceEditor.Framework
         #endregion
 
         #region 【PRIVATE】
-        internal IceGUIAutoPack Pack => _pack ??= new IceGUIAutoPack(DefaultThemeColor, Repaint, OnThemeColorChange); [SerializeField] IceGUIAutoPack _pack;
+        public IceGUIAutoPack Pack => _pack ??= new IceGUIAutoPack(DefaultThemeColor, Repaint, OnThemeColorChange); [SerializeField] IceGUIAutoPack _pack;
 
         bool drawingWindowGUI = false;
         bool needsCheckControlId = false;

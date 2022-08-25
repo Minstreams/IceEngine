@@ -78,17 +78,17 @@ public class AWDASD : NetworkObject
     [TCPReceive]
     public void OnRec(PktTestId pkt)
     {
-        Debug.Log("TCPReceiveId + pkt.data.ToString()");
+        Debug.Log("TCPReceiveId" + pkt.data.ToString());
     }
     [TCPProcess]
     public void OnProc(PktTest pkt, ServerBase.Connection conn)
     {
-        Debug.Log("TCPProcess + pkt.data.ToString()");
+        Debug.Log("TCPProcess" + pkt.data.ToString() + "|" + conn.NetId);
     }
     [TCPProcess]
     public void OnProc(PktTestId pkt, ServerBase.Connection conn)
     {
-        Debug.Log("TCPProcessId" + pkt.data.ToString());
+        Debug.Log("TCPProcessId" + pkt.data.ToString() + "|" + conn.NetId);
     }
     [UDPReceive]
     public void OnRec(PktTest pkt, IPEndPoint remote)
