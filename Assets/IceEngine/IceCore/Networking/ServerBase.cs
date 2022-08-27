@@ -308,6 +308,7 @@ namespace IceEngine.Networking.Framework
                 Log("TCP already closed!");
                 return;
             }
+            DisconnectAll();
             listener?.Stop();
             listener = null;
             listenThread?.Abort();
