@@ -745,7 +745,7 @@ namespace IceEditor.Internal
         }
 
         #region 定制
-        [MenuItem("IceEngine/Iceprint Box")]
+        [MenuItem("IceEngine/Iceprint Box", false, 20)]
         static void OpenWindow() => GetWindow<IceprintBox>();
         protected override bool HasScrollScopeOnWindowGUI => false;
         protected override Color DefaultThemeColor => Setting.themeColor;

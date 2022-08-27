@@ -12,7 +12,7 @@ namespace IceEditor.Internal
 {
     public class IceToolBox : IceEditorWindow
     {
-        [MenuItem("IceEngine/Ice Tool Box #F1", priority = 0)]
+        [MenuItem("IceEngine/Ice Tool Box #F1", false, 0)]
         public static void OpenWindow() => GetWindow<IceToolBox>();
 
         #region SubSystem Management

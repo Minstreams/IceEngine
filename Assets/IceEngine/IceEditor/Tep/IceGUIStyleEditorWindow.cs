@@ -18,7 +18,7 @@ namespace IceEditor
 
 
         #region 定制
-        [MenuItem("IceEngine/GUIStyle Box")]
+        [MenuItem("测试/GUIStyle Box")]
         static void OpenWindow() => GetWindow<IceGUIStyleEditorWindow>();
         protected override string Title => "GUIStyle Box";
         #endregion

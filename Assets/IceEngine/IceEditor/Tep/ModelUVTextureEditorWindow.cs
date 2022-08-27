@@ -17,7 +17,7 @@ namespace IceEditor
     public class ModelUVTextureEditorWindow : IceEditorWindow
     {
         #region 定制
-        [MenuItem("场景美术/贴图裁剪UV重排工具")]
+        [MenuItem("测试/贴图裁剪UV重排工具")]
         static void OpenWindow() => GetWindow<ModelUVTextureEditorWindow>();
         public override GUIContent TitleContent => new GUIContent("贴图裁剪UV重排");
         protected override Color DefaultThemeColor => new Color(0.38f, 0.85f, 0.85f);
