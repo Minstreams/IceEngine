@@ -47,8 +47,6 @@ namespace IceEngine.Networking.Internal
             Ice.Network.Setting.serverUDPPort = IntField("Server UDP Port", Ice.Network.Setting.serverUDPPort);
             Ice.Network.Setting.clientUDPPort = IntField("Client UDP Port", Ice.Network.Setting.clientUDPPort);
             Ice.Network.Setting.serverTCPPort = IntField("Server TCP Port", Ice.Network.Setting.serverTCPPort);
-            Ice.Network.Setting.clientTCPPortRange.x = IntField("Client TCP Min", Ice.Network.Setting.clientTCPPortRange.x);
-            Ice.Network.Setting.clientTCPPortRange.y = IntField("Client TCP Max", Ice.Network.Setting.clientTCPPortRange.y);
             serverAddress = StringField("Server Address", serverAddress);
 
             if (GUILayout.Button("LaunchServer")) LaunchServer();

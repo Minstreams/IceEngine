@@ -8,7 +8,6 @@ namespace IceEngine.Networking
         static IceEngine.Internal.SettingNetwork Setting => Ice.Network.Setting;
 
         protected override IPAddress LocalIPAddress => Ice.Network.LocalIPAddress;
-        protected override IPAddress ServerIPAddress => Ice.Network.ServerIPAddress;
         protected override int ServerTCPPort => Setting.serverTCPPort;
         protected override int ClientUDPPort => Setting.clientUDPPort;
         protected override int InitialBufferSize => Setting.initialBufferSize;

@@ -219,7 +219,7 @@ namespace Ice
         public static Client Client { get; set; } = null;
         public static bool IsConnected => Client?.IsConnected ?? false;
         public static int NetId => Client?.NetId ?? 0;
-        public static IPAddress ServerIPAddress { get; private set; } = IPAddress.Any;
+        public static IPAddress ServerIPAddress => Client?.ServerIPAddress ?? Setting.DefaultServerAddress;
         #endregion
 
         #region Interface
@@ -242,11 +242,8 @@ namespace Ice
         }
         public static void ClientOpenUDP() => Client?.OpenUDP();
         public static void ClientCloseUDP() => Client?.CloseUDP();
-        public static void ClientConnectTo(IPAddress serverIPAddress)
-        {
-            ServerIPAddress = serverIPAddress;
-            Client?.StartTCPConnecting();
-        }
+        public static void ClientConnectTo(IPAddress serverIPAddress) => Client?.StartTCPConnecting(serverIPAddress);
+        public static void ClientConnectToDefaultServer() => Client?.StartTCPConnecting(Setting.DefaultServerAddress);
         public static void ClientDisconnect() => Client?.StopTCPConnecting();
         public static void ClientSend(Pkt pkt)
         {

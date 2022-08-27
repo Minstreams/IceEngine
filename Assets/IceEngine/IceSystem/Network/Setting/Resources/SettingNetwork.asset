@@ -12,10 +12,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 849450a084818664e83d2e7108542913, type: 3}
   m_Name: SettingNetwork
   m_EditorClassIdentifier: 
-  themeColor: {r: 0.52512383, g: 1, b: 0, a: 1}
+  themeColor: {r: 1, g: 0.6, b: 0, a: 1}
   initialBufferSize: 4096
-  magicByte: 255
+  magicByte: 201
   serverUDPPort: 7857
   serverTCPPort: 7858
   clientUDPPort: 7856
-  clientTCPPortRange: {x: 12306, y: 17851}
+  defaultServerIPString: 127.0.0.1

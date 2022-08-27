@@ -11,7 +11,7 @@ namespace IceEngine.Networking.Framework
         #region Configuration
 
         protected abstract IPAddress LocalIPAddress { get; }
-        protected abstract IPAddress ServerIPAddress { get; }
+        public IPAddress ServerIPAddress { get; private set; }
         protected abstract int ServerTCPPort { get; }
         protected abstract int ClientUDPPort { get; }
         protected abstract int InitialBufferSize { get; }
@@ -128,7 +128,7 @@ namespace IceEngine.Networking.Framework
         }
         public void UDPSend(Pkt pkt, IPEndPoint remote)
         {
-            if (udpClient 
+            if (udpClient
                 is null)
             {
                 Log("UDP not opened!");
@@ -191,7 +191,7 @@ namespace IceEngine.Networking.Framework
         /// <summary>
         /// Start connecting to given IP address (LoaclIPAddress & ServerIPAddress should be set)
         /// </summary>
-        public void StartTCPConnecting()
+        public void StartTCPConnecting(IPAddress serverIPAddress)
         {
             if (client != null)
             {
@@ -223,6 +223,7 @@ namespace IceEngine.Networking.Framework
                     throw ex;
                 }
             }
+            ServerIPAddress = serverIPAddress;
             connectThread = new Thread(ConnectThread);
             connectThread.Start();
         }
