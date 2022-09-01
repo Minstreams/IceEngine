@@ -22,6 +22,7 @@ namespace IceEngine.Framework
     /// 子系统的特殊静态方法会被特定生命周期调用：
     /// <list type="bullet">
     /// <item><c>Awake()</c> 进入游戏调用，用于初始化系统</item>
+    /// <item><c>LateAwake()</c> Awke后，Start前调用</item>
     /// <item><c>Start()</c> 所有系统初始化完成开始调用，用于加载流程</item>
     /// <item><c>Quitting()</c> 退出游戏前调用，用于析构</item>
     /// </list>

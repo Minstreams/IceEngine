@@ -9,6 +9,7 @@ using UnityEngine;
 using IceEngine;
 using IceEngine.Internal;
 using IceEngine.Framework.Internal;
+using System.Linq.Expressions;
 
 // Ice命名空间内只有所有子系统静态类，这样设计有助于运行时代码快速定位到子系统
 namespace Ice
@@ -67,18 +68,35 @@ namespace Ice
                     CollectSubSystemFromAssembly(iceAssembly);
 
                     var iceName = iceAssembly.GetName().Name;
-                    foreach (var a in AppDomain.CurrentDomain.GetAssemblies().Where(a => a.GetReferencedAssemblies().Select(a => a.Name).Contains(iceName))) CollectSubSystemFromAssembly(a);
+                    foreach (var a in AppDomain.CurrentDomain.GetAssemblies().Where(a => a.GetReferencedAssemblies().Any(a => a.Name == iceName))) CollectSubSystemFromAssembly(a);
                 }
                 return _subsystemList;
             }
         }
         static List<Type> _subsystemList;
+
+
+        static Dictionary<string, Action> _subsystemActionCache = new();
         /// <summary>
         /// 调用所有子系统上存在的同名静态方法
         /// </summary>
         public static void CallSubSystem(string methodName)
         {
-            foreach (var s in SubSystemList) s.GetMethod(methodName, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static)?.Invoke(null, null);
+            if (!_subsystemActionCache.TryGetValue(methodName, out Action action))
+            {
+                List<Expression> callList = new();
+                foreach (var s in SubSystemList)
+                {
+                    MethodInfo m = s.GetMethod(methodName, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static);
+                    if (m != null)
+                    {
+                        callList.Add(Expression.Call(m));
+                    }
+                }
+                action = Expression.Lambda<Action>(Expression.Block(callList)).Compile();
+                _subsystemActionCache.Add(methodName, action);
+            }
+            action();
         }
         #endregion
 
