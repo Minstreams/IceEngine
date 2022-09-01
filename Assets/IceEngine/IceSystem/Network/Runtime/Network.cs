@@ -450,12 +450,5 @@ namespace Ice
         #endregion
 
         #endregion
-
-
-        static void LateAwake()
-        {
-            Log("LateAwake");
-        }
-
     }
 }
