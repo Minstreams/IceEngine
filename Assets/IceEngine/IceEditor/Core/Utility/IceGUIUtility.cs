@@ -15,6 +15,7 @@ using IceEditor.Internal;
 using static IceEditor.IceGUI;
 using static IceEditor.IceGUIAuto;
 using UnityEngine.UIElements;
+using System.Linq.Expressions;
 
 namespace IceEditor
 {
@@ -24,12 +25,7 @@ namespace IceEditor
         [InitializeOnLoadMethod]
         static void OnLoad()
         {
-            EditorApplication.update -= Update;
-            EditorApplication.update += Update;
-        }
-        static void Update()
-        {
-            TryRegisterToolbarGUI();
+            OnLoad_Toolbar();
         }
         #endregion
 
@@ -489,12 +485,42 @@ namespace IceEditor
         #endregion
 
         #region Toolbar
-        public static Action onToolbarGUILeft;
-        public static Action onToolbarGUIRight;
+        static Action onToolbarGUILeft;
+        static Action onToolbarGUIMidLeft;
+        static Action onToolbarGUIMidRight;
+        static Action onToolbarGUIRight;
 
         static readonly Type m_toolbarType = typeof(Editor).Assembly.GetType("UnityEditor.Toolbar");
         static ScriptableObject m_currentToolbar;
 
+        static void OnLoad_Toolbar()
+        {
+            var callbacks = TypeCache.GetMethodsWithAttribute<ToolbarGUICallbackAttribute>();
+            foreach (var callback in callbacks)
+            {
+                if (!callback.IsStatic) throw new IceGUIException("Toolbar GUI handler must be static!");
+
+                var handler = Expression.Lambda<Action>(Expression.Call(callback)).Compile();
+                switch (callback.GetCustomAttribute<ToolbarGUICallbackAttribute>().Position)
+                {
+                    case ToolbarGUIPosition.Left:
+                        onToolbarGUILeft += handler;
+                        break;
+                    case ToolbarGUIPosition.MidLeft:
+                        onToolbarGUIMidLeft += handler;
+                        break;
+                    case ToolbarGUIPosition.MidRight:
+                        onToolbarGUIMidRight += handler;
+                        break;
+                    case ToolbarGUIPosition.Right:
+                        onToolbarGUIRight += handler;
+                        break;
+                }
+            }
+
+            EditorApplication.update -= TryRegisterToolbarGUI;
+            EditorApplication.update += TryRegisterToolbarGUI;
+        }
         internal static void TryRegisterToolbarGUI()
         {
             // Relying on the fact that toolbar is ScriptableObject and gets deleted when layout changes
@@ -508,12 +534,12 @@ namespace IceEditor
                     var mRoot = m_currentToolbar.GetType().GetField("m_Root", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(m_currentToolbar) as VisualElement;
                     mRoot.Q("ToolbarZoneLeftAlign").Add(new IMGUIContainer()
                     {
-                        style = { flexGrow = 1 },
+                        style = { flexGrow = 1, marginLeft = 4, marginRight = 4 },
                         onGUIHandler = OnToolbarGUILeft,
                     });
                     mRoot.Q("ToolbarZoneRightAlign").Add(new IMGUIContainer()
                     {
-                        style = { flexGrow = 1 },
+                        style = { flexGrow = 1, marginLeft = 4, marginRight = 4 },
                         onGUIHandler = OnToolbarGUIRight,
                     });
                 }
@@ -524,12 +550,15 @@ namespace IceEditor
             using (HORIZONTAL)
             {
                 onToolbarGUILeft?.Invoke();
+                Space();
+                onToolbarGUIMidLeft?.Invoke();
             }
         }
         static void OnToolbarGUIRight()
         {
             using (HORIZONTAL)
             {
+                onToolbarGUIMidRight?.Invoke();
                 Space();
                 onToolbarGUIRight?.Invoke();
             }

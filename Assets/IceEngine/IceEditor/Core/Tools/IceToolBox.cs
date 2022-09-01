@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEditor;
 
+using IceEngine;
 using IceEditor.Framework;
 using static IceEditor.IceGUI;
 using static IceEditor.IceGUIAuto;
@@ -12,8 +13,17 @@ namespace IceEditor.Internal
 {
     public class IceToolBox : IceEditorWindow
     {
-        [MenuItem("IceEngine/Ice Tool Box #F1", false, 0)]
+        #region 定制
+        protected override string Title => "Ice工具箱";
+        [MenuItem("IceEngine/Ice工具箱 #F1", false, 0)]
         public static void OpenWindow() => GetWindow<IceToolBox>();
+
+        [ToolbarGUICallback(ToolbarGUIPosition.Right)]
+        static void OnToolbarGUI()
+        {
+            if (IceButton(" ◈ ".Size(13), focusedWindow is IceToolBox, "Ice工具箱")) OpenWindow();
+        }
+        #endregion
 
         #region SubSystem Management
         public static List<Type> SubSystemList => Ice.Island.SubSystemList;

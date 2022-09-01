@@ -37,7 +37,7 @@ namespace IceEditor
                     var input = TextField("Input", "public void TestTTTT2() { }");
                     if (Button("Save"))
                     {
-                        WriteToRegion("StyleMap", input);
+                        IceEditorUtility.WriteToFileRegion("StyleMap", input);
                     }
                 }
                 //StyleBox(subRect, GetStyle("sgsdg"));
@@ -70,11 +70,6 @@ namespace IceEditor
         {
             EnumPopup(ref dir);
             base.OnDebugGUI(position);
-        }
-
-        void WriteToRegion(string regionName, string content, [System.Runtime.CompilerServices.CallerFilePath] string callerFilePath = null)
-        {
-            IceEditorUtility.WriteToFileRegion(callerFilePath, regionName, content.Split('\n'));
         }
     }
 }
