@@ -42,10 +42,10 @@ namespace IceEditor.Internal
 
             using (GROUP) using (SectionFolder("代码生成")) using (LabelWidth(60))
             {
-                using (GROUP) using (SectionFolder("子系统"))
+                using (Horizontal(StlGroup))
                 {
                     TextField("系统名字");
-                    if (Button("生成"))
+                    if (IceButton("生成"))
                     {
 
                     }
