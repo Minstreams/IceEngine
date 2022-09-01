@@ -14,11 +14,30 @@ using IceEditor.Framework.Internal;
 using IceEditor.Internal;
 using static IceEditor.IceGUI;
 using static IceEditor.IceGUIAuto;
+using UnityEngine.UIElements;
 
 namespace IceEditor
 {
     public static class IceGUIUtility
     {
+        #region General
+        [InitializeOnLoadMethod]
+        static void OnLoad()
+        {
+            EditorApplication.update -= Update;
+            EditorApplication.update += Update;
+        }
+        static void Update()
+        {
+            TryRegisterToolbarGUI();
+        }
+        #endregion
+
+        #region Theme Color
+        public static Color DefaultThemeColor => Ice.Island.Setting.themeColor;
+        public static Color CurrentThemeColor => HasPack ? CurrentPack.ThemeColor : DefaultThemeColor;
+        #endregion
+
         #region Custom Drawer
         // 统计所有已有CustomDrawer的类
         static HashSet<Type> _typesWithCustomDrawer;
@@ -42,7 +61,7 @@ namespace IceEditor
         }
         #endregion
 
-        #region General Implementation
+        #region SerializedObject
         public static void DrawSerializedObject(SerializedObject so)
         {
             if (so.targetObject == null)
@@ -237,8 +256,6 @@ namespace IceEditor
             //    StyleBox(rMul, GetStyle(), "Multiple Values");
             //}
         }
-        public static Color DefaultThemeColor => Ice.Island.Setting.themeColor;
-        public static Color CurrentThemeColor => HasPack ? CurrentPack.ThemeColor : DefaultThemeColor;
         #endregion
 
         #region GUIAutoPack
@@ -469,6 +486,54 @@ namespace IceEditor
         );
         public static Vector2 GetSizeTitle(this IceprintNode node) => node.GetDrawer().GetSizeTitle(node);
         public static Vector2 GetSizeBody(this IceprintNode node) => node.GetDrawer().GetSizeBody(node);
+        #endregion
+
+        #region Toolbar
+        public static Action onToolbarGUILeft;
+        public static Action onToolbarGUIRight;
+
+        static readonly Type m_toolbarType = typeof(Editor).Assembly.GetType("UnityEditor.Toolbar");
+        static ScriptableObject m_currentToolbar;
+
+        internal static void TryRegisterToolbarGUI()
+        {
+            // Relying on the fact that toolbar is ScriptableObject and gets deleted when layout changes
+            if (m_currentToolbar == null)
+            {
+                // Find toolbar
+                var toolbars = Resources.FindObjectsOfTypeAll(m_toolbarType);
+                m_currentToolbar = toolbars.Length > 0 ? (ScriptableObject)toolbars[0] : null;
+                if (m_currentToolbar != null)
+                {
+                    var mRoot = m_currentToolbar.GetType().GetField("m_Root", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(m_currentToolbar) as VisualElement;
+                    mRoot.Q("ToolbarZoneLeftAlign").Add(new IMGUIContainer()
+                    {
+                        style = { flexGrow = 1 },
+                        onGUIHandler = OnToolbarGUILeft,
+                    });
+                    mRoot.Q("ToolbarZoneRightAlign").Add(new IMGUIContainer()
+                    {
+                        style = { flexGrow = 1 },
+                        onGUIHandler = OnToolbarGUIRight,
+                    });
+                }
+            }
+        }
+        static void OnToolbarGUILeft()
+        {
+            using (HORIZONTAL)
+            {
+                onToolbarGUILeft?.Invoke();
+            }
+        }
+        static void OnToolbarGUIRight()
+        {
+            using (HORIZONTAL)
+            {
+                Space();
+                onToolbarGUIRight?.Invoke();
+            }
+        }
         #endregion
     }
 }
