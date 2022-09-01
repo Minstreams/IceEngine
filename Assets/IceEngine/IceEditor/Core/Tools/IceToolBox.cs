@@ -21,7 +21,7 @@ namespace IceEditor.Internal
         [ToolbarGUICallback(ToolbarGUIPosition.Right)]
         static void OnToolbarGUI()
         {
-            if (IceButton(" ◈ ".Size(13), focusedWindow is IceToolBox, "Ice工具箱")) OpenWindow();
+            if (IceButton("-◈-".Size(13), focusedWindow is IceToolBox, "Ice工具箱")) OpenWindow();
         }
         #endregion
 
@@ -40,8 +40,23 @@ namespace IceEditor.Internal
                 }
             }
 
+            using (GROUP) using (SectionFolder("代码生成")) using (LabelWidth(60))
+            {
+                using (GROUP) using (SectionFolder("子系统"))
+                {
+                    TextField("系统名字");
+                    if (Button("生成"))
+                    {
+
+                    }
+                }
+            }
+
+            Space();
+
             using (GROUP)
             {
+                Label("Selected Path:");
                 Label(IceEditorUtility.GetSelectPath());
             }
         }
