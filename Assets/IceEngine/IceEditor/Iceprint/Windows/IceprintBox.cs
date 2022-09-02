@@ -114,8 +114,6 @@ namespace IceEditor.Internal
 
         #endregion
 
-
-
         #region Port
         int idDragPort;
         IceprintPort DraggingPort { get; set; }
@@ -236,6 +234,35 @@ namespace IceEditor.Internal
 
         #endregion
 
+        #region Utility
+        public void ResetGraphView()
+        {
+            Vector2 offset = Vector2.zero;
+            Vector2 min = Vector2.positiveInfinity;
+            Vector2 max = Vector2.negativeInfinity;
+            foreach (var node in Graph.nodeList)
+            {
+                var pos = node.position;
+                offset += pos;
+                min = Vector2.Min(min, pos);
+                max = Vector2.Max(max, pos);
+            }
+            offset /= Graph.nodeList.Count;
+            offset = offset.Snap(Setting.gridSize);
+            if (offset != Vector2.zero)
+            {
+                foreach (var node in Graph.nodeList)
+                {
+                    node.position -= offset;
+                }
+                RecordForUndo();
+            }
+
+            SetFloat($"{GRAPH_KEY}_ViewScale", 1);
+            SetVector2($"{GRAPH_KEY}_ViewOffset", Vector2.zero);
+        }
+        #endregion
+
         protected override void OnWindowGUI(Rect position)
         {
             using (DOCK)
@@ -274,8 +301,7 @@ namespace IceEditor.Internal
                     // 未选择任何
                     if (IceButton("重置视图"))
                     {
-                        SetFloat($"{GRAPH_KEY}_ViewScale", 1);
-                        SetVector2($"{GRAPH_KEY}_ViewOffset", Vector2.zero);
+                        ResetGraphView();
                     }
                 }
 
