@@ -2,7 +2,6 @@
 using UnityEngine;
 using IceEngine;
 using IceEngine.Internal;
-using IceEditor;
 
 public class TestSO : ScriptableObject
 {
