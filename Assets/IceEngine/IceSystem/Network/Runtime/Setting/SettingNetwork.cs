@@ -16,6 +16,8 @@ namespace IceEngine.Internal
         public int clientUDPPort = 7856;
 
         public string defaultServerIPString = "127.0.0.1";
+        public string defaultServerDomain = "minstreams.com";
         public IPAddress DefaultServerAddress => IPAddress.Parse(defaultServerIPString);
+        public IPAddress DefaultServerDomain => Dns.GetHostEntry(defaultServerDomain).AddressList[0];
     }
 }

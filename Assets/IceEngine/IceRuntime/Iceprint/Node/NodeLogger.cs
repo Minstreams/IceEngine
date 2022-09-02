@@ -14,12 +14,12 @@ namespace IceEngine.IceprintNodes
         [IceprintPort]
         public void Log()
         {
-            Debug.Log(message);
+            Debug.Log(message, graph);
         }
         [IceprintPort]
         public void Log(object obj)
         {
-            Debug.Log(obj);
+            Debug.Log(obj, graph);
         }
     }
 }

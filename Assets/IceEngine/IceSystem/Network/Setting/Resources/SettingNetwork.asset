@@ -19,3 +19,4 @@ MonoBehaviour:
   serverTCPPort: 7858
   clientUDPPort: 7856
   defaultServerIPString: 127.0.0.1
+  defaultServerDomain: minstreams.com

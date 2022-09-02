@@ -13,7 +13,7 @@ public class AWDASD : NetworkObject
         LaunchClient();
         ClientOpenUDP();
         ServerOpenTCP();
-        ClientConnectTo(LocalIPAddress);
+        ClientConnectTo(LocalIPAddressList[0]);
     }
     protected override void OnDestroy()
     {

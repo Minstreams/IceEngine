@@ -10,7 +10,7 @@ namespace IceEngine.Networking.Internal
     [AddComponentMenu("[Network]/UI/NetworkSystemAgent")]
     public class NetworkSystemAgent : UIBase
     {
-         public string serverAddress;
+        public string serverAddress;
 
         //Input
         [ContextMenu("LaunchServer")]
@@ -37,7 +37,7 @@ namespace IceEngine.Networking.Internal
         public void DetectLocalIPAddress()
         {
             Ice.Network.DetectLocalIPAddress();
-            serverAddress = Ice.Network.LocalIPAddress.ToString();
+            serverAddress = Ice.Network.LocalIPAddressList[0].ToString();
         }
 
         protected override void OnUI()
