@@ -447,7 +447,6 @@ namespace IceEditor.Internal
                     else
                     {
                         _cache_time = t;
-                        E.Use();
 
                         // 开始拖动
                         if (GUIHotControl == 0)
@@ -465,6 +464,7 @@ namespace IceEditor.Internal
                             _cache_drag = E.mousePosition;
                             _cache_pos = E.mousePosition;
                             _cache_offset = E.mousePosition - node.position;
+                            E.Use();
                         }
                     }
                 }
