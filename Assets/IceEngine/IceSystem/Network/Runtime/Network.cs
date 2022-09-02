@@ -13,7 +13,7 @@ namespace Ice
     public sealed class Network : IceSystem<IceEngine.Internal.SettingNetwork>
     {
         #region Common
-        public static IPAddress LocalIPAddress => LocalIPAddressList.Count > 0 ? LocalIPAddressList[0] : IPAddress.Any;
+        public static IPAddress LocalIPAddress => LocalIPAddressList.Count > 0 ? LocalIPAddressList[0] : IPAddress.Loopback;
         public readonly static List<IPAddress> LocalIPAddressList = new();
         public static void DetectLocalIPAddress()
         {
