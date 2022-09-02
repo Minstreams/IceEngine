@@ -19,3 +19,4 @@ MonoBehaviour:
   gridColor: {r: 0.19023673, g: 0.4245283, b: 0.3573973, a: 1}
   mustContainOnSelect: 0
   maxUndoCount: 512
+  allowRuntimeConst: 1

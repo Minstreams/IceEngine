@@ -64,12 +64,11 @@ namespace IceEngine.Framework
         #region Configuration
         string _displayName = null;
         protected virtual string GetDisplayName() => GetNodeDisplayName(GetType().Name);
+        public void RefreshDisplayName() => _displayName = null;
         public string DisplayName => _displayName ??= GetDisplayName();
-        public virtual void InitializePorts()
+        protected void InitializePorts(Type type, object instance)
         {
-            var t = GetType();
-
-            foreach (var m in t.GetMethods(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic))
+            foreach (var m in type.GetMethods(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic))
             {
                 var attr = m.GetCustomAttribute<IceprintPortAttribute>();
                 if (attr is null) continue;
@@ -77,7 +76,7 @@ namespace IceEngine.Framework
                 // TODO: 支持一下模板函数
                 if (m.IsGenericMethodDefinition)
                 {
-                    throw new Exception($"Iceprint Inport can not be generic for now! node:[{t.FullName}] port:[{m.Name}]");
+                    throw new Exception($"Iceprint Inport can not be generic for now! node:[{type.FullName}] port:[{m.Name}]");
                 }
 
                 // 这里解析Inport数据
@@ -86,37 +85,49 @@ namespace IceEngine.Framework
                     var ps = m.GetParameters();
                     int psCount = ps.Length;
 
-                    if (psCount > 16) throw new Exception($"Iceprint Inport can not have more than 16 parameter! node:[{t.FullName}] port:[{m.Name}]");
+                    if (psCount > 16) throw new Exception($"Iceprint Inport can not have more than 16 parameter! node:[{type.FullName}] port:[{m.Name}]");
 
                     if (psCount == 0)
                     {
                         var port = AddInport(m.Name);
 
-                        var exp = Expression.Lambda(
-                            IceCoreUtility.actionTypes[0],
-                            Expression.Call(Expression.Constant(this), m)
-                            );
+#if UNITY_EDITOR
+                        if (UnityEditor.EditorApplication.isPlayingOrWillChangePlaymode)
+#endif
+                            if (instance != null)
+                            {
+                                var exp = Expression.Lambda(
+                                    IceCoreUtility.actionTypes[0],
+                                    Expression.Call(Expression.Constant(instance), m)
+                                    );
 
-                        port.data.action = exp.Compile();
+                                port.data.action = exp.Compile();
+                            }
                     }
                     else
                     {
                         var pts = ps.Select(p => p.ParameterType).ToArray();
                         var port = AddInport(m.Name, pts);
 
-                        var at = IceCoreUtility.actionTypes[psCount].MakeGenericType(pts);
-                        var prs = pts.Select(pt => Expression.Parameter(pt)).ToArray();
-                        var exp = Expression.Lambda(
-                            at,
-                            Expression.Call(Expression.Constant(this), m, prs),
-                            prs
-                            );
+#if UNITY_EDITOR
+                        if (UnityEditor.EditorApplication.isPlayingOrWillChangePlaymode)
+#endif
+                            if (instance != null)
+                            {
+                                var at = IceCoreUtility.actionTypes[psCount].MakeGenericType(pts);
+                                var prs = pts.Select(pt => Expression.Parameter(pt)).ToArray();
+                                var exp = Expression.Lambda(
+                                    at,
+                                    Expression.Call(Expression.Constant(instance), m, prs),
+                                    prs
+                                    );
 
-                        port.data.action = exp.Compile();
+                                port.data.action = exp.Compile();
+                            }
                     }
                 }
             }
-            foreach (var f in t.GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic))
+            foreach (var f in type.GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic))
             {
                 var attr = f.GetCustomAttribute<IceprintPortAttribute>();
                 if (attr is null) continue;
@@ -129,13 +140,19 @@ namespace IceEngine.Framework
                 {
                     var port = AddOutport(fName);
 
-                    var m = OutportInvokeMethods[0];
-                    var exp = Expression.Lambda(
-                        IceCoreUtility.actionTypes[0],
-                        Expression.Call(Expression.Constant(port), m)
-                        );
+#if UNITY_EDITOR
+                    if (UnityEditor.EditorApplication.isPlayingOrWillChangePlaymode)
+#endif
+                        if (instance != null)
+                        {
+                            var m = OutportInvokeMethods[0];
+                            var exp = Expression.Lambda(
+                                IceCoreUtility.actionTypes[0],
+                                Expression.Call(Expression.Constant(port), m)
+                                );
 
-                    f.SetValue(this, exp.Compile());
+                            f.SetValue(instance, exp.Compile());
+                        }
                 }
                 else if (at.IsGenericType)
                 {
@@ -146,18 +163,26 @@ namespace IceEngine.Framework
 
                     var port = AddOutport(fName, pts);
 
-                    var m = OutportInvokeMethods[psCount].MakeGenericMethod(pts);
-                    var prs = pts.Select(pt => Expression.Parameter(pt)).ToArray();
-                    var exp = Expression.Lambda(
-                            at,
-                            Expression.Call(Expression.Constant(port), m, prs),
-                            prs);
+#if UNITY_EDITOR
+                    if (UnityEditor.EditorApplication.isPlayingOrWillChangePlaymode)
+#endif
+                        if (instance != null)
+                        {
+                            var m = OutportInvokeMethods[psCount].MakeGenericMethod(pts);
+                            var prs = pts.Select(pt => Expression.Parameter(pt)).ToArray();
+                            var exp = Expression.Lambda(
+                                    at,
+                                    Expression.Call(Expression.Constant(port), m, prs),
+                                    prs);
 
-                    f.SetValue(this, exp.Compile());
+                            f.SetValue(instance, exp.Compile());
+                        }
                 }
                 else throw new Exception($"Invalid IceprintPort! {at.Name} {f.Name}");
             }
         }
+        public virtual void InitializePorts() => InitializePorts(GetType(), this);
+        public virtual void OnAddToGraph() { }
         #endregion
     }
 }

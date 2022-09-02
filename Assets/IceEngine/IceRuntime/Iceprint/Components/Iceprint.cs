@@ -66,6 +66,7 @@ namespace IceEngine
             node.graph = this;
             node.id = id;
             foreach (var ip in node.inports) ip.data.nodeId = id;
+            node.OnAddToGraph();
         }
         #endregion
 
@@ -106,7 +107,7 @@ namespace IceEngine
         #region Interface
         public IceprintNode AddNode(Type nodeType, Vector2 pos = default) => AddNode(Activator.CreateInstance(nodeType) as IceprintNode, pos);
         public IceprintNode AddNode<Node>(Vector2 pos = default) where Node : IceprintNode => AddNode(Activator.CreateInstance<Node>(), pos);
-        IceprintNode AddNode(IceprintNode node, Vector2 pos = default)
+        public IceprintNode AddNode(IceprintNode node, Vector2 pos = default)
         {
             int index = nodeList.Count;
             node.InitializePorts();
@@ -190,7 +191,6 @@ namespace IceEngine
             LoadGraph();
         }
 
-        public Action onAwake;
         public Action onStart;
         public Action onUpdate;
         public Action onDestroy;
@@ -201,7 +201,6 @@ namespace IceEngine
             {
                 if (node is NodeBaseEvents nbe)
                 {
-                    onAwake += nbe.onAwake;
                     onStart += nbe.onStart;
                     onUpdate += nbe.onUpdate;
                     onDestroy += nbe.onDestroy;
@@ -212,14 +211,9 @@ namespace IceEngine
         {
             onUpdate = null;
         }
-
-        void Awake()
-        {
-            LoadGraph();
-            onAwake?.Invoke();
-        }
         void Start()
         {
+            LoadGraph();
             onStart?.Invoke();
         }
         void Update()

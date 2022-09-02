@@ -2,9 +2,11 @@
 using System.Collections.Generic;
 using UnityEngine;
 using IceEngine;
+using System;
+using IceEngine.Framework;
 
 [ThemeColor(1, 0, 1)]
-public class TestComp : MonoBehaviour
+public class TestComp : IceprintNodeComponent
 {
     [System.Serializable]
     public class IntEvent : UnityEngine.Events.UnityEvent<int> { }
@@ -44,14 +46,14 @@ public class TestComp : MonoBehaviour
     [Label("标签Bs")]
     [RuntimeConst]
     public ClassB bs;
-    void Awake()
-    {
-        Debug.Log("AwakeTemp!");
-    }
+
+    [IceprintPort]
+    public Action<string> onJJJ;
 
     [Button]
+    [IceprintPort]
     public void DoSomething()
     {
-        Debug.Log("Fff" + bs.bb);
+        onJJJ?.Invoke("Fff" + bs.bb);
     }
 }

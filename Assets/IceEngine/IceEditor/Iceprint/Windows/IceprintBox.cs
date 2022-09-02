@@ -6,6 +6,7 @@ using UnityEngine;
 using IceEngine;
 using IceEngine.Framework;
 using IceEngine.Internal;
+using IceEngine.IceprintNodes;
 using static IceEditor.IceGUI;
 using static IceEditor.IceGUIAuto;
 using IceEditor.Framework;
@@ -211,6 +212,30 @@ namespace IceEditor.Internal
                     });
                 }
             }
+
+            foreach (var g in Graph.gameObject.scene.GetRootGameObjects())
+            {
+                var nodeComps = g.GetComponentsInChildren<IceprintNodeComponent>();
+                foreach (var nodeComp in nodeComps)
+                {
+                    gm.AddItem(new GUIContent(GetMenuPath(nodeComp)), false, () =>
+                    {
+                        var node = Graph.AddNode(new NodeMonoBehaviour()
+                        {
+                            target = nodeComp,
+                            targetType = nodeComp.GetType(),
+                            targetInstanceId = nodeComp.GetInstanceID(),
+                        }, pos);
+
+                        selectedNodes.Clear();
+                        selectedNodes.Add(node);
+                        RecordForUndo();
+                    });
+                }
+            }
+
+            string GetMenuPath(IceprintNodeComponent node) => $"Components/{node.GetPath()}";
+
             gm.ShowAsContext();
         }
         #endregion
@@ -242,7 +267,7 @@ namespace IceEditor.Internal
             Vector2 max = Vector2.negativeInfinity;
             foreach (var node in Graph.nodeList)
             {
-                var pos = node.position;
+                var pos = node.GetArea().center;
                 offset += pos;
                 min = Vector2.Min(min, pos);
                 max = Vector2.Max(max, pos);
@@ -430,13 +455,20 @@ namespace IceEditor.Internal
 
                 // 背景
                 var nodeRect = node.GetArea();
-                if (bSelected && E.type == EventType.Repaint && GUIHotControl == idDragNode)
+                if (E.type == EventType.Repaint)
                 {
-                    // 在原始位置画一个残影
-                    var holderRect = nodeRect.Move(_cache_pos - _cache_drag);
-                    using (GUIColor(Color.white * 0.6f)) StyleBox(holderRect, drawer.StlGraphNodeBackground);
+                    if (bSelected)
+                    {
+                        if (GUIHotControl == idDragNode)
+                        {
+                            // 在原始位置画一个残影
+                            var holderRect = nodeRect.Move(_cache_pos - _cache_drag);
+                            using (GUIColor(Color.white * 0.6f)) StyleBox(holderRect, drawer.StlGraphNodeBackground);
+                        }
+                        StyleBox(nodeRect, StlSelectedBox);
+                    }
+                    StyleBox(nodeRect, drawer.StlGraphNodeBackground);
                 }
-                StyleBox(nodeRect, bSelected ? drawer.StlGraphNodeBackgroundSelected : drawer.StlGraphNodeBackground);
 
                 using (GUICHECK)
                 {

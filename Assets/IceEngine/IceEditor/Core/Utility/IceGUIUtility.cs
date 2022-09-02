@@ -56,7 +56,7 @@ namespace IceEditor
             return false;
         }
         #endregion
-
+        
         #region SerializedObject
         public static void DrawSerializedObject(SerializedObject so)
         {
@@ -90,7 +90,6 @@ namespace IceEditor
                 if (Button(text)) action.Invoke(so.targetObject);
             }
         }
-
 
         /// <summary>
         /// Attributes信息，用于绘制 SerializedObject 或者 SerializedProperty
@@ -450,8 +449,6 @@ namespace IceEditor
         #region IceGraphNode
 
         #region Drawer
-        static readonly IceprintNodeDrawer _defaultDrawer = new IceprintNodeDrawer();
-        static Dictionary<Type, IceprintNodeDrawer> _nodeDrawerMap = null;
         static Dictionary<Type, IceprintNodeDrawer> NodeDrawerMap
         {
             get
@@ -470,7 +467,31 @@ namespace IceEditor
                 return _nodeDrawerMap;
             }
         }
+        static Dictionary<Type, IceprintNodeDrawer> _nodeDrawerMap = null;
         public static IceprintNodeDrawer GetDrawer(this IceprintNode node) => NodeDrawerMap.TryGetValue(node.GetType(), out var drawer) ? drawer : _defaultDrawer;
+        static readonly IceprintNodeDrawer _defaultDrawer = new();
+
+        static Dictionary<Type, IceprintNodeComponentDrawer> NodeComponentDrawerMap
+        {
+            get
+            {
+                if (_nodeComponentDrawerMap == null)
+                {
+                    _nodeComponentDrawerMap = new();
+                    var drawers = TypeCache.GetTypesDerivedFrom<IceprintNodeComponentDrawer>();
+                    foreach (var dt in drawers)
+                    {
+                        if (dt.IsAbstract) continue;
+                        var drawer = (IceprintNodeComponentDrawer)Activator.CreateInstance(dt);
+                        if (!_nodeComponentDrawerMap.TryAdd(drawer.NodeType, drawer)) throw new Exception($"Collecting drawer [{dt.FullName}] failed! [{drawer.NodeType}] already has a drawer [{_nodeComponentDrawerMap[drawer.NodeType]}]");
+                    }
+                }
+                return _nodeComponentDrawerMap;
+            }
+        }
+        static Dictionary<Type, IceprintNodeComponentDrawer> _nodeComponentDrawerMap = null;
+        public static IceprintNodeComponentDrawer GetDrawer(this IceprintNodeComponent node) => NodeComponentDrawerMap.TryGetValue(node.GetType(), out var drawer) ? drawer : _defaultComponentDrawer;
+        static readonly IceprintNodeComponentDrawer _defaultComponentDrawer = new();
         #endregion
 
         public static Rect GetArea(this IceprintNode node) => new(node.position, node.GetSize());

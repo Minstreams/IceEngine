@@ -198,5 +198,23 @@ namespace IceEngine
         /// </summary>
         public static Rect ExpandToRect(this Vector2 center, Vector2 halfSize) => new Rect(center - halfSize, halfSize + halfSize);
         #endregion
+
+        #region MonoBehaviour
+        /// <summary>
+        /// 组件在Hierarchy中的路径
+        /// </summary>
+        /// <param name="component">组件</param>
+        public static string GetPath(this MonoBehaviour component)
+        {
+            string path = component.ToString();
+            var trans = component.transform.parent;
+            while (trans != null)
+            {
+                path = trans.name + "/" + path;
+                trans = trans.parent;
+            }
+            return path;
+        }
+        #endregion
     }
 }
