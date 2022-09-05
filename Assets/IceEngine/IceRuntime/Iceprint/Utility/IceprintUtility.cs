@@ -35,13 +35,5 @@ namespace IceEngine
             }
         }
         static MethodInfo[] _outportInvokeMethods = null;
-
-
-        readonly static Regex upperAlphaRegex = new("(?<!^)[A-Z]");
-        internal static string GetNodeDisplayName(string name)
-        {
-            if (name.StartsWith("Node")) name = name.Substring(4);
-            return upperAlphaRegex.Replace(name, " $0");
-        }
     }
 }

@@ -62,10 +62,6 @@ namespace IceEngine.Framework
         #endregion
 
         #region Configuration
-        string _displayName = null;
-        protected virtual string GetDisplayName() => GetNodeDisplayName(GetType().Name);
-        public void RefreshDisplayName() => _displayName = null;
-        public string DisplayName => _displayName ??= GetDisplayName();
         protected void InitializePorts(Type type, object instance)
         {
             foreach (var m in type.GetMethods(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic))
@@ -182,7 +178,7 @@ namespace IceEngine.Framework
             }
         }
         public virtual void InitializePorts() => InitializePorts(GetType(), this);
-        public virtual void OnAddToGraph() { }
+        //public virtual void OnAddToGraph() { }
         #endregion
     }
 }

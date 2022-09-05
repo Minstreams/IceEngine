@@ -318,7 +318,7 @@ namespace IceEditor.Internal
                     // 单个操作
                     var itr = selectedNodes.GetEnumerator();
                     itr.MoveNext();
-                    Label($"当前选择 {itr.Current.DisplayName}");
+                    Label($"当前选择 {itr.Current.GetDrawer().GetDisplayName(itr.Current)}");
                     if (IceButton("删除") || (E.type == EventType.KeyDown && E.keyCode == KeyCode.Delete)) DeleteSelectedNodes();
                 }
                 else
@@ -514,6 +514,7 @@ namespace IceEditor.Internal
                                 if (!E.control && !E.shift)
                                 {
                                     selectedNodes.Clear();
+                                    drawer.OnSelect(node);
                                 }
                                 selectedNodes.Add(node);
                             }

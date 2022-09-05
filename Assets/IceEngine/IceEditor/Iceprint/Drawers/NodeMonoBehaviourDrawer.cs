@@ -14,16 +14,22 @@ namespace IceEditor.Internal
 {
     public class NodeMonoBehaviourDrawer : IceprintNodeDrawer<NodeMonoBehaviour>
     {
-        public override GUIStyle StlGraphNodeBackground => StlBackground;
+        public override GUIStyle StlGraphNodeBackground => _stlGraphNodeBackground?.Check() ?? (_stlGraphNodeBackground = new GUIStyle("NotificationBackground") { overflow = new RectOffset(8, 8, 8, 8), richText = true, }); GUIStyle _stlGraphNodeBackground;
+        public override string GetDisplayName(NodeMonoBehaviour node)
+        {
+            if (node.target != null) return node.target.GetDrawer().GetDisplayName(node.target);
+            if (node.targetType != null) return $"{node.targetType.Name.Color(IceGUIUtility.CurrentThemeColor)} (Missing)";
+            return "空组件";
+        }
         public override Vector2 GetSizeTitle(NodeMonoBehaviour node)
         {
             if (node.target != null) return node.target.GetDrawer().GetSizeTitle(node.target);
-            return base.GetSizeTitle(node);
+            return new(128, 16);
         }
         public override Vector2 GetSizeBody(NodeMonoBehaviour node)
         {
             if (node.target != null) return node.target.GetDrawer().GetSizeBody(node.target);
-            return base.GetSizeBody(node);
+            return new(224, 32);
         }
         public override void OnGUI_Title(NodeMonoBehaviour node, Rect rect)
         {
@@ -33,7 +39,7 @@ namespace IceEditor.Internal
                 return;
             }
 
-            base.OnGUI_Title(node, rect);
+            StyleBox(rect, StlLabel, GetDisplayName(node).Bold());
         }
 
         public override void OnGUI_Body(NodeMonoBehaviour node, Rect rect)
@@ -44,10 +50,18 @@ namespace IceEditor.Internal
                 return;
             }
 
-
             using (AreaRaw(rect)) using (GUICHECK)
             {
-                var val = _ObjectField(node.target, true);
+                IceprintNodeComponent val;
+                Space(8);
+                if (node.targetType == null)
+                {
+                    val = _ObjectField(node.target, true);
+                }
+                else
+                {
+                    val = (IceprintNodeComponent)EditorGUILayout.ObjectField(node.target, node.targetType, true);
+                }
 
                 if (GUIChanged && val != node.target)
                 {
@@ -71,10 +85,14 @@ namespace IceEditor.Internal
                             node.connectionData.Clear();
                             node.InitializePorts();
                         }
-                        node.RefreshDisplayName();
                     }
                 }
             }
+        }
+
+        public override void OnSelect(NodeMonoBehaviour node)
+        {
+            if (node.target != null) Selection.activeObject = node.target;
         }
     }
 }

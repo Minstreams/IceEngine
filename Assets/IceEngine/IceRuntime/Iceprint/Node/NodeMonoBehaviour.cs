@@ -22,14 +22,8 @@ namespace IceEngine.IceprintNodes
             if (targetType == null) return;
 
             if (target == null)
-                target = (IceprintNodeComponent)UnityEditor.EditorUtility.InstanceIDToObject(targetInstanceId);
+                target = IceprintNodeComponent.FromInstanceId(targetInstanceId);
             InitializePorts(targetType, target);
-        }
-
-        protected override string GetDisplayName()
-        {
-            if (targetType == null) return base.GetDisplayName();
-            return targetType.Name;
         }
     }
 }

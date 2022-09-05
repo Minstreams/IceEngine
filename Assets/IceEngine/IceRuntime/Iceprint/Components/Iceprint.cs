@@ -66,7 +66,7 @@ namespace IceEngine
             node.graph = this;
             node.id = id;
             foreach (var ip in node.inports) ip.data.nodeId = id;
-            node.OnAddToGraph();
+            //node.OnAddToGraph();
         }
         #endregion
 

@@ -17,22 +17,19 @@ namespace IceEditor.Framework
             #region Configuration
             internal virtual Type NodeType => null;
             public virtual Vector2 GetSizeTitle(IceprintNodeComponent node) => new(128, 16);
-            public virtual Vector2 GetSizeBody(IceprintNodeComponent node) => new(512, 512);
+            public virtual Vector2 GetSizeBody(IceprintNodeComponent node) => new(224, 32);
             public virtual void OnGUI_Title(IceprintNodeComponent node, Rect rect)
             {
-                StyleBox(rect.ApplyBorder(0, -1), StlHeader, node.ToString());
+                StyleBox(rect, StlLabel, GetDisplayName(node).Color(IceGUIUtility.CurrentThemeColor).Bold());
             }
-            static readonly Dictionary<IceprintNodeComponent, Editor> soMap = new();
             public virtual void OnGUI_Body(IceprintNodeComponent node, Rect rect)
             {
-                using var _ = Area(rect, StlBox);
-                using (ScrollVertical(node.ToString()))
-                {
-                    Editor so;
-                    if (!soMap.TryGetValue(node, out so)) so = soMap[node] = Editor.CreateEditor(node);
-                    so.OnInspectorGUI();
-                }
+                using var _ = Area(rect);
+
+                Space(8);
+                Label(node.GetPath());
             }
+            public virtual string GetDisplayName(IceprintNodeComponent node) => node.GetType().Name;
             #endregion
         }
     }
@@ -48,5 +45,7 @@ namespace IceEditor.Framework
         public virtual Vector2 GetSizeBody(NodeComp node) => base.GetSizeBody(node);
         public sealed override void OnGUI_Body(IceprintNodeComponent node, Rect rect) => OnGUI_Body(node as NodeComp, rect);
         public virtual void OnGUI_Body(NodeComp node, Rect rect) => base.OnGUI_Body(node, rect);
+        public sealed override string GetDisplayName(IceprintNodeComponent node) => GetDisplayName(node as NodeComp);
+        public virtual string GetDisplayName(NodeComp node) => typeof(NodeComp).Name;
     }
 }
