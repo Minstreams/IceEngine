@@ -2,7 +2,7 @@
 
 namespace IceEditor
 {
-    [AttributeUsage(AttributeTargets.Method)]
+    [AttributeUsage(AttributeTargets.Method, AllowMultiple = false)]
     public class ToolbarGUICallbackAttribute : Attribute
     {
         public ToolbarGUIPosition Position { get; private set; }

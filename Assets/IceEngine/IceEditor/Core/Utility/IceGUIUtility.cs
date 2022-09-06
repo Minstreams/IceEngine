@@ -26,6 +26,7 @@ namespace IceEditor
         static void OnLoad()
         {
             OnLoad_Toolbar();
+            OnLoad_AppStatusBar();
         }
         #endregion
 
@@ -555,13 +556,17 @@ namespace IceEditor
                 if (m_currentToolbar != null)
                 {
                     var mRoot = m_currentToolbar.GetType().GetField("m_Root", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(m_currentToolbar) as VisualElement;
-                    mRoot.Q("ToolbarZoneLeftAlign").Add(new IMGUIContainer()
+
+                    if (onToolbarGUILeft != null || onToolbarGUIMidLeft != null) mRoot.Q("ToolbarZoneLeftAlign").Add(new IMGUIContainer()
                     {
+                        name = "IceToolbarLeft",
                         style = { flexGrow = 1, marginLeft = 4, marginRight = 4 },
                         onGUIHandler = OnToolbarGUILeft,
                     });
-                    mRoot.Q("ToolbarZoneRightAlign").Add(new IMGUIContainer()
+
+                    if (onToolbarGUIMidRight != null || onToolbarGUIRight != null) mRoot.Q("ToolbarZoneRightAlign").Add(new IMGUIContainer()
                     {
+                        name = "IceToolbarRight",
                         style = { flexGrow = 1, marginLeft = 4, marginRight = 4 },
                         onGUIHandler = OnToolbarGUIRight,
                     });
@@ -585,6 +590,74 @@ namespace IceEditor
                 Space();
                 onToolbarGUIRight?.Invoke();
             }
+        }
+        #endregion
+
+        #region AppStatusBar
+        static Action onAppStatusBarGUILeft;
+        static Action onAppStatusBarGUIRight;
+
+        static readonly Type m_appStatusBarType = typeof(Editor).Assembly.GetType("UnityEditor.AppStatusBar");
+        static readonly Type m_guiViewType = typeof(Editor).Assembly.GetType("UnityEditor.GUIView");
+        static ScriptableObject m_currentAppStatusBar;
+
+        static void OnLoad_AppStatusBar()
+        {
+            var callbacks = TypeCache.GetMethodsWithAttribute<AppStatusBarGUICallbackAttribute>();
+            foreach (var callback in callbacks)
+            {
+                if (!callback.IsStatic) throw new IceGUIException("AppStatusBar GUI handler must be static!");
+
+                var handler = Expression.Lambda<Action>(Expression.Call(callback)).Compile();
+                if (callback.GetCustomAttribute<AppStatusBarGUICallbackAttribute>().IsRight)
+                    onAppStatusBarGUIRight += handler;
+                else onAppStatusBarGUILeft += handler;
+            }
+
+            EditorApplication.update -= TryRegisterAppStatusBarGUI;
+            EditorApplication.update += TryRegisterAppStatusBarGUI;
+        }
+        internal static void TryRegisterAppStatusBarGUI()
+        {
+            // Relying on the fact that toolbar is ScriptableObject and gets deleted when layout changes
+            if (m_currentAppStatusBar == null)
+            {
+                // Find status bar
+                m_currentAppStatusBar = (ScriptableObject)m_appStatusBarType.GetField("s_AppStatusBar", BindingFlags.Static | BindingFlags.NonPublic).GetValue(null);
+                if (m_currentAppStatusBar != null)
+                {
+                    var viewField = m_guiViewType.GetProperty("visualTree", BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance);
+                    var mRoot = viewField.GetValue(m_currentAppStatusBar) as VisualElement;
+
+                    if (onAppStatusBarGUILeft != null || onAppStatusBarGUIRight != null)
+                    {
+                        mRoot.style.flexDirection = FlexDirection.Row;
+                        mRoot.Q(className: "unity-imgui-container").style.position = Position.Relative;
+
+                        if (onAppStatusBarGUILeft != null) mRoot.Insert(0, new IMGUIContainer()
+                        {
+                            name = "IceStatusBarLeft",
+                            style = { flexShrink = 0, marginLeft = 4, marginRight = 4 },
+                            onGUIHandler = OnAppStatusBarGUILeft,
+                        });
+
+                        if (onAppStatusBarGUIRight != null) mRoot.Add(new IMGUIContainer()
+                        {
+                            name = "IceStatusBarRight",
+                            style = { flexShrink = 0, marginLeft = 4, marginRight = 4 },
+                            onGUIHandler = OnAppStatusBarGUIRight,
+                        });
+                    }
+                }
+            }
+        }
+        static void OnAppStatusBarGUILeft()
+        {
+            using (HORIZONTAL) onAppStatusBarGUILeft?.Invoke();
+        }
+        static void OnAppStatusBarGUIRight()
+        {
+            using (HORIZONTAL) onAppStatusBarGUIRight?.Invoke();
         }
         #endregion
     }
