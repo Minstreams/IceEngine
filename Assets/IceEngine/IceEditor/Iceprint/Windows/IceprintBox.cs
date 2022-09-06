@@ -318,7 +318,7 @@ namespace IceEditor.Internal
                     // 单个操作
                     var itr = selectedNodes.GetEnumerator();
                     itr.MoveNext();
-                    Label($"当前选择 {itr.Current.GetDrawer().GetDisplayName(itr.Current)}");
+                    Label($"当前选择 {itr.Current.GetDisplayName()}");
                     if (IceButton("删除") || (E.type == EventType.KeyDown && E.keyCode == KeyCode.Delete)) DeleteSelectedNodes();
                 }
                 else

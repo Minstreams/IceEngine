@@ -1,11 +1,9 @@
-﻿using UnityEngine;
-
+﻿using System.Net;
 using IceEngine.Framework;
-using System.Net;
 
 namespace IceEngine.Internal
 {
-    [IceSettingPath("IceEngine/IceSystem/Network/Setting")]
+    [IceSettingPath("IceEngine/IceSystem/Network")]
     public class SettingNetwork : IceSetting<SettingNetwork>
     {
         public int initialBufferSize = 4096;

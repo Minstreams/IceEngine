@@ -4,6 +4,8 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEditor;
 
+using System.IO;
+using System.Text;
 using IceEngine;
 using IceEditor.Framework;
 using static IceEditor.IceGUI;
@@ -28,28 +30,86 @@ namespace IceEditor.Internal
         #region SubSystem Management
         public static List<Type> SubSystemList => Ice.Island.SubSystemList;
 
+        void GUI_SubSystem()
+        {
+            foreach (var sub in SubSystemList)
+            {
+                Label(sub.Name);
+            }
+        }
+        #endregion
+
+        #region Code Generation
+        public const string SubSystemFolder = "Assets/IceEngine/IceSystem";
+        public static void GenerateSubSystem(string name)
+        {
+            // Path calculation
+            string path = $"{SubSystemFolder}/{name}";
+            IceEditorUtility.TryCreateDirectory(path);
+
+            string resPath = $"{path}/Resources";
+            IceEditorUtility.TryCreateDirectory(resPath);
+
+            string runtimePath = $"{path}/Runtime";
+            IceEditorUtility.TryCreateDirectory(runtimePath);
+
+            // Code
+            string settingPath = $"{runtimePath}/Setting{name}.cs";
+            string settingCode =
+                $"using IceEngine.Framework;\r\n" +
+                $"\r\n" +
+                $"namespace IceEngine.Internal\r\n" +
+                $"{{\r\n" +
+                $"    [IceSettingPath(\"IceEngine/IceSystem/{name}\")]\r\n" +
+                $"    public class Setting{name} : IceSetting<Setting{name}>\r\n" +
+                $"    {{\r\n" +
+                $"\r\n" +
+                $"    }}\r\n" +
+                $"}}";
+            File.WriteAllText(settingPath, settingCode, Encoding.UTF8);
+
+            string systemPath = $"{runtimePath}/{name}.cs";
+            string systemCode =
+                $"using IceEngine.Framework;\r\n" +
+                $"\r\n" +
+                $"namespace Ice\r\n" +
+                $"{{\r\n" +
+                $"    public sealed class {name} : IceSystem<IceEngine.Internal.Setting{name}>\r\n" +
+                $"    {{\r\n" +
+                $"\r\n" +
+                $"    }}\r\n" +
+                $"}}";
+            File.WriteAllText(systemPath, systemCode, Encoding.UTF8);
+
+            AssetDatabase.Refresh();
+        }
+
+        void GUI_CodeGeneration()
+        {
+            using var _ = LabelWidth(60);
+
+            using (Horizontal(StlGroup))
+            {
+                var name = TextField("系统名字");
+                if (IceButton("生成"))
+                {
+                    GenerateSubSystem(name);
+                    DialogNoCancel($"{name}系统生成完成！");
+                }
+            }
+        }
         #endregion
 
         protected override void OnWindowGUI(Rect position)
         {
-            using (GROUP) using (SectionFolder("Sub Systems"))
+            using (GROUP) using (SectionFolder("子系统"))
             {
-                foreach (var sub in SubSystemList)
-                {
-                    Label(sub.Name);
-                }
+                GUI_SubSystem();
             }
 
-            using (GROUP) using (SectionFolder("代码生成")) using (LabelWidth(60))
+            using (GROUP) using (SectionFolder("代码生成"))
             {
-                using (Horizontal(StlGroup))
-                {
-                    TextField("系统名字");
-                    if (IceButton("生成"))
-                    {
-
-                    }
-                }
+                GUI_CodeGeneration();
             }
 
             Space();

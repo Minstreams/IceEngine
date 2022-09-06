@@ -56,7 +56,7 @@ namespace IceEditor
             return false;
         }
         #endregion
-        
+
         #region SerializedObject
         public static void DrawSerializedObject(SerializedObject so)
         {
@@ -92,7 +92,7 @@ namespace IceEditor
         }
 
         /// <summary>
-        /// Attributes信息，用于绘制 SerializedObject 或者 SerializedProperty
+        /// Attributes信息，用于绘制SerializedObject或者SerializedProperty
         /// </summary>
         internal class IceAttributesInfo
         {
@@ -203,11 +203,9 @@ namespace IceEditor
                 }
             } while (itr.NextVisible(false) && itr.propertyPath != end?.propertyPath);
         }
-        /// <summary>
-        /// TODO:全面支持多目标编辑
-        /// </summary>
         static void PropertyField(SerializedProperty p, string label)
         {
+            // TODO:全面支持多目标编辑
             var bMulti = p.hasMultipleDifferentValues;
             if (bMulti) GUI.color = CurrentThemeColor * 0.6f;
             using (GUICHECK)
@@ -356,7 +354,10 @@ namespace IceEditor
 
                 // 显示Title删掉开头的Setting
                 var title = settingType.Name.StartsWith(prefix) ? settingType.Name[prefix.Length..] : settingType.Name;
-                var so = new SerializedObject((UnityEngine.Object)settingType.BaseType.GetProperty("Setting", settingType).GetValue(null));
+                var setting = settingType.BaseType.GetProperty("Setting", settingType).GetValue(null) as TSetting;
+                var so = new SerializedObject(setting);
+                var colorField = so.FindProperty("themeColor");
+                if (colorField != null) title = title.Color(colorField.colorValue);
                 iceSettingSOMap.Add(title, so);
             }
 
@@ -371,11 +372,11 @@ namespace IceEditor
                 {
                     if (selectedSetting == null)
                     {
-                        foreach ((string setting, SerializedObject so) in iceSettingSOMap)
+                        foreach ((string title, SerializedObject so) in iceSettingSOMap)
                         {
                             using (GROUP)
                             {
-                                Header(setting);
+                                Header(title);
                                 DrawSerializedObject(so);
                             }
                         }
@@ -393,9 +394,9 @@ namespace IceEditor
                 },
                 titleBarGuiHandler = () =>
                 {
-                    foreach (var so in iceSettingSOMap)
+                    foreach ((string title, _) in iceSettingSOMap)
                     {
-                        if (IceButton(so.Key, so.Key == selectedSetting)) selectedSetting = so.Key;
+                        if (IceButton(title, title == selectedSetting)) selectedSetting = title;
                     }
                     if (IceButton("All", selectedSetting == null)) selectedSetting = null;
                 },
@@ -503,6 +504,7 @@ namespace IceEditor
         );
         public static Vector2 GetSizeTitle(this IceprintNode node) => node.GetDrawer().GetSizeTitle(node);
         public static Vector2 GetSizeBody(this IceprintNode node) => node.GetDrawer().GetSizeBody(node);
+        public static string GetDisplayName(this IceprintNode node) => node.GetDrawer().GetDisplayName(node);
         #endregion
 
         #region Toolbar
