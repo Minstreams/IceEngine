@@ -259,7 +259,7 @@ namespace IceEditor
 
         public class GUIPackScope : IDisposable
         {
-            IceGUIAutoPack originPack = null;
+            readonly IceGUIAutoPack originPack = null;
             static GUIStyle LabelStyle => _labelStyle != null ? _labelStyle : (_labelStyle = EditorGUIUtility.GetBuiltinSkin(EditorSkin.Scene).FindStyle("ControlLabel")); static GUIStyle _labelStyle;
             Color originFocusColor;
 

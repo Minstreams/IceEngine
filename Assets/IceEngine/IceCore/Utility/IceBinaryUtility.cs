@@ -846,28 +846,27 @@ namespace IceEngine
             }
         }
 
-        public static object FromBytes(byte[] bytes)
+        public static object FromBytes(byte[] bytes, int offset = 0, Type baseType = null)
         {
             if (bytes.Length == 0) throw new ArgumentException("Bytes is null!");
 
-            int offset = 0;
-            return bytes.ReadValueWithHeader(ref offset);
+            return bytes.ReadValueWithHeader(ref offset, baseType);
         }
-        public static void FromBytesOverride(byte[] bytes, object target, Type type = null, bool withHeader = true, int offset = 0)
+        public static void FromBytesOverwrite(byte[] bytes, object objectToOverwrite, Type type = null, bool withHeader = true, int offset = 0)
         {
             if (bytes.Length == 0) throw new ArgumentException("Bytes is null!");
-            if (target is null) throw new ArgumentException("Target is null!");
+            if (objectToOverwrite is null) throw new ArgumentException("Target is null!");
 
-            if (type is null) type = target.GetType();
+            if (type is null) type = objectToOverwrite.GetType();
 
             if (withHeader)
             {
-                bytes.ReadValueWithHeader(ref offset, type, target);
+                bytes.ReadValueWithHeader(ref offset, type, objectToOverwrite);
             }
             else
             {
                 if (type.IsEnum || type.IsArray || type.IsCollection() || (!type.IsClass && !type.IsValueType)) throw new ArgumentException($"Unsupported type {type}");
-                bytes.ReadObjectOverride(ref offset, target, type);
+                bytes.ReadObjectOverride(ref offset, objectToOverwrite, type);
             }
         }
         #endregion

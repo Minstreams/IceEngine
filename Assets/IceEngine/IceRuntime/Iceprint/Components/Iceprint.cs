@@ -92,7 +92,7 @@ namespace IceEngine
             }
             try
             {
-                IceBinaryUtility.FromBytesOverride(data, nodeList, withHeader: true);
+                IceBinaryUtility.FromBytesOverwrite(data, nodeList, withHeader: true);
                 OnDeserialized();
             }
             catch (Exception ex)
