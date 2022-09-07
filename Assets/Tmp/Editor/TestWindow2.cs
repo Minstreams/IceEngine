@@ -25,6 +25,7 @@ public class TestWindow2 : IceEditorWindow
     }
 
     [IcePacket]
+    [Serializable]
     public struct Class1
     {
         public float f1;
@@ -32,8 +33,10 @@ public class TestWindow2 : IceEditorWindow
         public Class2 c3;
         public C4 c4;
         public Enum1 e1;
+        [SerializeField] public DateTimeOffset dt;
     }
     [IcePacket]
+    [Serializable]
     public struct C4
     {
         [SerializeField] float f3;
@@ -49,6 +52,7 @@ public class TestWindow2 : IceEditorWindow
         public int? iii;
     }
     [IcePacket]
+    [Serializable]
     public sealed class Class2 : CC2
     {
         public string ss2;
@@ -96,7 +100,8 @@ public class TestWindow2 : IceEditorWindow
                 f1 = 1.2323f,
                 s2 = "asdddss",
                 c3 = new Class2() { /*ff1 = 4123.23f,*/ ss2 = "WWQEE", tt = typeof(int) },
-                c4 = new C4(1.44444f)
+                c4 = new C4(1.44444f),
+                dt = DateTimeOffset.Now
             });
             if (IceButton("C3")) TB(new Class3()
             {
