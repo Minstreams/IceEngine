@@ -16,14 +16,30 @@ namespace IceEditor.Internal
     public class IceToolBox : IceEditorWindow
     {
         #region 定制
-        protected override string Title => "Ice工具箱";
+        protected override string Title => "❄- Ice工具箱";
         [MenuItem("IceEngine/Ice工具箱 #F1", false, 0)]
         public static void OpenWindow() => GetWindow<IceToolBox>();
+
+        [InitializeOnLoadMethod]
+        static void OnLoadd()
+        {
+            bDeveloperMode = EditorPrefs.GetBool("DeveloperMode");
+        }
 
         [ToolbarGUICallback(ToolbarGUIPosition.Right)]
         static void OnToolbarGUI()
         {
-            if (IceButton("-◈-".Size(13), focusedWindow is IceToolBox, "Ice工具箱")) OpenWindow();
+            if (IceButton("-❄-".Size(13), focusedWindow is IceToolBox, "Ice工具箱")) OpenWindow();
+        }
+        static bool bDeveloperMode;
+        [AppStatusBarGUICallback]
+        static void OnAppStatusGUI()
+        {
+            using (GUICHECK)
+            {
+                IceToggle("❂", ref bDeveloperMode, "开发者模式");
+                if (GUIChanged) EditorPrefs.SetBool("DeveloperMode", bDeveloperMode);
+            }
         }
         #endregion
 
