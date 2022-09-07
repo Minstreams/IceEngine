@@ -69,6 +69,9 @@ namespace IceEditor.Internal
             string runtimePath = $"{path}/Runtime";
             IceEditorUtility.TryCreateDirectory(runtimePath);
 
+            string editorPath = $"{path}/Editor";
+            IceEditorUtility.TryCreateDirectory(editorPath);
+
             // Code
             string settingPath = $"{runtimePath}/Setting{name}.cs";
             string settingCode =
@@ -96,6 +99,13 @@ namespace IceEditor.Internal
                 $"    }}\r\n" +
                 $"}}";
             File.WriteAllText(systemPath, systemCode, Encoding.UTF8);
+
+            string asmrefPath = $"{editorPath}/IceEditor.asmref";
+            string asmrefCode =
+                $"{{\n" +
+                $"    \"reference\": \"IceEditor\"" +
+                $"}}";
+            File.WriteAllText(asmrefPath, asmrefCode, Encoding.UTF8);
 
             AssetDatabase.Refresh();
         }

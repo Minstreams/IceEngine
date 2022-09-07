@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 849450a084818664e83d2e7108542913, type: 3}
   m_Name: SettingNetwork
   m_EditorClassIdentifier: 
-  themeColor: {r: 0.5547793, g: 0.8584906, b: 0.79259133, a: 1}
+  themeColor: {r: 0.12588999, g: 0.45750266, b: 0.6509434, a: 1}
   initialBufferSize: 4096
   magicByte: 201
   serverUDPPort: 7857

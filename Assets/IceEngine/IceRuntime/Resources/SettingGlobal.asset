@@ -12,4 +12,4 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 09d35c14dc862444a89c5229b2861d1d, type: 3}
   m_Name: SettingGlobal
   m_EditorClassIdentifier: 
-  themeColor: {r: 1, g: 0.6, b: 0, a: 1}
+  themeColor: {r: 0.57271266, g: 0.72958994, b: 0.735849, a: 1}
