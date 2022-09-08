@@ -18,11 +18,8 @@ namespace IceEngine
 
         void OnDeserialized()
         {
-            // Step1: initialize ports
-            foreach (var node in nodeList)
-            {
-                node.InitializePorts();
-            }
+            // Step1: initialize node data
+            for (int ni = 0; ni < nodeList.Count; ++ni) InitializeNodeData(nodeList[ni], ni);
 
             // Step2: repair connection references
             foreach (var node in nodeList)
@@ -57,20 +54,24 @@ namespace IceEngine
                     node.connectionData.RemoveAt(i);
                 }
             }
-
-            // Step3: update node cache
-            for (int ni = 0; ni < nodeList.Count; ++ni) UpdateNodeCache(nodeList[ni], ni);
         }
-        void UpdateNodeCache(IceprintNode node, int id)
+        void InitializeNodeData(IceprintNode node, int id)
         {
             node.graph = this;
             node.id = id;
             foreach (var ip in node.inports) ip.data.nodeId = id;
-            //node.OnAddToGraph();
+            if (id == _fieldMap.Count)
+            {
+                _fieldMap.Add(new FieldTable());
+                MarkDirty();
+            }
+            node.Initialize();
         }
         #endregion
 
         #region Serialized Data
+
+        #region Graph Data
         public byte[] graphData = null;
         public byte[] Serialize()
         {
@@ -86,9 +87,7 @@ namespace IceEngine
             if (graphData != data)
             {
                 graphData = data;
-#if UNITY_EDITOR
-                UnityEditor.EditorUtility.SetDirty(this);
-#endif
+                MarkDirty();
             }
             try
             {
@@ -98,10 +97,58 @@ namespace IceEngine
             catch (Exception ex)
             {
                 nodeList = new();
+                _fieldMap = new();
                 Serialize();
                 Debug.LogWarning("Deserialize failed, node list is reset.\n" + ex.Message);
             }
         }
+        #endregion
+
+        #region Node Fields
+        [Serializable]
+        public class FieldTable
+        {
+            [SerializeField] List<UnityEngine.Object> _tbl = new();
+            public int Count => _tbl.Count;
+            public UnityEngine.Object this[int id]
+            {
+                get => _tbl[id];
+                set => _tbl[id] = value;
+            }
+            public void Add(UnityEngine.Object obj) => _tbl.Add(obj);
+        }
+        public List<FieldTable> _fieldMap = new();
+        public T GetField<T>(int nodeId, ref int fieldId) where T : UnityEngine.Object
+        {
+            // Get table
+            var table = _fieldMap[nodeId];
+
+            // Calculate fieldId
+            int count = table.Count;
+            if (fieldId < 0)
+            {
+                // new field
+                fieldId = count;
+                table.Add(null);
+                MarkDirty();
+                return null;
+            }
+            else
+            {
+                if (fieldId >= count) throw new IndexOutOfRangeException($"Get field failed at {fieldId} out of {count}");
+                // old field
+                return table[fieldId] as T;
+            }
+        }
+        public void SetField(int nodeId, int fieldId, UnityEngine.Object field)
+        {
+            if (_fieldMap[nodeId][fieldId] == field) return;
+
+            _fieldMap[nodeId][fieldId] = field;
+            MarkDirty();
+        }
+        #endregion
+
         #endregion
 
         #region Interface
@@ -110,10 +157,9 @@ namespace IceEngine
         public IceprintNode AddNode(IceprintNode node, Vector2 pos = default)
         {
             int index = nodeList.Count;
-            node.InitializePorts();
             node.position = pos;
-            UpdateNodeCache(node, index);
             nodeList.Add(node);
+            InitializeNodeData(node, index);
             return node;
         }
         public void RemoveNode(IceprintNode node) => RemoveNodeAt(node.id);
@@ -129,9 +175,12 @@ namespace IceEngine
                 var newNode = nodeList[end];
                 nodeList[i] = newNode;
                 newNode.id = i;
+                _fieldMap[i] = _fieldMap[end];
                 foreach (var ip in newNode.inports) ip.data.nodeId = i;
             }
+            node.graph = null;
             nodeList.RemoveAt(end);
+            _fieldMap.RemoveAt(end);
         }
         #endregion
 
@@ -223,6 +272,16 @@ namespace IceEngine
         void OnDestroy()
         {
             onDestroy?.Invoke();
+        }
+        #endregion
+
+        #region Editor
+        [System.Diagnostics.Conditional("UNITY_EDITOR")]
+        void MarkDirty()
+        {
+#if UNITY_EDITOR
+            UnityEditor.EditorUtility.SetDirty(this);
+#endif
         }
         #endregion
     }

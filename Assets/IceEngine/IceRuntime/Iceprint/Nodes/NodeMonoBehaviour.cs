@@ -1,5 +1,4 @@
 ﻿using System;
-using UnityEngine;
 using IceEngine.Framework;
 
 namespace IceEngine.IceprintNodes
@@ -9,21 +8,23 @@ namespace IceEngine.IceprintNodes
     {
         #region Serialized Data
         public Type targetType;
-        public int targetInstanceId;
+        public NodeField<IceprintNodeComponent> target = new();
         #endregion
 
-        #region Cache
-        [NonSerialized] public IceprintNodeComponent target;
+        public override void Initialize()
+        {
+            target.Initialize(this);
+            if (target.Value != null)
+            {
+                if (target.Value.GetType() != targetType) target.Value = null;
+            }
+            InitializePorts();
+        }
 
-        #endregion
-
-        public override void InitializePorts()
+        public void InitializePorts()
         {
             if (targetType == null) return;
-
-            if (target == null)
-                target = IceprintNodeComponent.FromInstanceId(targetInstanceId);
-            InitializePorts(targetType, target);
+            InitializePorts(targetType, target.Value);
         }
     }
 }

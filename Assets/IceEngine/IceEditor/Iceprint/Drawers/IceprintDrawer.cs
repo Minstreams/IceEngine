@@ -22,6 +22,11 @@ namespace IceEditor.Internal
             {
                 IceprintBox.OpenPrint(Target);
             }
+
+            using (GROUP)
+            {
+                base.OnGUI();
+            }
         }
 
         // TODO: Draw nodes in preview area

@@ -70,6 +70,19 @@ namespace IceEditor.Internal
             using (LOG)
             {
                 byte[] cur = Graph.Serialize();
+                if (Equals(cur, buffer))
+                {
+                    buffer = cur;
+                    return;
+                }
+
+                static bool Equals(byte[] b1, byte[] b2)
+                {
+                    if (b1.Length != b2.Length) return false;
+                    for (int i = 0; i < b1.Length; ++i) if (b1[i] != b2[i]) return false;
+                    return true;
+                }
+
                 if (undoList.Count >= Setting.maxUndoCount) undoList.RemoveFirst();
                 undoList.AddLast(IceBinaryUtility.GetDiff(buffer, cur));
                 redoList.Clear();
@@ -222,10 +235,10 @@ namespace IceEditor.Internal
                     {
                         var node = Graph.AddNode(new NodeMonoBehaviour()
                         {
-                            target = nodeComp,
                             targetType = nodeComp.GetType(),
-                            targetInstanceId = nodeComp.GetInstanceID(),
-                        }, pos);
+                        }, pos) as NodeMonoBehaviour;
+
+                        node.target.Value = nodeComp;
 
                         selectedNodes.Clear();
                         selectedNodes.Add(node);

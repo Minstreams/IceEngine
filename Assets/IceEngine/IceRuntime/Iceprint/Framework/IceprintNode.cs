@@ -59,9 +59,6 @@ namespace IceEngine.Framework
             outports.Add(port);
             return port;
         }
-        #endregion
-
-        #region Configuration
         protected void InitializePorts(Type type, object instance)
         {
             foreach (var m in type.GetMethods(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic))
@@ -177,8 +174,30 @@ namespace IceEngine.Framework
                 else throw new Exception($"Invalid IceprintPort! {at.Name} {f.Name}");
             }
         }
-        public virtual void InitializePorts() => InitializePorts(GetType(), this);
-        //public virtual void OnAddToGraph() { }
+        static readonly Type nodeFieldType = typeof(NodeField);
+        protected void InitializeAllFields(Type type, object instance)
+        {
+            foreach (var f in type.GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic))
+            {
+                if (nodeFieldType.IsAssignableFrom(f.FieldType))
+                {
+                    var nf = f.GetValue(instance) as NodeField;
+                    nf.Initialize(this);
+                }
+            }
+        }
+        #endregion
+
+        #region Configuration
+        /// <summary>
+        /// 初始化时调用，此时没有连接，有id
+        /// </summary>
+        public virtual void Initialize()
+        {
+            var t = GetType();
+            InitializeAllFields(t, this);
+            InitializePorts(t, this);
+        }
         #endregion
     }
 }

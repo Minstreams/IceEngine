@@ -504,8 +504,11 @@ namespace IceEditor
             node.GetSizeBody().y + node.GetSizeTitle().y
         );
         public static Vector2 GetSizeTitle(this IceprintNode node) => node.GetDrawer().GetSizeTitle(node);
+        public static Vector2 GetSizeTitle(this IceprintNodeComponent node) => node.GetDrawer().GetSizeTitle(node);
         public static Vector2 GetSizeBody(this IceprintNode node) => node.GetDrawer().GetSizeBody(node);
+        public static Vector2 GetSizeBody(this IceprintNodeComponent node) => node.GetDrawer().GetSizeBody(node);
         public static string GetDisplayName(this IceprintNode node) => node.GetDrawer().GetDisplayName(node);
+        public static string GetDisplayName(this IceprintNodeComponent node) => node.GetDrawer().GetDisplayName(node);
         #endregion
 
         #region Toolbar
