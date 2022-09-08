@@ -75,7 +75,7 @@ namespace IceEngine
         public byte[] graphData = null;
         public byte[] Serialize()
         {
-            graphData = IceBinaryUtility.ToBytes(nodeList, withHeader: true);
+            graphData = IceBinaryUtility.ToBytes(nodeList, withHeader: true, withExtraInfo: true);
 #if UNITY_EDITOR
             UnityEditor.EditorUtility.SetDirty(this);
 #endif
@@ -91,7 +91,7 @@ namespace IceEngine
             }
             try
             {
-                IceBinaryUtility.FromBytesOverwrite(data, nodeList, withHeader: true);
+                IceBinaryUtility.FromBytesOverwrite(data, nodeList, withHeader: true, withExtraInfo: true);
                 OnDeserialized();
             }
             catch (Exception ex)
@@ -99,7 +99,7 @@ namespace IceEngine
                 nodeList = new();
                 _fieldMap = new();
                 Serialize();
-                Debug.LogWarning("Deserialize failed, node list is reset.\n" + ex.Message);
+                Debug.LogWarning("Deserialize failed, node list is reset.\n" + ex.Message + "\n" + ex.StackTrace);
             }
         }
         #endregion

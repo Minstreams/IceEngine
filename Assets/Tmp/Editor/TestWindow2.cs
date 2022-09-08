@@ -119,6 +119,8 @@ public class TestWindow2 : IceEditorWindow
                 }
             });
             if (IceButton("self")) TB(this);
+            Space();
+            IceToggle("extraInfo");
         }
 
         using (GROUP)
@@ -152,8 +154,8 @@ public class TestWindow2 : IceEditorWindow
         SetString("Console", "");
         using (new IceBinaryUtility.LogScope(OnLog))
         {
-            var bytes = IceBinaryUtility.ToBytes(obj);
-            var res = IceBinaryUtility.FromBytes(bytes);
+            var bytes = IceBinaryUtility.ToBytes(obj, withExtraInfo: GetBool("extraInfo"));
+            var res = IceBinaryUtility.FromBytes(bytes, withExtraInfo: GetBool("extraInfo"));
             SetString("Console2", res == null ? "null" : $"[{res.GetType()}] {res}");
             SetString("Console3", PrintJson(obj));
             SetString("Console4", PrintJson(res));

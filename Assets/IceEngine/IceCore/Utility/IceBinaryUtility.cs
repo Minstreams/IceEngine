@@ -288,11 +288,11 @@ namespace IceEngine
             return res.Color("#F0B");
         }
         [System.Diagnostics.Conditional("DEBUG")]
-        static void LogBlock(this List<byte> buffer, int count)
+        static void LogBlock(this IList<byte> buffer, int count, string color = "#FA0")
         {
             Log($"{count}".Color("#0AB"));
             Log(" [");
-            Log(buffer.Hex(count).Color("#FA0"));
+            Log(buffer.Hex(count).Color(color));
             Log("] ");
         }
         #endregion
@@ -390,7 +390,7 @@ namespace IceEngine
             buffer.AddRange(bytes);
             buffer.LogBlock(bytes.Length);
         }
-        static void AddFieldBlock(this List<byte> buffer, object obj, bool withHeader = true, string name = "_", Type baseType = null)
+        static void AddFieldBlock(this List<byte> buffer, object obj, bool withHeader = true, string name = "_", Type baseType = null, bool withExtraInfo = false)
         {
             Log("\n");
 
@@ -540,7 +540,7 @@ namespace IceEngine
                     int i = 0;
                     foreach (var item in ic)
                     {
-                        buffer.AddFieldBlock(item, hasHeader, $"[{i++}]", iType);
+                        buffer.AddFieldBlock(item, hasHeader, $"[{i++}]", iType, withExtraInfo);
                     }
                     Log("\n}");
                 }
@@ -563,10 +563,30 @@ namespace IceEngine
                             buffer.AddFieldBlock(type, false, "type");
                         }
                     }
+                    string extraInfoColor = "#C5F";
+                    if (withExtraInfo)
+                    {
+                        buffer.Add(0);
+                        buffer.Add(0);
+                        Log("\n");
+                        Log("┍━━━━━━━━━".Color(extraInfoColor));
+                        Log(" [");
+                        Log("LOCK".Color(extraInfoColor));
+                        Log("] ");
+                        Log("━━━━━━━━━┑".Color(extraInfoColor));
+                    }
+                    int mark = buffer.Count;
 
                     List<FieldInfo> fieldList = new();
-                    fieldList.AddRange(type.GetFields(BindingFlags.Instance | BindingFlags.Public));
+                    List<FieldInfo> changableFieldList = new();    // 容易改变的 field 信息
                     for (var t = type; t != TypeDefinitions.objectType; t = t.BaseType) fieldList.AddRange(t.GetFields(BindingFlags.Instance | BindingFlags.NonPublic));
+                    foreach (var f in type.GetFields(BindingFlags.Instance | BindingFlags.Public))
+                    {
+                        if (f.DeclaringType == type) changableFieldList.Add(f);
+                        else fieldList.Add(f);
+                    }
+                    fieldList.AddRange(changableFieldList);
+
                     foreach (var f in fieldList)
                     {
                         var fType = f.FieldType;
@@ -577,7 +597,20 @@ namespace IceEngine
 
                         var fobj = f.GetValue(obj);
 
-                        buffer.AddFieldBlock(fobj, fType.HasHeader(), f.Name, fType);
+                        buffer.AddFieldBlock(fobj, fType.HasHeader(), f.Name, fType, withExtraInfo);
+                    }
+
+                    if (withExtraInfo)
+                    {
+                        int length = buffer.Count - mark;
+                        if (length > ushort.MaxValue) throw new OverflowException($"Length of block overflow! | {(baseType ?? type).Name.Color("#4CA")} {name.Color("#AF0")}");
+                        var blockLengthBts = GetBytes((ushort)length);
+                        buffer[mark - 2] = blockLengthBts[0];
+                        buffer[mark - 1] = blockLengthBts[1];
+                        Log("\n");
+                        Log($"┕━━━━━━━━".Color(extraInfoColor));
+                        blockLengthBts.LogBlock(2, extraInfoColor);
+                        Log($"━━━━━━━━━┙ {length}".Color(extraInfoColor));
                     }
 
                     Log("\n}");
@@ -602,12 +635,12 @@ namespace IceEngine
             }
         }
 
-        public static byte[] ToBytes(object obj, bool withHeader = true, Type baseType = null)
+        public static byte[] ToBytes(object obj, bool withHeader = true, Type baseType = null, bool withExtraInfo = false)
         {
             List<byte> buffer = new();
 
             // 处理值
-            buffer.AddFieldBlock(obj, withHeader, baseType: baseType);
+            buffer.AddFieldBlock(obj, withHeader, baseType: baseType, withExtraInfo: withExtraInfo);
 
             // 打印所有数据
             Log("\n");
@@ -715,7 +748,7 @@ namespace IceEngine
         {
             return IceCoreUtility.GetType(bytes.ReadString(ref offset));
         }
-        static object ReadValueOfType(this byte[] bytes, ref int offset, Type type, object instance = null)
+        static object ReadValueOfType(this byte[] bytes, ref int offset, Type type, object instance = null, bool withExtraInfo = false)
         {
             if (type is null) return null;
             if (type.IsNullable()) type = type.GetGenericArguments()[0];
@@ -778,11 +811,11 @@ namespace IceEngine
 
                 if (hasHeader)
                 {
-                    for (int i = 0; i < count; ++i) addMethod.Invoke(ic, new object[] { bytes.ReadValueWithHeader(ref offset, iType) });
+                    for (int i = 0; i < count; ++i) addMethod.Invoke(ic, new object[] { bytes.ReadValueWithHeader(ref offset, iType, null, withExtraInfo) });
                 }
                 else
                 {
-                    for (int i = 0; i < count; ++i) addMethod.Invoke(ic, new object[] { bytes.ReadValueOfType(ref offset, iType) });
+                    for (int i = 0; i < count; ++i) addMethod.Invoke(ic, new object[] { bytes.ReadValueOfType(ref offset, iType, null, withExtraInfo) });
                 }
 
                 return ic;
@@ -790,12 +823,12 @@ namespace IceEngine
             if (type.IsClass || type.IsValueType)
             {
                 var obj = instance ?? Activator.CreateInstance(type);
-                bytes.ReadObjectOverride(ref offset, obj, type);
+                bytes.ReadObjectOverride(ref offset, obj, type, withExtraInfo);
                 return obj;
             }
             throw new NotSupportedException($"Not supported type: {type.FullName}");
         }
-        static object ReadValueWithHeader(this byte[] bytes, ref int offset, Type baseType = null, object instance = null)
+        static object ReadValueWithHeader(this byte[] bytes, ref int offset, Type baseType = null, object instance = null, bool withExtraInfo = false)
         {
             byte header = bytes.ReadByte(ref offset);
 
@@ -805,21 +838,35 @@ namespace IceEngine
             {
                 FieldBlockHeaderDefinitions.typeField => bytes.ReadType(ref offset),
                 FieldBlockHeaderDefinitions.typeHashField => IceCoreUtility.HashCodeToPacketType(bytes.ReadUShort(ref offset)),
-                FieldBlockHeaderDefinitions.classField => bytes.ReadValueOfType(ref offset, bytes.ReadType(ref offset), instance),
+                FieldBlockHeaderDefinitions.classField => bytes.ReadValueOfType(ref offset, bytes.ReadType(ref offset), instance, withExtraInfo),
                 FieldBlockHeaderDefinitions.arrayField or
                 FieldBlockHeaderDefinitions.collectionField or
-                FieldBlockHeaderDefinitions.baseClassField => bytes.ReadValueOfType(ref offset, baseType, instance),
-                FieldBlockHeaderDefinitions.packetField => bytes.ReadValueOfType(ref offset, IceCoreUtility.HashCodeToPacketType(bytes.ReadUShort(ref offset)), instance),
+                FieldBlockHeaderDefinitions.baseClassField => bytes.ReadValueOfType(ref offset, baseType, instance, withExtraInfo),
+                FieldBlockHeaderDefinitions.packetField => bytes.ReadValueOfType(ref offset, IceCoreUtility.HashCodeToPacketType(bytes.ReadUShort(ref offset)), instance, withExtraInfo),
                 _ => throw new Exception($"Not supported header! {header}"),
             };
         }
-        static void ReadObjectOverride(this byte[] bytes, ref int offset, object obj, Type type = null)
+        static void ReadObjectOverride(this byte[] bytes, ref int offset, object obj, Type type = null, bool withExtraInfo = false)
         {
             if (type is null) type = obj.GetType();
 
+            ushort blockLength = ushort.MaxValue;
+            if (withExtraInfo)
+            {
+                blockLength = bytes.ReadUShort(ref offset);
+            }
+            int mark = offset;
+
             List<FieldInfo> fieldList = new();
-            fieldList.AddRange(type.GetFields(BindingFlags.Instance | BindingFlags.Public));
+            List<FieldInfo> changableFieldList = new();    // 容易改变的 field 信息
             for (var t = type; t != TypeDefinitions.objectType; t = t.BaseType) fieldList.AddRange(t.GetFields(BindingFlags.Instance | BindingFlags.NonPublic));
+            foreach (var f in type.GetFields(BindingFlags.Instance | BindingFlags.Public))
+            {
+                if (f.DeclaringType == type) changableFieldList.Add(f);
+                else fieldList.Add(f);
+            }
+            fieldList.AddRange(changableFieldList);
+
             foreach (var f in fieldList)
             {
                 var fType = f.FieldType;
@@ -837,22 +884,37 @@ namespace IceEngine
                         _ => null,
                     };
 
-                    f.SetValue(obj, bytes.ReadValueWithHeader(ref offset, fType, instance));
+                    f.SetValue(obj, bytes.ReadValueWithHeader(ref offset, fType, instance, withExtraInfo));
                 }
                 else
                 {
-                    f.SetValue(obj, bytes.ReadValueOfType(ref offset, fType));
+                    f.SetValue(obj, bytes.ReadValueOfType(ref offset, fType, null, withExtraInfo));
                 }
+
+                if (withExtraInfo)
+                {
+                    if (offset - mark == blockLength) break;
+                    if (offset - mark > blockLength)
+                    {
+                        offset = mark + blockLength;
+                        break;
+                    }
+                }
+            }
+
+            if (withExtraInfo && offset - mark < blockLength)
+            {
+                offset = mark + blockLength;
             }
         }
 
-        public static object FromBytes(byte[] bytes, int offset = 0, Type baseType = null)
+        public static object FromBytes(byte[] bytes, int offset = 0, Type baseType = null, bool withExtraInfo = false)
         {
             if (bytes.Length == 0) throw new ArgumentException("Bytes is null!");
 
-            return bytes.ReadValueWithHeader(ref offset, baseType);
+            return bytes.ReadValueWithHeader(ref offset, baseType, null, withExtraInfo);
         }
-        public static void FromBytesOverwrite(byte[] bytes, object objectToOverwrite, Type type = null, bool withHeader = true, int offset = 0)
+        public static void FromBytesOverwrite(byte[] bytes, object objectToOverwrite, Type type = null, bool withHeader = true, int offset = 0, bool withExtraInfo = false)
         {
             if (bytes.Length == 0) throw new ArgumentException("Bytes is null!");
             if (objectToOverwrite is null) throw new ArgumentException("Target is null!");
@@ -861,12 +923,12 @@ namespace IceEngine
 
             if (withHeader)
             {
-                bytes.ReadValueWithHeader(ref offset, type, objectToOverwrite);
+                bytes.ReadValueWithHeader(ref offset, type, objectToOverwrite, withExtraInfo);
             }
             else
             {
                 if (type.IsEnum || type.IsArray || type.IsCollection() || (!type.IsClass && !type.IsValueType)) throw new ArgumentException($"Unsupported type {type}");
-                bytes.ReadObjectOverride(ref offset, objectToOverwrite, type);
+                bytes.ReadObjectOverride(ref offset, objectToOverwrite, type, withExtraInfo);
             }
         }
         #endregion

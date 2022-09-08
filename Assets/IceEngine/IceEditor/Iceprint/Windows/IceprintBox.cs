@@ -908,7 +908,7 @@ namespace IceEditor.Internal
                 int indent = fc - baseStack.Value;
                 if (indent > 0)
                 {
-                    for (int i = 0; i < indent; ++i) prefix += "|       ".Color(GetColor(i));
+                    for (int i = 0; i < indent; ++i) prefix += "┆       ".Color(GetColor(i));
                     log = log.Replace("\n", $"\n{prefix}");
                 }
             }
