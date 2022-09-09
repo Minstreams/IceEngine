@@ -288,11 +288,11 @@ namespace IceEngine
             return res.Color("#F0B");
         }
         [System.Diagnostics.Conditional("DEBUG")]
-        static void LogBlock(this IList<byte> buffer, int count, string color = "#FA0")
+        static void LogBlock(this IList<byte> buffer, int count)
         {
             Log($"{count}".Color("#0AB"));
             Log(" [");
-            Log(buffer.Hex(count).Color(color));
+            Log(buffer.Hex(count).Color("#FA0"));
             Log("] ");
         }
         #endregion
@@ -571,9 +571,10 @@ namespace IceEngine
                         Log("\n");
                         Log("┍━━━━━━━━━".Color(extraInfoColor));
                         Log(" [");
-                        Log("LOCK".Color(extraInfoColor));
+                        Log(" LOCK ".Color(extraInfoColor));
                         Log("] ");
-                        Log("━━━━━━━━━┑".Color(extraInfoColor));
+                        Log("━━━━━━━━━┑ ".Color(extraInfoColor));
+                        Log($"{2}".Color("#0AB"));
                     }
                     int mark = buffer.Count;
 
@@ -608,8 +609,10 @@ namespace IceEngine
                         buffer[mark - 2] = blockLengthBts[0];
                         buffer[mark - 1] = blockLengthBts[1];
                         Log("\n");
-                        Log($"┕━━━━━━━━".Color(extraInfoColor));
-                        blockLengthBts.LogBlock(2, extraInfoColor);
+                        Log($"┕━━━━━━━━━".Color(extraInfoColor));
+                        Log(" [ ");
+                        Log(blockLengthBts.Hex(2).Color(extraInfoColor));
+                        Log(" ] ");
                         Log($"━━━━━━━━━┙ {length}".Color(extraInfoColor));
                     }
 
