@@ -234,7 +234,9 @@ namespace IceEngine
         }
         void UnloadGraph()
         {
+            onStart = null;
             onUpdate = null;
+            onDestroy = null;
         }
         void Start()
         {
