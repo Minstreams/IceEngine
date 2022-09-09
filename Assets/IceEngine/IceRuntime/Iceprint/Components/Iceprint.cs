@@ -185,30 +185,6 @@ namespace IceEngine
         #endregion
 
         #region Configuration
-        public Color GetColor(IceprintPort port)
-        {
-            Color c = Color.white;
-            for (int i = 0; i < port.ParamsList.Count; ++i)
-            {
-                c = Color.LerpUnclamped(GetColor(port.ParamsList[i]), c, i / ((float)(i + 1)));
-            }
-            return c;
-        }
-        public Color GetColor(Type paramType)
-        {
-            if (paramType == typeof(int)) return Color.cyan;
-            if (paramType == typeof(float)) return new Color(1.0f, 0.6f, 0.2f);
-            if (paramType == typeof(string)) return new Color(1.0f, 0.7f, 0.1f);
-            return Color.white;
-        }
-        public string GetParamTypeName(Type paramType)
-        {
-            if (paramType is null) return "void";
-            if (paramType == typeof(int)) return "int";
-            if (paramType == typeof(float)) return "float";
-            if (paramType == typeof(string)) return "string";
-            return paramType.Name;
-        }
         public bool IsConnectable(IceprintPort p1, IceprintPort p2)
         {
             if (p1.node == p2.node) return false;

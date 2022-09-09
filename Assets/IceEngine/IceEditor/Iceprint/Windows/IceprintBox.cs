@@ -22,6 +22,22 @@ namespace IceEditor.Internal
 
         EditorSettingIceprintBox Setting => EditorSettingIceprintBox.Setting;
         GUIStyle StlGraphBackgroud => StlDock;
+
+        string GetParamTypeName(Type paramType)
+        {
+            if (paramType is null) return "void";
+            if (paramType == typeof(int)) return "int";
+            if (paramType == typeof(float)) return "float";
+            if (paramType == typeof(string)) return "string";
+            return paramType.Name;
+        }
+        Color GetColor(Type paramType)
+        {
+            if (paramType == typeof(int)) return Color.cyan;
+            if (paramType == typeof(float)) return new Color(1.0f, 0.6f, 0.2f);
+            if (paramType == typeof(string)) return new Color(1.0f, 0.7f, 0.1f);
+            return Color.white;
+        }
         #endregion
 
         #region Graph
@@ -151,6 +167,16 @@ namespace IceEditor.Internal
         {
             DraggingPort = null;
             AvailablePorts.Clear();
+        }
+
+        Color GetColor(IceprintPort port)
+        {
+            Color c = Color.white;
+            for (int i = 0; i < port.ParamsList.Count; ++i)
+            {
+                c = Color.LerpUnclamped(GetColor(port.ParamsList[i]), c, i / ((float)(i + 1)));
+            }
+            return c;
         }
         #endregion
 
@@ -547,7 +573,7 @@ namespace IceEditor.Internal
             {
                 var pos = DraggingPort.GetPos();
                 var tagent = DraggingPort.GetTangent();
-                var color = Graph.GetColor(DraggingPort);
+                var color = GetColor(DraggingPort);
                 IceGUIUtility.DrawPortLine(pos, E.mousePosition, tagent, color, color);
                 IceGUIUtility.DrawPortLine(E.mousePosition, pos, -tagent, color, color);
             }
@@ -561,16 +587,16 @@ namespace IceEditor.Internal
                 if (E.type == EventType.Repaint && port.IsConnected)
                 {
                     Vector2 pos = port.GetPos();
-                    var color = Graph.GetColor(port);
+                    var color = GetColor(port);
 
                     var tagent = port.GetTangent();
                     if (port is IceprintInport pin)
                     {
-                        foreach (var pp in pin.connectedPorts) IceGUIUtility.DrawPortLine(pos, pp.GetPos(), tagent, color, Graph.GetColor(pp));
+                        foreach (var pp in pin.connectedPorts) IceGUIUtility.DrawPortLine(pos, pp.GetPos(), tagent, color, GetColor(pp));
                     }
                     else if (port is IceprintOutport pout)
                     {
-                        foreach (var pp in pout.connectedPorts) IceGUIUtility.DrawPortLine(pos, pp.port.GetPos(), tagent, color, Graph.GetColor(pp.port));
+                        foreach (var pp in pout.connectedPorts) IceGUIUtility.DrawPortLine(pos, pp.port.GetPos(), tagent, color, GetColor(pp.port));
                     }
                 }
             }
@@ -583,7 +609,7 @@ namespace IceEditor.Internal
             void OnGUI_Port(IceprintPort port)
             {
                 Vector2 pos = port.GetPos();
-                var color = Graph.GetColor(port);
+                var color = GetColor(port);
 
                 Rect rPort = pos.ExpandToRect(IceGUIUtility.PORT_RADIUS);
                 bool bHover = rPort.Contains(E.mousePosition);
@@ -742,11 +768,11 @@ namespace IceEditor.Internal
 
                             void DrawTextWithType(bool focus)
                             {
-                                string tType = port.ParamsList.Count == 0 ? Graph.GetParamTypeName(null) : "";
+                                string tType = port.ParamsList.Count == 0 ? GetParamTypeName(null) : "";
                                 for (int i = 0; i < port.ParamsList.Count; ++i)
                                 {
                                     var param = port.ParamsList[i];
-                                    tType += Graph.GetParamTypeName(param).Color(Graph.GetColor(param));
+                                    tType += GetParamTypeName(param).Color(GetColor(param));
                                     if (i < port.ParamsList.Count - 1) tType += ", ";
                                 }
 
