@@ -27,6 +27,7 @@ namespace IceEditor
         {
             OnLoad_Toolbar();
             OnLoad_AppStatusBar();
+            OnLoad_HierarchyItem();
         }
         #endregion
 
@@ -683,6 +684,50 @@ namespace IceEditor
         static void OnAppStatusBarGUIRight()
         {
             using (HORIZONTAL) onAppStatusBarGUIRight?.Invoke();
+        }
+        #endregion
+
+        #region HierarchyItem
+        static Dictionary<Type, Action<Component, Rect>> hierarchyItemGUICallbackMap = new();
+        static readonly Type componentType = typeof(Component);
+        static readonly Type rectType = typeof(Rect);
+        static void OnLoad_HierarchyItem()
+        {
+            var callbacks = TypeCache.GetMethodsWithAttribute<HierarchyItemGUICallbackAttribute>();
+            foreach (var callback in callbacks)
+            {
+                if (!callback.IsStatic) throw new IceGUIException("Hierarchy Item GUI handler must be static!");
+                var pt = CheckParams(callback);
+
+                var p0 = Expression.Parameter(componentType);
+                var p1 = Expression.Parameter(rectType);
+                var handler = Expression.Lambda<Action<Component, Rect>>(Expression.Call(callback, Expression.Convert(p0, pt), p1), p0, p1).Compile();
+                if (!hierarchyItemGUICallbackMap.TryGetValue(pt, out var listener)) hierarchyItemGUICallbackMap.Add(pt, null);
+                hierarchyItemGUICallbackMap[pt] += handler;
+            }
+
+            Type CheckParams(MethodInfo m)
+            {
+                var ps = m.GetParameters();
+                if (ps.Length != 2 || ps[1].ParameterType != rectType) throw new Exception($"Invalid Parameters of {m.DeclaringType.FullName}.{m.Name}");
+                return ps[0].ParameterType;
+            }
+
+            EditorApplication.hierarchyWindowItemOnGUI -= OnHierarchyItemGUI;
+            EditorApplication.hierarchyWindowItemOnGUI += OnHierarchyItemGUI;
+        }
+
+        static void OnHierarchyItemGUI(int instanceId, Rect selectionRect)
+        {
+            var obj = EditorUtility.InstanceIDToObject(instanceId);
+            if (obj == null) return;
+            if (obj is not GameObject go) throw new Exception($"Hierarchy Item must be a gameobject! {obj}");
+            foreach ((Type t, var callback) in hierarchyItemGUICallbackMap)
+            {
+                var comp = go.GetComponent(t);
+                if (comp == null) continue;
+                callback?.Invoke(comp, selectionRect);
+            }
         }
         #endregion
     }

@@ -20,7 +20,7 @@ namespace IceEditor.Internal
         #region 配置
         const string GRAPH_KEY = "GraphView";
 
-        EditorSettingIceprintBox Setting => EditorSettingIceprintBox.Setting;
+        public static EditorSettingIceprintBox Setting => EditorSettingIceprintBox.Setting;
         GUIStyle StlGraphBackgroud => StlDock;
 
         string GetParamTypeName(Type paramType)
@@ -382,6 +382,7 @@ namespace IceEditor.Internal
             }
 
             {
+                string title = "Iceprint Box";
                 if (Graph == null)
                 {
                     var area = GetRect(GUILayout.ExpandWidth(true), GUILayout.ExpandHeight(true));
@@ -391,6 +392,16 @@ namespace IceEditor.Internal
                 else
                 {
                     OnGraphGUI();
+                    if (EditorUtility.IsDirty(Graph)) title = "Iceprint Box*";
+                }
+
+                if (E.type == EventType.Repaint)
+                {
+                    if (_title != title)
+                    {
+                        _title = title;
+                        RefreshTitleContent();
+                    }
                 }
             }
         }
@@ -843,10 +854,15 @@ namespace IceEditor.Internal
         }
 
         #region 定制
+        public static IceprintBox Instance { get; private set; } = null;
+
         [MenuItem("IceEngine/Iceprint Box", false, 20)]
         static void OpenWindow() => GetWindow<IceprintBox>();
         protected override bool HasScrollScopeOnWindowGUI => false;
         protected override Color DefaultThemeColor => Setting.themeColor;
+        protected override string Title => _title ??= "Iceprint Box";
+
+        string _title = null;
 
         protected override void OnEnable()
         {
@@ -857,9 +873,13 @@ namespace IceEditor.Internal
 
             EditorApplication.playModeStateChanged -= OnPlayModeChange;
             EditorApplication.playModeStateChanged += OnPlayModeChange;
+
+            Instance = this;
         }
         void OnDisable()
         {
+            Instance = null;
+
             EditorApplication.playModeStateChanged -= OnPlayModeChange;
         }
 

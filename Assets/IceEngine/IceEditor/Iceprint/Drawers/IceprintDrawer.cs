@@ -22,11 +22,26 @@ namespace IceEditor.Internal
             {
                 IceprintBox.OpenPrint(Target);
             }
+        }
 
-            using (GROUP)
+        [HierarchyItemGUICallback]
+        static void OnHierarchyGUI(Iceprint print, Rect selectionRect)
+        {
+            using var _a = AreaRaw(selectionRect);
+            using var _h = HORIZONTAL;
+
+            Space();
+
+#pragma warning disable UNT0008 // Null propagation on Unity objects
+            if (IceprintBox.Instance?.Graph == print)
             {
-                base.OnGUI();
+                Label("编辑中...".Color(IceprintBox.Setting.themeColor));
             }
+            else
+            {
+                if (IceButton("编辑")) IceprintBox.OpenPrint(print);
+            }
+#pragma warning restore UNT0008 // Null propagation on Unity objects
         }
 
         // TODO: Draw nodes in preview area
