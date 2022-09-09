@@ -10,7 +10,7 @@ namespace IceEngine
     [AttributeUsage(AttributeTargets.Class, Inherited = false, AllowMultiple = true)]
     public sealed class HasPropertyDrawerAttribute : Attribute { }
     /// <summary>
-    /// 组件内自定义主题颜色
+    /// 自定义主题颜色
     /// </summary>
     [AttributeUsage(AttributeTargets.Class, AllowMultiple = false)]
     public sealed class ThemeColorAttribute : Attribute
@@ -19,7 +19,7 @@ namespace IceEngine
         public ThemeColorAttribute(float r, float g, float b) => Color = new Color(r, g, b);
     }
     /// <summary>
-    /// 组件内自定义标签宽度
+    /// 自定义标签宽度
     /// </summary>
     [AttributeUsage(AttributeTargets.Class, AllowMultiple = false)]
     public sealed class LabelWidthAttribute : Attribute

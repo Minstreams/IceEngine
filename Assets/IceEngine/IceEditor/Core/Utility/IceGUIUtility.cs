@@ -32,7 +32,8 @@ namespace IceEditor
 
         #region Theme Color
         public static Color DefaultThemeColor => Ice.Island.Setting.themeColor;
-        public static Color CurrentThemeColor => HasPack ? CurrentPack.ThemeColor : DefaultThemeColor;
+        public static Color CurrentThemeColor => themeColorOverride ?? (HasPack ? CurrentPack.ThemeColor : DefaultThemeColor);
+        internal static Color? themeColorOverride = null;
         #endregion
 
         #region Custom Drawer
@@ -77,6 +78,10 @@ namespace IceEditor
             SerializedProperty itr = so.GetIterator();
             if (!itr.NextVisible(true)) return;
 
+            // 处理全局 Scope
+            using var lScope = info.labelWidth == null ? null : LabelWidth(info.labelWidth.Value);
+            using var cScope = info.themeColor == null ? null : ThemeColor(info.themeColor.Value);
+
             // m_Script 是 Monobehavior 隐藏字段，没必要显示在面板上
             if (itr.propertyPath != "m_Script" || itr.NextVisible(false))
             {
@@ -101,6 +106,8 @@ namespace IceEditor
             public Dictionary<string, IceAttributesInfo> childrenMap = new();
 
             // Custom Attributes
+            public float? labelWidth = null;
+            public Color? themeColor = null;
             public Dictionary<string, string> labelMap = new();
             public HashSet<string> runtimeConstSet = new();
             public List<(string text, Action<object> action)> buttonList = new();
@@ -117,6 +124,19 @@ namespace IceEditor
 
             public IceAttributesInfo(Type type)
             {
+                // 处理主type
+                foreach (var a in type.GetCustomAttributes(true))
+                {
+                    if (a is ThemeColorAttribute tc)
+                    {
+                        themeColor = tc.Color;
+                    }
+                    else if (a is LabelWidthAttribute lw)
+                    {
+                        labelWidth = lw.Width;
+                    }
+                }
+
                 // 处理Fields
                 var fields = type.GetFields();
                 foreach (var f in fields)
@@ -256,11 +276,11 @@ namespace IceEditor
         public static bool HasPack => _currentPack != null;
         public static IceGUIAutoPack CurrentPack => _currentPack ?? throw new IceGUIException("IceGUIAuto functions must be called inside a GUIPackScope!");
         static IceGUIAutoPack _currentPack;
+        internal static GUIStyle LabelStyle => _labelStyle != null ? _labelStyle : (_labelStyle = EditorGUIUtility.GetBuiltinSkin(EditorSkin.Scene).FindStyle("ControlLabel")); static GUIStyle _labelStyle;
 
         public class GUIPackScope : IDisposable
         {
             readonly IceGUIAutoPack originPack = null;
-            static GUIStyle LabelStyle => _labelStyle != null ? _labelStyle : (_labelStyle = EditorGUIUtility.GetBuiltinSkin(EditorSkin.Scene).FindStyle("ControlLabel")); static GUIStyle _labelStyle;
             Color originFocusColor;
 
             public GUIPackScope(IceGUIAutoPack pack)
@@ -269,7 +289,7 @@ namespace IceEditor
                 _currentPack = pack;
 
                 originFocusColor = LabelStyle.focused.textColor;
-                LabelStyle.focused.textColor = pack.ThemeColor;
+                LabelStyle.focused.textColor = CurrentThemeColor;
             }
             void IDisposable.Dispose()
             {
@@ -345,7 +365,7 @@ namespace IceEditor
             Type baseSettingType = typeof(TSetting);
 
             // soMap
-            Dictionary<string, SerializedObject> iceSettingSOMap = new Dictionary<string, SerializedObject>();
+            Dictionary<string, (SerializedObject, Color?)> iceSettingSOMap = new();
 
             // 从所有相关的Assembly中收集数据
             var settingCollection = TypeCache.GetTypesDerivedFrom<TSetting>();
@@ -357,9 +377,8 @@ namespace IceEditor
                 var title = settingType.Name.StartsWith(prefix) ? settingType.Name[prefix.Length..] : settingType.Name;
                 var setting = settingType.BaseType.GetProperty("Setting", settingType).GetValue(null) as TSetting;
                 var so = new SerializedObject(setting);
-                var colorField = so.FindProperty("themeColor");
-                if (colorField != null) title = title.Color(colorField.colorValue);
-                iceSettingSOMap.Add(title, so);
+                var color = so.FindProperty("themeColor")?.colorValue;
+                iceSettingSOMap.Add(title, (so, color));
             }
 
             // 选择的项目字段
@@ -373,9 +392,9 @@ namespace IceEditor
                 {
                     if (selectedSetting == null)
                     {
-                        foreach ((string title, SerializedObject so) in iceSettingSOMap)
+                        foreach ((string title, (SerializedObject so, Color? color)) in iceSettingSOMap)
                         {
-                            using (GROUP)
+                            using (GROUP) using (color == null ? null : ThemeColor(color.Value))
                             {
                                 Header(title);
                                 DrawSerializedObject(so);
@@ -385,8 +404,8 @@ namespace IceEditor
                     }
                     else
                     {
-                        var so = iceSettingSOMap[selectedSetting];
-                        using (GROUP)
+                        (SerializedObject so, Color? color) = iceSettingSOMap[selectedSetting];
+                        using (GROUP) using (color == null ? null : ThemeColor(color.Value))
                         {
                             Header(selectedSetting);
                             DrawSerializedObject(so);
@@ -395,11 +414,14 @@ namespace IceEditor
                 },
                 titleBarGuiHandler = () =>
                 {
-                    foreach ((string title, _) in iceSettingSOMap)
+                    foreach ((string title, (_, Color? color)) in iceSettingSOMap)
                     {
-                        if (IceButton(title, title == selectedSetting)) selectedSetting = title;
+                        string t = title;
+                        Color c = color ?? CurrentThemeColor;
+                        //using (color == null ? null : ThemeColor(color.Value))
+                        if (selectedSetting == title || selectedSetting == null) t = t.Color(c);
+                        if (IceButton(t)) selectedSetting = selectedSetting == title ? null : title;
                     }
-                    if (IceButton("All", selectedSetting == null)) selectedSetting = null;
                 },
             };
         }

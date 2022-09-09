@@ -14,22 +14,9 @@ namespace IceEditor.Internal
     internal class IceInspectorDrawer : Editor
     {
         IceGUIAutoPack pack;
-        float labelWidth;
         void OnEnable()
         {
             pack = new IceGUIAutoPack(Repaint);
-            labelWidth = EditorGUIUtility.labelWidth;
-            foreach (var a in target.GetType().GetCustomAttributes(true))
-            {
-                if (a is ThemeColorAttribute tc)
-                {
-                    pack.ThemeColor = tc.Color;
-                }
-                else if (a is LabelWidthAttribute lw)
-                {
-                    labelWidth = lw.Width;
-                }
-            }
         }
         void OnDisable()
         {
@@ -37,7 +24,7 @@ namespace IceEditor.Internal
         }
         public sealed override void OnInspectorGUI()
         {
-            using (UsePack(pack)) using (LabelWidth(labelWidth)) OnGUI();
+            using (UsePack(pack)) OnGUI();
         }
         protected virtual void OnGUI()
         {

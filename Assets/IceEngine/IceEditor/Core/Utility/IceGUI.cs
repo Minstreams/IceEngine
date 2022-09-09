@@ -490,6 +490,36 @@ namespace IceEditor
                 Handles.color = originColor;
             }
         }
+        /// <summary>
+        /// 暂时改变 IceGUIUtility.themeColorOverride
+        /// </summary>
+        public class ThemeColorScope : IDisposable
+        {
+            Color? originColor;
+            Color originTextColor;
+            Color originPackColor;
+
+            GUIStyle LabelStyle => IceGUIUtility.LabelStyle;
+            public ThemeColorScope(Color color)
+            {
+                originColor = IceGUIUtility.themeColorOverride;
+                originTextColor = LabelStyle.focused.textColor;
+                if (IceGUIUtility.HasPack)
+                {
+                    originPackColor = IceGUIUtility.CurrentPack.ThemeColor;
+                    IceGUIUtility.CurrentPack.ThemeColor = color;
+                }
+                IceGUIUtility.themeColorOverride = color;
+                LabelStyle.focused.textColor = color;
+            }
+            void IDisposable.Dispose()
+            {
+                LabelStyle.focused.textColor = originTextColor;
+                IceGUIUtility.themeColorOverride = originColor;
+                if (IceGUIUtility.HasPack) IceGUIUtility.CurrentPack.ThemeColor = originPackColor;
+            }
+        }
+
 
 
         public static GUILayout.HorizontalScope Horizontal(GUIStyle style, params GUILayoutOption[] options) => new GUILayout.HorizontalScope(style ?? GUIStyle.none, options);
@@ -726,6 +756,10 @@ namespace IceEditor
         /// 暂时改变 Handles.Color
         /// </summary>
         public static HandlesColorScope HandlesColor(Color color) => new HandlesColorScope(color);
+        /// <summary>
+        /// 暂时改变 IceGUIUtility.themeColorOverride
+        /// </summary>
+        public static ThemeColorScope ThemeColor(Color color) => new ThemeColorScope(color);
 
         public static GUILayout.HorizontalScope HORIZONTAL => Horizontal();
         public static GUILayout.VerticalScope VERTICAL => Vertical();
