@@ -301,25 +301,28 @@ namespace IceEditor.Internal
         #region Utility
         public void ResetGraphView()
         {
-            Vector2 offset = Vector2.zero;
-            Vector2 min = Vector2.positiveInfinity;
-            Vector2 max = Vector2.negativeInfinity;
-            foreach (var node in Graph.nodeList)
+            if (Graph != null)
             {
-                var pos = node.GetArea().center;
-                offset += pos;
-                min = Vector2.Min(min, pos);
-                max = Vector2.Max(max, pos);
-            }
-            offset /= Graph.nodeList.Count;
-            offset = offset.Snap(Setting.gridSize);
-            if (offset != Vector2.zero)
-            {
+                Vector2 offset = Vector2.zero;
+                Vector2 min = Vector2.positiveInfinity;
+                Vector2 max = Vector2.negativeInfinity;
                 foreach (var node in Graph.nodeList)
                 {
-                    node.position -= offset;
+                    var pos = node.GetArea().center;
+                    offset += pos;
+                    min = Vector2.Min(min, pos);
+                    max = Vector2.Max(max, pos);
                 }
-                RecordForUndo();
+                offset /= Graph.nodeList.Count;
+                offset = offset.Snap(Setting.gridSize);
+                if (offset != Vector2.zero)
+                {
+                    foreach (var node in Graph.nodeList)
+                    {
+                        node.position -= offset;
+                    }
+                    RecordForUndo();
+                }
             }
 
             SetFloat($"{GRAPH_KEY}_ViewScale", 1);
