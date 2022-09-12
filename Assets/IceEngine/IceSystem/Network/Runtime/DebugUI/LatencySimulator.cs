@@ -9,8 +9,8 @@ namespace IceEngine.Networking.Internal
         int latencyMS;
         protected override void OnUI()
         {
-            TitleLabel("LatencySimulator");
-            latencyMS = IntField("Latency Override:", latencyMS);
+            Title("LatencySimulator");
+            latencyMS = _IntField("Latency Override:", latencyMS);
             Ice.Network.latencyOverride = latencyMS / 1000.0f;
         }
     }

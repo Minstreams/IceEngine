@@ -58,10 +58,10 @@ namespace IceEngine.Networking.Internal
 
         protected override void OnUI()
         {
-            TitleLabel("Server Agent");
+            Title("Server Agent");
 
-            message = StringField("Message", message);
-            connectionIndex = IntField("Connection Index", connectionIndex);
+            message = _TextField("Message", message);
+            connectionIndex = _IntField("Connection Index", connectionIndex);
 
             if (GUILayout.Button("Init")) Init();
             if (connection != null)

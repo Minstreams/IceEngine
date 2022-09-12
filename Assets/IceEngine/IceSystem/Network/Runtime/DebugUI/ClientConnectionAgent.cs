@@ -66,11 +66,11 @@ namespace IceEngine.Networking.Internal
 
         protected override void OnUI()
         {
-            TitleLabel("Client Agent");
+            Title("Client Agent");
             if (GUILayout.Button("Init")) Init();
             if (connection != null)
             {
-                message = StringField("Message", message);
+                message = _TextField("Message", message);
 
                 if (GUILayout.Button("Send")) Send();
                 if (GUILayout.Button("UDPSend")) UDPSend();

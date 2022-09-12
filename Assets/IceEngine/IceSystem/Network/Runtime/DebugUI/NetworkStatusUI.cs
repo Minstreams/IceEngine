@@ -8,7 +8,7 @@ namespace IceEngine.Networking.Internal
     {
         protected override void OnUI()
         {
-            TitleLabel("NetworkStatusUI");
+            Title("NetworkStatusUI");
             foreach (var a in Ice.Network.LocalIPAddressList) GUILayout.Label("LocalIP:" + a);
             GUILayout.Label("ServerIP:" + Ice.Network.ServerIPAddress);
             GUILayout.Label("Latency Override:" + Ice.Network.latencyOverride);

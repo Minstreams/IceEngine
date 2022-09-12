@@ -42,12 +42,12 @@ namespace IceEngine.Networking.Internal
 
         protected override void OnUI()
         {
-            TitleLabel("Network System");
+            Title("Network System");
 
-            Ice.Network.Setting.serverUDPPort = IntField("Server UDP Port", Ice.Network.Setting.serverUDPPort);
-            Ice.Network.Setting.clientUDPPort = IntField("Client UDP Port", Ice.Network.Setting.clientUDPPort);
-            Ice.Network.Setting.serverTCPPort = IntField("Server TCP Port", Ice.Network.Setting.serverTCPPort);
-            serverAddress = StringField("Server Address", serverAddress);
+            Ice.Network.Setting.serverUDPPort = _IntField("Server UDP Port", Ice.Network.Setting.serverUDPPort);
+            Ice.Network.Setting.clientUDPPort = _IntField("Client UDP Port", Ice.Network.Setting.clientUDPPort);
+            Ice.Network.Setting.serverTCPPort = _IntField("Server TCP Port", Ice.Network.Setting.serverTCPPort);
+            serverAddress = _TextField("Server Address", serverAddress);
 
             if (GUILayout.Button("LaunchServer")) LaunchServer();
             if (GUILayout.Button("LaunchClient")) LaunchClient();
