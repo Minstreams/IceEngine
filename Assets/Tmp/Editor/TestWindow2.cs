@@ -51,7 +51,7 @@ public class TestWindow2 : IceEditorWindow
         [SerializeField] float ff1;
         public int? iii;
     }
-    [IcePacket]
+    [IcePacket(IsNullable = true)]
     [Serializable]
     public sealed class Class2 : CC2
     {

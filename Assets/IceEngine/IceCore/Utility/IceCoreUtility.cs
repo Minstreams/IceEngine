@@ -199,7 +199,7 @@ namespace IceEngine
                         if (_hash2PktMap.TryAdd(hash, t))
                         {
                             _pkt2HashMap.Add(t, hash);
-                            if (isNullable && t.IsSealed) _pktNotNullSet.Add(t);
+                            if (!isNullable && t.IsSealed) _pktNotNullSet.Add(t);
                         }
                         else
                         {
