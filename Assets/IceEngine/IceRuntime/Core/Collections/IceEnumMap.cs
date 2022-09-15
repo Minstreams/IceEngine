@@ -27,12 +27,25 @@ namespace IceEngine
         /// TODO:试试优化这一项
         /// </summary>
         [SerializeField] ET _;
+        [System.NonSerialized] DT defaultValue = default;
+
+        public IceEnumMap() { }
+        public IceEnumMap(DT defaultValue)
+        {
+            this.defaultValue = defaultValue;
+        }
 
         public List<DT> list = new(System.Enum.GetNames(typeof(ET)).Length);
         public DT this[ET key]
         {
-            get => this.list[(int)(object)key];
-            set => this.list[(int)(object)key] = value;
+            get => this.list[ToIndex(key)];
+            set => this.list[ToIndex(key)] = value;
+        }
+        int ToIndex(ET key)
+        {
+            int i = (int)(object)key;
+            while (list.Count <= i) list.Add(defaultValue);
+            return i;
         }
         IEnumerator<DT> IEnumerable<DT>.GetEnumerator() => list.GetEnumerator();
         IEnumerator IEnumerable.GetEnumerator() => list.GetEnumerator();

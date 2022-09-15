@@ -9,6 +9,10 @@ namespace IceEngine.DebugUI
     /// </summary>
     public abstract class UIBase : MonoBehaviour
     {
+        static GUIStyle StlGroup => _stlGroup?.Check() ?? (_stlGroup = new GUIStyle("window") { margin = new RectOffset(4, 4, 4, 4), padding = new RectOffset(4, 4, 4, 4), overflow = new RectOffset(2, 2, 2, 2), contentOffset = new Vector2(0f, 0f), }); static GUIStyle _stlGroup;
+        static GUIStyle StlToggleButton => _stlToggleButton?.Check() ?? (_stlToggleButton = new GUIStyle("window") { margin = new RectOffset(4, 4, 4, 4), padding = new RectOffset(6, 6, 4, 4), overflow = new RectOffset(0, 0, 1, 0), contentOffset = new Vector2(0f, 0f), fontSize = 12 }); static GUIStyle _stlToggleButton;
+        static GUIStyle StlLabel => _stlLabel?.Check() ?? (_stlLabel = new GUIStyle("label") { richText = true, wordWrap = true, stretchWidth = false }); static GUIStyle _stlLabel;
+
         protected void SetStyle(ref GUIStyle target, string styleName)
         {
 #if UNITY_EDITOR
@@ -77,6 +81,7 @@ namespace IceEngine.DebugUI
         protected static ChangeCheckScope GUICHECK => new ChangeCheckScope();
         protected static bool GUIChanged => GUI.changed;
         protected GUILayout.VerticalScope BOX => Vertical(boxStyle);
+        protected static GUILayout.VerticalScope GROUP => Vertical(StlGroup);
         protected static GUILayout.HorizontalScope Horizontal(GUIStyle style, params GUILayoutOption[] options) => new GUILayout.HorizontalScope(style ?? GUIStyle.none, options);
         protected static GUILayout.HorizontalScope Horizontal(params GUILayoutOption[] options) => new GUILayout.HorizontalScope(options);
         protected static GUILayout.VerticalScope Vertical(GUIStyle style, params GUILayoutOption[] options) => new GUILayout.VerticalScope(style ?? GUIStyle.none, options);
@@ -158,17 +163,17 @@ namespace IceEngine.DebugUI
         #endregion
 
         #region GUI Elements
-        static GUIStyle DefaultLabelStyle => "label";
+
         /// <summary>
         /// Calculate the width of given content if rendered with default label style. Return the "width" layout option object.
         /// </summary>
-        protected GUILayoutOption AutoWidth(string label) => GUILayout.Width(DefaultLabelStyle.CalcSize(new GUIContent(label + "\t")).x);
+        protected GUILayoutOption AutoWidth(string label) => GUILayout.Width(StlLabel.CalcSize(new GUIContent(label + "\t")).x);
 
         protected static void Space(float pixels) => GUILayout.Space(pixels);
         protected static void Space() => GUILayout.FlexibleSpace();
 
         protected static void Label(string text, GUIStyle style, params GUILayoutOption[] options) => GUILayout.Label(text, style, options);
-        protected static void Label(string text, params GUILayoutOption[] options) => Label(text, DefaultLabelStyle, options);
+        protected static void Label(string text, params GUILayoutOption[] options) => Label(text, StlLabel, options);
         protected void Title(string text) => Label(text, boxStyle, GUILayout.ExpandWidth(true));
 
         protected bool Button(string text, bool expandWidth = false) => GUILayout.Button(text, GUILayout.ExpandWidth(expandWidth));
@@ -185,7 +190,8 @@ namespace IceEngine.DebugUI
 
         protected bool _ToggleButton(string label, bool value, bool expandWidth = false)
         {
-            if (GUILayout.Button(label.Color(value ? Color.white : Color.gray), GUILayout.ExpandWidth(expandWidth))) return !value;
+            return GUILayout.Toggle(value, label, StlToggleButton, GUILayout.ExpandWidth(expandWidth));
+            if (GUILayout.Button(label.Color(value ? Color.white : Color.gray), StlGroup, GUILayout.ExpandWidth(expandWidth))) return !value;
             return value;
         }
         protected bool ToggleButton(string label, ref bool value, bool expandWidth = false) => value = _ToggleButton(label, value, expandWidth);
@@ -212,10 +218,8 @@ namespace IceEngine.DebugUI
             return SetString(key, _TextField(label, value));
         }
 
-        protected int _IntField(string label, int value)
+        protected int _IntField(int value)
         {
-            using var _ = HORIZONTAL;
-            Label(label, AutoWidth(label));
             int res;
             try
             {
@@ -227,6 +231,14 @@ namespace IceEngine.DebugUI
                 return value;
             }
         }
+        protected int IntField(ref int value) => value = _IntField(value);
+        protected int IntFieldNoLabel(string key, int defaultValue = 0) => SetInt(key, _IntField(GetInt(key, defaultValue)));
+        protected int _IntField(string label, int value)
+        {
+            using var _ = HORIZONTAL;
+            Label(label, AutoWidth(label));
+            return _IntField(value);
+        }
         protected int IntField(string label, ref int value) => value = _IntField(label, value);
         protected int IntField(string key, int defaultValue = 0, string labelOverride = null)
         {
@@ -236,10 +248,8 @@ namespace IceEngine.DebugUI
             return SetInt(key, _IntField(label, value));
         }
 
-        protected int _SliderInt(string label, int value, int min = 0, int max = 1)
+        protected int _SliderInt(int value, int min = 0, int max = 1)
         {
-            using var _ = HORIZONTAL;
-            Label(label, AutoWidth(label));
             try
             {
                 int res = (int)GUILayout.HorizontalSlider(value, min, max);
@@ -250,19 +260,25 @@ namespace IceEngine.DebugUI
                 return value;
             }
         }
+        protected int SliderInt(ref int value, int min = 0, int max = 1) => value = _SliderInt(value, min, max);
+        protected int SliderIntNoLabel(string key, int defaultValue = 0, int min = 0, int max = 1) => SetInt(key, _SliderInt(GetInt(key, defaultValue), min, max));
+        protected int _SliderInt(string label, int value, int min = 0, int max = 1)
+        {
+            using var _ = HORIZONTAL;
+            Label(label, AutoWidth(label));
+            return _SliderInt(value, min, max);
+        }
         protected int SliderInt(string label, ref int value, int min = 0, int max = 1) => value = _SliderInt(label, value, min, max);
         protected int SliderInt(string key, int defaultValue = 0, int min = 0, int max = 1, string labelOverride = null)
         {
             var label = string.IsNullOrEmpty(labelOverride) ? key : labelOverride;
             var value = GetInt(key, defaultValue);
 
-            return SetInt(key, SliderInt(label, value, min, max));
+            return SetInt(key, _SliderInt(label, value, min, max));
         }
 
-        protected float _FloatField(string label, float value)
+        protected float _FloatField(float value)
         {
-            using var _ = HORIZONTAL;
-            Label(label, AutoWidth(label));
             try
             {
                 float res = float.Parse(GUILayout.TextField(value.ToString()));
@@ -273,6 +289,14 @@ namespace IceEngine.DebugUI
                 return value;
             }
         }
+        protected float FloatField(ref float value) => value = _FloatField(value);
+        protected float FloatFieldNoLabel(string key, float defaultValue = 0) => SetFloat(key, _FloatField(GetFloat(key, defaultValue)));
+        protected float _FloatField(string label, float value)
+        {
+            using var _ = HORIZONTAL;
+            Label(label, AutoWidth(label));
+            return _FloatField(value);
+        }
         protected float FloatField(string label, ref float value) => value = _FloatField(label, value);
         protected float FloatField(string key, float defaultValue = 0, string labelOverride = null)
         {
@@ -282,10 +306,8 @@ namespace IceEngine.DebugUI
             return SetFloat(key, _FloatField(label, value));
         }
 
-        protected float _Slider(string label, float value, float min = 0, float max = 1)
+        protected float _Slider(float value, float min = 0, float max = 1)
         {
-            using var _ = HORIZONTAL;
-            Label(label, AutoWidth(label));
             try
             {
                 float res = GUILayout.HorizontalSlider(value, min, max);
@@ -295,6 +317,14 @@ namespace IceEngine.DebugUI
             {
                 return value;
             }
+        }
+        protected float Slider(ref float value, float min = 0, float max = 1) => value = _Slider(value, min, max);
+        protected float SliderNoLabel(string key, float defaultValue = 0, float min = 0, float max = 1) => SetFloat(key, _Slider(GetFloat(key, defaultValue), min, max));
+        protected float _Slider(string label, float value, float min = 0, float max = 1)
+        {
+            using var _ = HORIZONTAL;
+            Label(label, AutoWidth(label));
+            return _Slider(value, min, max);
         }
         protected float Slider(string label, ref float value, float min = 0, float max = 1) => value = _Slider(label, value, min, max);
         protected float Slider(string key, float defaultValue = 0, float min = 0, float max = 1, string labelOverride = null)
