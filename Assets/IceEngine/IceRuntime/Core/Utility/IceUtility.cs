@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Text.RegularExpressions;
 using UnityEngine;
 
 namespace IceEngine
@@ -33,6 +34,88 @@ namespace IceEngine
         /// <param name="color">颜色</param>
         /// <returns>结果表达式</returns>
         public static string Color(this string self, Color color) => $"<color=#{ColorUtility.ToHtmlStringRGB(color)}>{self}</color>";
+        /// <summary>
+        /// 用于关键字筛选
+        /// </summary>
+        /// <param name="text">待筛选的string</param>
+        /// <param name="filter">关键字</param>
+        /// <param name="highlightColor">设定高亮颜色</param>
+        /// <param name="highlightedText">高亮后的名字</param>
+        /// <param name="useRegex">使用正则表达式</param>
+        /// <param name="continuousMatching">连续匹配</param>
+        /// <param name="caseSensitive">区分大小写</param>
+        /// <returns></returns>
+        public static bool IsMatch(this string text, string filter, Color highlightColor, out string highlightedText, bool useRegex = false, bool continuousMatching = false, bool caseSensitive = false)
+        {
+            highlightedText = null;
+            if (filter.IsNullOrWhiteSpace())
+            {
+                highlightedText = text;
+                return true;
+            }
+
+            if (useRegex)
+            {
+                // 正则表达式匹配
+                try
+                {
+                    var option = caseSensitive ? RegexOptions.None : RegexOptions.IgnoreCase;
+                    if (Regex.IsMatch(text, filter, option))
+                    {
+                        highlightedText = Regex.Replace(text, filter, "$0".Color(highlightColor), option);
+                        return true;
+                    }
+                    return false;
+                }
+                catch (Exception)
+                {
+                    return false;
+                }
+            }
+            else
+            {
+                // 判断是否包含filter关键字
+                if (continuousMatching)
+                {
+                    // 连续匹配
+                    int index = text.IndexOf(filter, caseSensitive ? StringComparison.CurrentCulture : StringComparison.CurrentCultureIgnoreCase);
+                    if (index < 0) return false;
+
+                    // 替换关键字为指定颜色
+                    highlightedText = text
+                        .Insert(index + filter.Length, "</color>")
+                        .Insert(index, $"<color={highlightColor}>");
+
+                    return true;
+                }
+                else
+                {
+                    int l = filter.Length;
+                    {
+                        // 离散匹配
+                        int i = 0;
+                        foreach (char c in text) if (c.CompareChar(filter[i], caseSensitive) && ++i == l) break;
+                        if (i < l) return false;
+                    }
+
+                    highlightedText = string.Empty;
+                    {
+                        // 替换关键字为指定颜色
+                        int i = 0;
+                        foreach (char c in text)
+                        {
+                            if (i < l && c.CompareChar(filter[i], caseSensitive))
+                            {
+                                highlightedText += c.ToString().Color(highlightColor);
+                                ++i;
+                            }
+                            else highlightedText += c;
+                        }
+                    }
+                    return true;
+                }
+            }
+        }
         #endregion
 
         #region Rect

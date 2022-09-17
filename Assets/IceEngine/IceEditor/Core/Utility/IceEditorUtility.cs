@@ -71,7 +71,6 @@ namespace IceEditor
             return true;
         }
 
-
         /// <summary>
         /// 筛选一个string集合
         /// </summary>
@@ -84,80 +83,13 @@ namespace IceEditor
         /// <returns>筛选过的集合（高亮后的名字|原始值）</returns>
         public static List<(string displayName, string value)> Filter(this IEnumerable<string> origin, string filter, bool useRegex = false, bool continuousMatching = false, bool caseSensitive = false, Color? highlightColorOverride = null)
         {
-            if (string.IsNullOrWhiteSpace(filter)) return origin.Select(s => (s, s)).ToList();
-
+            Color color = highlightColorOverride ?? IceGUIUtility.CurrentThemeColor;
             var result = new List<(string displayName, string value)>();
-
-            string colorExpr = ColorUtility.ToHtmlStringRGB(highlightColorOverride ?? IceGUIUtility.CurrentThemeColor);
-            if (useRegex)
+            foreach (var candidate in origin)
             {
-                // 正则表达式匹配
-                foreach (var candidate in origin)
+                if (candidate.IsMatch(filter, color, out var highlight, useRegex, continuousMatching, caseSensitive))
                 {
-                    try
-                    {
-                        var option = caseSensitive ? RegexOptions.None : RegexOptions.IgnoreCase;
-                        if (Regex.IsMatch(candidate, filter, option))
-                        {
-                            string displayName = Regex.Replace(candidate, filter, "$0".Color(colorExpr), option);
-                            result.Add((displayName, candidate));
-                        }
-                    }
-                    catch (Exception)
-                    {
-                        return result;
-                    }
-                }
-            }
-            else
-            {
-                // 判断是否包含filter关键字
-                if (continuousMatching)
-                {
-                    foreach (var candidate in origin)
-                    {
-                        // 连续匹配
-                        int index = candidate.IndexOf(filter, caseSensitive ? StringComparison.CurrentCulture : StringComparison.CurrentCultureIgnoreCase);
-                        if (index < 0) continue;
-
-                        // 替换关键字为指定颜色
-                        string displayName = candidate
-                            .Insert(index + filter.Length, "</color>")
-                            .Insert(index, $"<color={colorExpr}>");
-
-                        result.Add((displayName, candidate));
-                    }
-                }
-                else
-                {
-                    foreach (var candidate in origin)
-                    {
-                        int l = filter.Length;
-                        {
-                            // 离散匹配
-                            int i = 0;
-                            foreach (char c in candidate) if (c.CompareChar(filter[i], caseSensitive) && ++i == l) break;
-                            // 不包含则跳过
-                            if (i < l) continue;
-                        }
-
-
-                        string displayName = string.Empty;
-                        {
-                            // 替换关键字为指定颜色
-                            int i = 0;
-                            foreach (char c in candidate)
-                            {
-                                if (i < l && c.CompareChar(filter[i], caseSensitive))
-                                {
-                                    displayName += c.ToString().Color(colorExpr);
-                                    ++i;
-                                }
-                                else displayName += c;
-                            }
-                        }
-                        result.Add((displayName, candidate));
-                    }
+                    result.Add((candidate, highlight));
                 }
             }
             return result;

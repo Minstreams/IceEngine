@@ -9,9 +9,9 @@ namespace IceEngine.DebugUI
     /// </summary>
     public abstract class UIBase : MonoBehaviour
     {
-        static GUIStyle StlGroup => _stlGroup?.Check() ?? (_stlGroup = new GUIStyle("window") { margin = new RectOffset(4, 4, 4, 4), padding = new RectOffset(4, 4, 4, 4), overflow = new RectOffset(2, 2, 2, 2), contentOffset = new Vector2(0f, 0f), }); static GUIStyle _stlGroup;
-        static GUIStyle StlToggleButton => _stlToggleButton?.Check() ?? (_stlToggleButton = new GUIStyle("window") { margin = new RectOffset(4, 4, 4, 4), padding = new RectOffset(6, 6, 4, 4), overflow = new RectOffset(0, 0, 1, 0), contentOffset = new Vector2(0f, 0f), fontSize = 12 }); static GUIStyle _stlToggleButton;
-        static GUIStyle StlLabel => _stlLabel?.Check() ?? (_stlLabel = new GUIStyle("label") { richText = true, wordWrap = true, stretchWidth = false }); static GUIStyle _stlLabel;
+        protected static GUIStyle StlGroup => _stlGroup?.Check() ?? (_stlGroup = new GUIStyle("window") { margin = new RectOffset(4, 4, 4, 4), padding = new RectOffset(4, 4, 4, 4), overflow = new RectOffset(2, 2, 2, 2), contentOffset = new Vector2(0f, 0f), }); static GUIStyle _stlGroup;
+        protected static GUIStyle StlToggleButton => _stlToggleButton?.Check() ?? (_stlToggleButton = new GUIStyle("window") { margin = new RectOffset(4, 4, 4, 4), padding = new RectOffset(6, 6, 4, 4), overflow = new RectOffset(0, 0, 1, 0), contentOffset = new Vector2(0f, 0f), fontSize = 12 }); static GUIStyle _stlToggleButton;
+        protected static GUIStyle StlLabel => _stlLabel?.Check() ?? (_stlLabel = new GUIStyle("label") { richText = true, wordWrap = true, stretchWidth = false }); static GUIStyle _stlLabel;
 
         protected void SetStyle(ref GUIStyle target, string styleName)
         {
@@ -19,8 +19,8 @@ namespace IceEngine.DebugUI
             target = new GUIStyle(UnityEditor.EditorGUIUtility.GetBuiltinSkin(UnityEditor.EditorSkin.Game).GetStyle(styleName));
 #endif
         }
-        public GUIStyle boxStyle;
-        protected virtual void Reset() => SetStyle(ref boxStyle, "box");
+        public GUIStyle stlBox;
+        protected virtual void Reset() => SetStyle(ref stlBox, "box");
 
         UIDisplayer displayer;
         protected virtual void OnEnable()
@@ -35,7 +35,7 @@ namespace IceEngine.DebugUI
         }
         public void UIAction()
         {
-            GUILayout.BeginVertical(boxStyle, GUILayout.ExpandWidth(false));
+            GUILayout.BeginVertical(stlBox, GUILayout.ExpandWidth(false));
             OnUI();
             GUILayout.EndVertical();
         }
@@ -80,7 +80,7 @@ namespace IceEngine.DebugUI
         protected static GUILayout.VerticalScope VERTICAL => Vertical();
         protected static ChangeCheckScope GUICHECK => new ChangeCheckScope();
         protected static bool GUIChanged => GUI.changed;
-        protected GUILayout.VerticalScope BOX => Vertical(boxStyle);
+        protected GUILayout.VerticalScope BOX => Vertical(stlBox);
         protected static GUILayout.VerticalScope GROUP => Vertical(StlGroup);
         protected static GUILayout.HorizontalScope Horizontal(GUIStyle style, params GUILayoutOption[] options) => new GUILayout.HorizontalScope(style ?? GUIStyle.none, options);
         protected static GUILayout.HorizontalScope Horizontal(params GUILayoutOption[] options) => new GUILayout.HorizontalScope(options);
@@ -174,7 +174,7 @@ namespace IceEngine.DebugUI
 
         protected static void Label(string text, GUIStyle style, params GUILayoutOption[] options) => GUILayout.Label(text, style, options);
         protected static void Label(string text, params GUILayoutOption[] options) => Label(text, StlLabel, options);
-        protected void Title(string text) => Label(text, boxStyle, GUILayout.ExpandWidth(true));
+        protected void Title(string text) => Label(text, stlBox, GUILayout.ExpandWidth(true));
 
         protected bool Button(string text, bool expandWidth = false) => GUILayout.Button(text, GUILayout.ExpandWidth(expandWidth));
 
