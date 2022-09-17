@@ -1,7 +1,14 @@
-﻿using System.IO;
+﻿using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
 using System.Text.RegularExpressions;
-using UnityEngine;
 using UnityEditor;
+using UnityEngine;
+using Obj = UnityEngine.Object;
+
+using IceEngine;
+
 
 namespace IceEditor
 {
@@ -38,10 +45,10 @@ namespace IceEditor
             string selectedPath = "Assets";
 
             //获取选中的资源
-            Object[] selection = Selection.GetFiltered(typeof(Object), SelectionMode.Assets);
+            Obj[] selection = Selection.GetFiltered(typeof(Obj), SelectionMode.Assets);
 
             //遍历选中的资源以返回路径
-            foreach (Object obj in selection)
+            foreach (Obj obj in selection)
             {
                 selectedPath = AssetDatabase.GetAssetPath(obj);
                 if (!string.IsNullOrEmpty(selectedPath) && File.Exists(selectedPath))
@@ -62,6 +69,98 @@ namespace IceEditor
             if (Directory.Exists(path)) return false;
             Directory.CreateDirectory(path);
             return true;
+        }
+
+
+        /// <summary>
+        /// 筛选一个string集合
+        /// </summary>
+        /// <param name="origin">待筛选的string集合</param>
+        /// <param name="filter">关键字</param>
+        /// <param name="useRegex">使用正则表达式</param>
+        /// <param name="continuousMatching">连续匹配</param>
+        /// <param name="caseSensitive">区分大小写</param>
+        /// <param name="highlightColorOverride">设定高亮颜色（默认为当前主题颜色）</param>
+        /// <returns>筛选过的集合（高亮后的名字|原始值）</returns>
+        public static List<(string displayName, string value)> Filter(this IEnumerable<string> origin, string filter, bool useRegex = false, bool continuousMatching = false, bool caseSensitive = false, Color? highlightColorOverride = null)
+        {
+            if (string.IsNullOrWhiteSpace(filter)) return origin.Select(s => (s, s)).ToList();
+
+            var result = new List<(string displayName, string value)>();
+
+            string colorExpr = ColorUtility.ToHtmlStringRGB(highlightColorOverride ?? IceGUIUtility.CurrentThemeColor);
+            if (useRegex)
+            {
+                // 正则表达式匹配
+                foreach (var candidate in origin)
+                {
+                    try
+                    {
+                        var option = caseSensitive ? RegexOptions.None : RegexOptions.IgnoreCase;
+                        if (Regex.IsMatch(candidate, filter, option))
+                        {
+                            string displayName = Regex.Replace(candidate, filter, "$0".Color(colorExpr), option);
+                            result.Add((displayName, candidate));
+                        }
+                    }
+                    catch (Exception)
+                    {
+                        return result;
+                    }
+                }
+            }
+            else
+            {
+                // 判断是否包含filter关键字
+                if (continuousMatching)
+                {
+                    foreach (var candidate in origin)
+                    {
+                        // 连续匹配
+                        int index = candidate.IndexOf(filter, caseSensitive ? StringComparison.CurrentCulture : StringComparison.CurrentCultureIgnoreCase);
+                        if (index < 0) continue;
+
+                        // 替换关键字为指定颜色
+                        string displayName = candidate
+                            .Insert(index + filter.Length, "</color>")
+                            .Insert(index, $"<color={colorExpr}>");
+
+                        result.Add((displayName, candidate));
+                    }
+                }
+                else
+                {
+                    foreach (var candidate in origin)
+                    {
+                        int l = filter.Length;
+                        {
+                            // 离散匹配
+                            int i = 0;
+                            foreach (char c in candidate) if (c.CompareChar(filter[i], caseSensitive) && ++i == l) break;
+                            // 不包含则跳过
+                            if (i < l) continue;
+                        }
+
+
+                        string displayName = string.Empty;
+                        {
+                            // 替换关键字为指定颜色
+                            int i = 0;
+                            foreach (char c in candidate)
+                            {
+                                if (i < l && c.CompareChar(filter[i], caseSensitive))
+                                {
+                                    displayName += c.ToString().Color(colorExpr);
+                                    ++i;
+                                }
+                                else displayName += c;
+                            }
+                        }
+                        result.Add((displayName, candidate));
+                    }
+                }
+            }
+            return result;
         }
     }
 }

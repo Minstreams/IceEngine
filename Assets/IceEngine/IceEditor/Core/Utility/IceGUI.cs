@@ -35,6 +35,7 @@ namespace IceEditor
         public static GUIStyle StlSelectedBox => _stlSelectedBox?.Check() ?? (_stlSelectedBox = new GUIStyle("LightmapEditorSelectedHighlight") { overflow = new RectOffset(6, 6, 6, 6), }); static GUIStyle _stlSelectedBox;
         public static GUIStyle StlGraphPortName => _stlGraphPortName?.Check() ?? (_stlGraphPortName = new GUIStyle("label") { margin = new RectOffset(-1, -1, 0, 0), padding = new RectOffset(0, 0, 0, 0), fontSize = 9, alignment = TextAnchor.MiddleCenter, }.Initialize(stl => { stl.normal.textColor = new Color(0.3962264f, 0.3962264f, 0.3962264f); })); static GUIStyle _stlGraphPortName;
         public static GUIStyle StlGraphPortLabel => _stlGraphPortLabel?.Check() ?? (_stlGraphPortLabel = new GUIStyle("ShurikenValue") { margin = new RectOffset(1, 1, 2, 2), padding = new RectOffset(3, 3, 0, 0), fontSize = 12, alignment = TextAnchor.MiddleCenter, fixedHeight = 0f, }); static GUIStyle _stlGraphPortLabel;
+        public static GUIStyle StlSearchTextField => _stlSearchTextField?.Check() ?? (_stlSearchTextField = new GUIStyle("SearchTextField") { padding = new RectOffset(14, 3, 2, 1), fontSize = 12, fixedHeight = 0f, }); static GUIStyle _stlSearchTextField;
         #endregion
 
         #region Scope
@@ -1254,6 +1255,33 @@ namespace IceEditor
         public static bool IceButton(GUIContent content, params GUILayoutOption[] options) => GUILayout.Button(content, StlIce, options);
         public static bool _IceToggle(string text, bool val, string tooltip = null, params GUILayoutOption[] options) => GUILayout.Button(TempContent(val ? $"{text.Color(IceGUIUtility.CurrentThemeColor)}" : text, tooltip), StlIce) ? !val : val;
         public static bool IceToggle(string text, ref bool val, string tooltip = null, params GUILayoutOption[] options) => val = _IceToggle(text, val, tooltip, options);
+
+        /// <summary>
+        /// 搜索框，筛选一个string集合
+        /// </summary>
+        /// <param name="origin">待筛选的string集合</param>
+        /// <param name="result">筛选过的集合（高亮后的名字|原始值）</param>
+        /// <param name="filter">关键字</param>
+        /// <param name="useRegex">使用正则表达式</param>
+        /// <param name="continuousMatching">连续匹配</param>
+        /// <param name="caseSensitive">区分大小写</param>
+        /// <param name="extraElementsAction">额外GUI元素</param>
+        public static void SearchField(IEnumerable<string> origin, ref List<(string displayName, string value)> result, ref string filter, ref bool useRegex, ref bool continuousMatching, ref bool caseSensitive, Action extraElementsAction = null)
+        {
+            using (HORIZONTAL) using (GUICHECK)
+            {
+                TextField(ref filter, StlSearchTextField);
+                if (!useRegex)
+                {
+                    IceToggle("连", ref continuousMatching, "连续匹配");
+                }
+                IceToggle("Aa", ref caseSensitive, "区分大小写");
+                IceToggle(".*", ref useRegex, "使用正则表达式");
+                extraElementsAction?.Invoke();
+
+                if (GUIChanged) result = origin.Filter(filter, useRegex, continuousMatching, caseSensitive);
+            }
+        }
         #endregion
     }
 }

@@ -13,6 +13,18 @@ namespace IceEngine
     {
         #region Extensions
 
+        #region Char
+        /// <summary>
+        /// 比较两个char的值，并指定是否区分大小写
+        /// </summary>
+        /// <param name="caseSensitive">是否区分大小写</param>
+        public static bool CompareChar(this char self, char other, bool caseSensitive = true)
+        {
+            if (caseSensitive) return self == other;
+            else return char.ToLower(self) == char.ToLower(other);
+        }
+        #endregion
+
         #region String
         public readonly static Encoding DefaultEncoding = Encoding.UTF8;
         public static byte[] GetBytes(this string str) => DefaultEncoding.GetBytes(str);

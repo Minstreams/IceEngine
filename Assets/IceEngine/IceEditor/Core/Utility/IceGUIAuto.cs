@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 
 using UnityEngine;
 using UnityEditor;
@@ -399,6 +400,34 @@ namespace IceEditor
         /// <returns></returns>
         public static ViewportScope ViewportGrid(string key, Rect workspace, float gridSize, float defaultScale = 1, float minScale = 0.4f, float maxScale = 4.0f, bool? useWidthOrHeightOfWorkspaceAsSize = null, Color? gridColor = null, GUIStyle styleBackground = null, bool hasOutterClip = true) => Viewport(key, workspace, gridSize, defaultScale, minScale, maxScale, useWidthOrHeightOfWorkspaceAsSize, true, false, gridColor, styleBackground, null, hasOutterClip);
 
+        /// <summary>
+        /// 搜索框，筛选一个string集合
+        /// </summary>
+        /// <param name="origin">待筛选的string集合</param>
+        /// <param name="result">筛选过的集合（高亮后的名字|原始值）</param>
+        /// <param name="defaultFilter">关键字</param>
+        /// <param name="defaultUseRegex">使用正则表达式</param>
+        /// <param name="defaultContinuousMatching">连续匹配</param>
+        /// <param name="defaultCaseSensitive">区分大小写</param>
+        /// <param name="extraElementsAction">额外GUI元素</param>
+        public static void SearchField(IEnumerable<string> origin, ref List<(string displayName, string value)> result, string key = default, string defaultFilter = default, bool defaultUseRegex = false, bool defaultContinuousMatching = false, bool defaultCaseSensitive = false, Action extraElementsAction = null)
+        {
+            string keyFilter = key + "Filter";
+            string filter = GetString(keyFilter, defaultFilter);
+            string keyUseRegex = key + "UseRegex";
+            bool useRegex = GetBool(keyUseRegex, defaultUseRegex);
+            string keyContinuousMatching = key + "ContinuousMatching";
+            bool continuousMatching = GetBool(keyContinuousMatching, defaultContinuousMatching);
+            string keyCaseSensitive = key + "CaseSensitive";
+            bool caseSensitive = GetBool(keyCaseSensitive, defaultCaseSensitive);
+
+            IceGUI.SearchField(origin, ref result, ref filter, ref useRegex, ref continuousMatching, ref caseSensitive, extraElementsAction);
+
+            SetString(keyFilter, filter);
+            SetBool(keyUseRegex, useRegex);
+            SetBool(keyContinuousMatching, continuousMatching);
+            SetBool(keyCaseSensitive, caseSensitive);
+        }
         #endregion
     }
 }
