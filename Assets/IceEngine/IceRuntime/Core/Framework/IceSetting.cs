@@ -52,8 +52,7 @@ namespace IceEngine.Framework
                         filePath += $"/Resources/{tName}.asset";
 
                         // 创建目录
-                        string directoryName = Path.GetDirectoryName(filePath);
-                        if (!Directory.Exists(directoryName)) Directory.CreateDirectory(directoryName);
+                        filePath.TryCreateFolderOfPath();
 
                         // 创建资源
                         _setting = CreateInstance<T>();

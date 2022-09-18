@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 using System.Text;
 using System.Text.RegularExpressions;
 using IceEngine.Framework;
@@ -95,6 +96,22 @@ namespace IceEngine
                 }
             }
         }
+        /// <summary>
+        /// 尝试创建指定路径文件夹
+        /// </summary>
+        public static bool TryCreateFolder(this string folder)
+        {
+            if (!Directory.Exists(folder))
+            {
+                Directory.CreateDirectory(folder);
+                return true;
+            }
+            return false;
+        }
+        /// <summary>
+        /// 尝试创建指定路径文件夹
+        /// </summary>
+        public static bool TryCreateFolderOfPath(this string path) => TryCreateFolder(Path.GetDirectoryName(path));
         #endregion
 
         #region Byte

@@ -17,6 +17,7 @@ namespace IceEngine.DebugUI
         {
 #if UNITY_EDITOR
             target = new GUIStyle(UnityEditor.EditorGUIUtility.GetBuiltinSkin(UnityEditor.EditorSkin.Game).GetStyle(styleName));
+            UnityEditor.EditorUtility.SetDirty(this);
 #endif
         }
         public GUIStyle stlBox;
@@ -191,8 +192,6 @@ namespace IceEngine.DebugUI
         protected bool _ToggleButton(string label, bool value, bool expandWidth = false)
         {
             return GUILayout.Toggle(value, label, StlToggleButton, GUILayout.ExpandWidth(expandWidth));
-            if (GUILayout.Button(label.Color(value ? Color.white : Color.gray), StlGroup, GUILayout.ExpandWidth(expandWidth))) return !value;
-            return value;
         }
         protected bool ToggleButton(string label, ref bool value, bool expandWidth = false) => value = _ToggleButton(label, value, expandWidth);
         protected bool ToggleButton(string key, bool defaultValue = false, string labelOverride = null, bool expandWidth = false)
