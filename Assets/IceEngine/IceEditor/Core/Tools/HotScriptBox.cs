@@ -40,6 +40,12 @@ namespace IceEditor.Internal
         GUIStyle StlScriptTabOn => _stlScriptTabOn?.Check() ?? (_stlScriptTabOn = new GUIStyle("dragtab") { padding = new RectOffset(7, 24, 0, 0), stretchWidth = false, }); [NonSerialized] GUIStyle _stlScriptTabOn;
         GUIStyle StlScriptTabOnFirst => _stlScriptTabOnFirst?.Check() ?? (_stlScriptTabOnFirst = new GUIStyle("dragtab first") { padding = new RectOffset(7, 24, 0, 0), stretchWidth = false, }); [NonSerialized] GUIStyle _stlScriptTabOnFirst;
         GUIStyle StlScriptTabDock => _stlScriptTabDock?.Check() ?? (_stlScriptTabDock = new GUIStyle("dockarea") { padding = new RectOffset(0, 4, 3, 0), }); [NonSerialized] GUIStyle _stlScriptTabDock;
+
+        protected override void OnThemeColorChange()
+        {
+            filteredResult = null;
+        }
+        protected override Color DefaultThemeColor => new Color(1, 0.7f, 0);
         #endregion
 
         #region Utility
@@ -116,12 +122,12 @@ namespace IceEditor.Internal
         public void CopyCurScript()
         {
             var json = EditorJsonUtility.ToJson(CurScript, true);
-            LogImportant("复制热脚本数据\n" + json);
+            Log("复制热脚本数据\n" + json);
             GUIUtility.systemCopyBuffer = json;
         }
         public void PasteCurScript(string json)
         {
-            LogImportant("粘贴热脚本数据\n" + json);
+            Log("粘贴热脚本数据\n" + json);
             EditorJsonUtility.FromJsonOverwrite(json, CurScript);
             Setting.Save();
         }
@@ -184,13 +190,14 @@ using static IceEditor.IceGUIAuto;
             if (bGUI)
             {
                 codeBuilder.AppendLine($"public static void {FuncName}() => GetWindow<{ClassName}>();");
+                codeBuilder.AppendLine("protected override Color DefaultThemeColor => new Color(0.8f, 0.2f, 0.5f);");
                 if (!title.IsNullOrWhiteSpace()) codeBuilder.AppendLine($"protected override string Title => \"{title}\";");
             }
             codeBuilder.Append("}}");
 
             code = codeBuilder.ToString();
 
-            Log(code);
+            LogDebug(code);
 
             // 2. 编译参数
             CompilerParameters objCompilerParameters = new CompilerParameters();
@@ -286,6 +293,7 @@ using static IceEditor.IceGUIAuto;
                     {
                         TextField("名字", ref CurScript.name);
                         EnumPopup("类型", ref CurScript.type);
+
                         if (GUIChanged) Setting.Save();
                     }
                     Space(4);
@@ -293,48 +301,58 @@ using static IceEditor.IceGUIAuto;
                     // 搜索框
                     using (BOX)
                     {
-                        SearchField(displayMode switch
+                        using (HORIZONTAL)
                         {
-                            AssemblyDisplayMode.Name => nameAssemblyMap.Keys,
-                            AssemblyDisplayMode.FullName => fullNameAssemblyMap.Keys,
-                            _ => nameAssemblyMap.Values,
-                        }, ref filteredResult, "程序集", extraElementsAction: () =>
-                        {
-                            EnumPopup(ref displayMode, GUILayout.Width(64));
-                        });
+
+                            Label("程序集");
+                            SearchField(displayMode switch
+                            {
+                                AssemblyDisplayMode.Name => nameAssemblyMap.Keys,
+                                AssemblyDisplayMode.FullName => fullNameAssemblyMap.Keys,
+                                _ => nameAssemblyMap.Values,
+                            }, ref filteredResult);
+
+                            using (GUICHECK)
+                            {
+                                EnumPopup(ref displayMode, GUILayout.Width(64));
+                                if (GUIChanged) filteredResult = null;
+                            }
+                        }
+
 
                         // 在这显示
                         using (ScrollInvisible("AssemblyList"))
                         {
                             // 显示样式列表
-                            foreach ((var displayName, var name) in filteredResult)
-                            {
-                                string location = displayMode switch
+                            if (filteredResult != null)
+                                foreach ((var displayName, var name) in filteredResult)
                                 {
-                                    AssemblyDisplayMode.Name => nameAssemblyMap[name],
-                                    AssemblyDisplayMode.FullName => fullNameAssemblyMap[name],
-                                    _ => name,
-                                };
-
-                                using (GUICHECK) using (Disable(defaultAssemblyLocations.Contains(location)))
-                                {
-                                    var val = _ToggleLeft(curAssemlySet.Contains(location), displayName, StlAssemblyToggle);
-                                    if (GUIChanged)
+                                    string location = displayMode switch
                                     {
-                                        if (val)
+                                        AssemblyDisplayMode.Name => nameAssemblyMap[name],
+                                        AssemblyDisplayMode.FullName => fullNameAssemblyMap[name],
+                                        _ => name,
+                                    };
+
+                                    using (GUICHECK) using (Disable(defaultAssemblyLocations.Contains(location)))
+                                    {
+                                        var val = _ToggleLeft(curAssemlySet.Contains(location), displayName, StlAssemblyToggle);
+                                        if (GUIChanged)
                                         {
-                                            curAssemlySet.Add(location);
-                                            CurScript.assemblies.Add(location);
+                                            if (val)
+                                            {
+                                                curAssemlySet.Add(location);
+                                                CurScript.assemblies.Add(location);
+                                            }
+                                            else
+                                            {
+                                                curAssemlySet.Remove(location);
+                                                CurScript.assemblies.Remove(location);
+                                            }
+                                            Setting.Save();
                                         }
-                                        else
-                                        {
-                                            curAssemlySet.Remove(location);
-                                            CurScript.assemblies.Remove(location);
-                                        }
-                                        Setting.Save();
                                     }
                                 }
-                            }
                         }
                     }
 

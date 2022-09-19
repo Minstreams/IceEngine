@@ -1266,11 +1266,10 @@ namespace IceEditor
         /// <param name="continuousMatching">连续匹配</param>
         /// <param name="caseSensitive">区分大小写</param>
         /// <param name="extraElementsAction">额外GUI元素</param>
-        public static void SearchField(IEnumerable<string> origin, ref List<(string displayName, string value)> result, ref string filter, ref bool useRegex, ref bool continuousMatching, ref bool caseSensitive, Action extraElementsAction = null, string label = null)
+        public static void SearchField(IEnumerable<string> origin, ref List<(string displayName, string value)> result, ref string filter, ref bool useRegex, ref bool continuousMatching, ref bool caseSensitive)
         {
             using (HORIZONTAL) using (GUICHECK)
             {
-                if (!label.IsNullOrWhiteSpace()) Label(label);
                 TextField(ref filter, StlSearchTextField);
                 if (!useRegex)
                 {
@@ -1278,7 +1277,6 @@ namespace IceEditor
                 }
                 IceToggle("Aa", ref caseSensitive, "区分大小写");
                 IceToggle(".*", ref useRegex, "使用正则表达式");
-                extraElementsAction?.Invoke();
 
                 if (GUIChanged || result == null) result = origin.Filter(filter, useRegex, continuousMatching, caseSensitive);
             }

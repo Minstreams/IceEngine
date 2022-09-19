@@ -13,13 +13,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   scripts:
-  - name: FFFFF
+  - name: "\u4E2D\u6587\u6D4B\u8BD5"
     type: 1
     assemblies: []
-    code: 'if(Button("AA"))
-
-      {
-
-      LogImportant("ASAS");
-
-      }'
+    code: "using (GROUP)\n{\n    Label(\"Created by lijinyao\");\n}\n\nif (Button(\"Test\"))\n{\n   
+      LogImportant(\"ASDAAAss\");\n}"

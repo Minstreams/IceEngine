@@ -158,20 +158,20 @@ namespace IceEditor.Framework
 
         #region Log & Dialog
         /// <summary>
-        /// 输出一个Debug模式下才会显示的Log
+        /// 输出一个的Log
         /// </summary>
         protected void Log(string text, UnityEngine.Object context = null)
         {
-            if (!DebugMode) return;
             text = $"【{titleContent.text.Color(ThemeColorExp)}】{text}";
             if (context == null) Debug.Log(text);
             else Debug.Log(text, context);
         }
         /// <summary>
-        /// 输出一个普通模式下也会显示的Log
+        /// 输出一个Debug模式下才会显示的Log
         /// </summary>
-        protected void LogImportant(string text, UnityEngine.Object context = null)
+        protected void LogDebug(string text, UnityEngine.Object context = null)
         {
+            if (!DebugMode) return;
             text = $"【{titleContent.text.Color(ThemeColorExp)}】{text.Color(ThemeColorExp)}";
             if (context == null) Debug.Log(text);
             else Debug.Log(text, context);
@@ -312,7 +312,10 @@ namespace IceEditor.Framework
                         {
                             ColorField("ThemeColor");
 
-                            if (GUIChanged) Pack.RefreshThemeColor();
+                            if (GUIChanged)
+                            {
+                                Pack.RefreshThemeColor();
+                            }
                         }
                         if (Pack._stringColorMap.Count > 1) foreach (var key in Pack._stringColorMap.Keys) if (key != "ThemeColor") ColorField(key);
                     }

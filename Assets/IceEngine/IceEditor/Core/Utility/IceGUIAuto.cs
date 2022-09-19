@@ -432,7 +432,7 @@ namespace IceEditor
         /// <param name="defaultContinuousMatching">连续匹配</param>
         /// <param name="defaultCaseSensitive">区分大小写</param>
         /// <param name="extraElementsAction">额外GUI元素</param>
-        public static void SearchField(IEnumerable<string> origin, ref List<(string displayName, string value)> result, string key = default, string defaultFilter = default, bool defaultUseRegex = false, bool defaultContinuousMatching = false, bool defaultCaseSensitive = false, Action extraElementsAction = null)
+        public static void SearchField(IEnumerable<string> origin, ref List<(string displayName, string value)> result, string key = default, string defaultFilter = default, bool defaultUseRegex = false, bool defaultContinuousMatching = false, bool defaultCaseSensitive = false)
         {
             string keyFilter = key + "Filter";
             string filter = GetString(keyFilter, defaultFilter);
@@ -443,7 +443,7 @@ namespace IceEditor
             string keyCaseSensitive = key + "CaseSensitive";
             bool caseSensitive = GetBool(keyCaseSensitive, defaultCaseSensitive);
 
-            IceGUI.SearchField(origin, ref result, ref filter, ref useRegex, ref continuousMatching, ref caseSensitive, extraElementsAction, key);
+            IceGUI.SearchField(origin, ref result, ref filter, ref useRegex, ref continuousMatching, ref caseSensitive);
 
             SetString(keyFilter, filter);
             SetBool(keyUseRegex, useRegex);

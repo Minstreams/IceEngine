@@ -26,7 +26,7 @@ namespace IceEditor
         #region StyleList
         public void DoFilterStyleList(string keyword)
         {
-            LogImportant($"Filter!{keyword}");
+            Log($"Filter!{keyword}");
         }
         #endregion
 

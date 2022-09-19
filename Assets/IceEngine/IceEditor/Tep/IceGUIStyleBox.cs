@@ -896,7 +896,7 @@ namespace IceEditor.Internal
                             if (IceButton("生成代码"))
                             {
                                 GUIUtility.systemCopyBuffer = GetStyleCode(styleName);
-                                LogImportant("样式代码已生成！");
+                                Log("样式代码已生成！");
                             }
                         }
                         // 样式列表
