@@ -242,7 +242,7 @@ using static IceEditor.IceGUIAuto;
                     var script = Setting.scripts[i];
                     using (HORIZONTAL)
                     {
-                        var name = script.name.IsNullOrEmpty() ? i.ToString() : script.name;
+                        var name = script.name.IsNullOrEmpty() ? $"脚本{i}" : script.name;
                         bool selected = CurScript == script;
                         if (selected)
                         {
@@ -252,10 +252,12 @@ using static IceEditor.IceGUIAuto;
                             if (GUI.Button(rBtn.MoveEdge(left: -15).Move(-4, 2), string.Empty, "WinBtnClose"))
                             {
                                 Setting.scripts.RemoveAt(i);
-                                --i;
-                                if (i >= 0) CurScript = Setting.scripts[i];
+                                int j = i;
+                                if (j >= Setting.scripts.Count) --j;
+                                if (j >= 0) CurScript = Setting.scripts[j];
                                 else CurScript = null;
                                 Setting.Save();
+                                --i;
                             }
                         }
                         else

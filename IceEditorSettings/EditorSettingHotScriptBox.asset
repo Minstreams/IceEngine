@@ -13,8 +13,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   scripts:
-  - name: "\u4E2D\u6587\u6D4B\u8BD5"
-    type: 1
+  - name: 
+    type: 0
     assemblies: []
-    code: "using (GROUP)\n{\n    Label(\"Created by lijinyao\");\n}\n\nif (Button(\"Test\"))\n{\n   
-      LogImportant(\"ASDAAAss\");\n}"
+    code: 
