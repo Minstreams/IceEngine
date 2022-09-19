@@ -66,18 +66,40 @@ namespace IceEditor
         /// <summary>
         /// 显示一个可展开的节
         /// </summary>
-        public static FolderScope SectionFolder(string key, bool defaultVal = true, string labelOverride = null, bool changeWidth = true)
+        public static FolderScope SectionFolder(string key, bool defaultVal = true, string labelOverride = null, bool changeWidth = true, Action extraAction = null)
         {
             var label = string.IsNullOrEmpty(labelOverride) ? key : labelOverride;
             if (IceGUIUtility.HasPack)
             {
                 var ab = GetAnimBool(key, defaultVal);
-                ab.target = GUILayout.Toggle(ab.target, label, StlSectionHeader);
+                if (extraAction != null)
+                {
+                    using (HORIZONTAL)
+                    {
+                        ab.target = GUILayout.Toggle(ab.target, label, StlSectionHeader);
+                        extraAction();
+                    }
+                }
+                else
+                {
+                    ab.target = GUILayout.Toggle(ab.target, label, StlSectionHeader);
+                }
                 return new FolderScope(ab, changeWidth);
             }
             else
             {
-                IceGUI.SectionHeader(label);
+                if (extraAction != null)
+                {
+                    using (HORIZONTAL)
+                    {
+                        IceGUI.SectionHeader(label);
+                        extraAction();
+                    }
+                }
+                else
+                {
+                    IceGUI.SectionHeader(label);
+                }
                 return null;
             }
         }
@@ -421,7 +443,7 @@ namespace IceEditor
             string keyCaseSensitive = key + "CaseSensitive";
             bool caseSensitive = GetBool(keyCaseSensitive, defaultCaseSensitive);
 
-            IceGUI.SearchField(origin, ref result, ref filter, ref useRegex, ref continuousMatching, ref caseSensitive, extraElementsAction);
+            IceGUI.SearchField(origin, ref result, ref filter, ref useRegex, ref continuousMatching, ref caseSensitive, extraElementsAction, key);
 
             SetString(keyFilter, filter);
             SetBool(keyUseRegex, useRegex);

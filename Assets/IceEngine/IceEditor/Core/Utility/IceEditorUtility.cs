@@ -89,7 +89,7 @@ namespace IceEditor
             {
                 if (candidate.IsMatch(filter, color, out var highlight, useRegex, continuousMatching, caseSensitive))
                 {
-                    result.Add((candidate, highlight));
+                    result.Add((highlight, candidate));
                 }
             }
             return result;

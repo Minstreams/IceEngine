@@ -85,6 +85,10 @@ namespace IceEditor.Framework
                 justLoaded = false;
                 return;
             }
+            Save();
+        }
+        public void Save()
+        {
             InternalEditorUtility.SaveToSerializedFileAndForget(new Object[] { _setting }, GetPath(), true);
         }
     }

@@ -316,18 +316,18 @@ namespace IceEditor.Framework
                         }
                         if (Pack._stringColorMap.Count > 1) foreach (var key in Pack._stringColorMap.Keys) if (key != "ThemeColor") ColorField(key);
                     }
-                    if (Pack._stringBoolMap.Count > 0) using (BOX) using (SectionFolder("Bool Map")) foreach (var key in Pack._stringBoolMap.Keys) Toggle(key);
-                    if (Pack._stringIntMap.Count > 0) using (BOX) using (SectionFolder("Int Map")) foreach (var key in Pack._stringIntMap.Keys) IntField(key);
-                    if (Pack._stringFloatMap.Count > 0) using (BOX) using (SectionFolder("Float Map")) foreach (var key in Pack._stringFloatMap.Keys) FloatField(key);
-                    if (Pack._stringStringMap.Count > 0) using (BOX) using (SectionFolder("String Map")) foreach (var key in Pack._stringStringMap.Keys) TextField(key);
-                    if (Pack._stringVec2Map.Count > 0) using (BOX) using (SectionFolder("Vector2 Map")) foreach (var key in Pack._stringVec2Map.Keys) Vector2Field(key);
-                    if (Pack._stringVec3Map.Count > 0) using (BOX) using (SectionFolder("Vector3 Map")) foreach (var key in Pack._stringVec3Map.Keys) Vector3Field(key);
-                    if (Pack._stringVec4Map.Count > 0) using (BOX) using (SectionFolder("Vector4 Map")) foreach (var key in Pack._stringVec4Map.Keys) Vector4Field(key);
-                    if (Pack._stringVec2IntMap.Count > 0) using (BOX) using (SectionFolder("Vector2Int Map")) foreach (var key in Pack._stringVec2IntMap.Keys) Vector2IntField(key);
-                    if (Pack._stringVec3IntMap.Count > 0) using (BOX) using (SectionFolder("Vector3Int Map")) foreach (var key in Pack._stringVec3IntMap.Keys) Vector3IntField(key);
-                    if (Pack._intVec2Map.Count > 0) using (BOX) using (SectionFolder("Int-Vector2 Map")) foreach (var key in Pack._intVec2Map.Keys) Pack._intVec2Map[key] = _Vector2Field(key.ToString(), Pack._intVec2Map[key]);
+                    if (Pack._stringBoolMap.Count > 0) using (BOX) using (SectionFolder("Bool Map", extraAction: () => { Space(); if (IceButton("Clear")) Pack._stringBoolMap.Clear(); })) foreach (var key in Pack._stringBoolMap.Keys) Toggle(key);
+                    if (Pack._stringIntMap.Count > 0) using (BOX) using (SectionFolder("Int Map", extraAction: () => { Space(); if (IceButton("Clear")) Pack._stringIntMap.Clear(); })) foreach (var key in Pack._stringIntMap.Keys) IntField(key);
+                    if (Pack._stringFloatMap.Count > 0) using (BOX) using (SectionFolder("Float Map", extraAction: () => { Space(); if (IceButton("Clear")) Pack._stringFloatMap.Clear(); })) foreach (var key in Pack._stringFloatMap.Keys) FloatField(key);
+                    if (Pack._stringStringMap.Count > 0) using (BOX) using (SectionFolder("String Map", extraAction: () => { Space(); if (IceButton("Clear")) Pack._stringStringMap.Clear(); })) foreach (var key in Pack._stringStringMap.Keys) TextField(key);
+                    if (Pack._stringVec2Map.Count > 0) using (BOX) using (SectionFolder("Vector2 Map", extraAction: () => { Space(); if (IceButton("Clear")) Pack._stringVec2Map.Clear(); })) foreach (var key in Pack._stringVec2Map.Keys) Vector2Field(key);
+                    if (Pack._stringVec3Map.Count > 0) using (BOX) using (SectionFolder("Vector3 Map", extraAction: () => { Space(); if (IceButton("Clear")) Pack._stringVec3Map.Clear(); })) foreach (var key in Pack._stringVec3Map.Keys) Vector3Field(key);
+                    if (Pack._stringVec4Map.Count > 0) using (BOX) using (SectionFolder("Vector4 Map", extraAction: () => { Space(); if (IceButton("Clear")) Pack._stringVec4Map.Clear(); })) foreach (var key in Pack._stringVec4Map.Keys) Vector4Field(key);
+                    if (Pack._stringVec2IntMap.Count > 0) using (BOX) using (SectionFolder("Vector2Int Map", extraAction: () => { Space(); if (IceButton("Clear")) Pack._stringVec2IntMap.Clear(); })) foreach (var key in Pack._stringVec2IntMap.Keys) Vector2IntField(key);
+                    if (Pack._stringVec3IntMap.Count > 0) using (BOX) using (SectionFolder("Vector3Int Map", extraAction: () => { Space(); if (IceButton("Clear")) Pack._stringVec3IntMap.Clear(); })) foreach (var key in Pack._stringVec3IntMap.Keys) Vector3IntField(key);
+                    if (Pack._intVec2Map.Count > 0) using (BOX) using (SectionFolder("Int-Vector2 Map", extraAction: () => { Space(); if (IceButton("Clear")) Pack._intVec2Map.Clear(); })) foreach (var key in Pack._intVec2Map.Keys) Pack._intVec2Map[key] = _Vector2Field(key.ToString(), Pack._intVec2Map[key]);
                     // AnimBool会被SectionFolder影响,必须放在最后面
-                    if (Pack._stringAnimBoolMap.Count > 0) using (BOX) using (SectionFolder("Anim Bool Map")) foreach (var key in Pack._stringAnimBoolMap.Keys) using (HORIZONTAL) { SetAnimBoolTarget(key, _Toggle(key.ToString(), GetAnimBoolTarget(key))); _Slider(GetAnimBoolFaded(key)); }
+                    if (Pack._stringAnimBoolMap.Count > 0) using (BOX) using (SectionFolder("Anim Bool Map", extraAction: () => { Space(); if (IceButton("Clear")) Pack._stringAnimBoolMap.Clear(); })) foreach (var key in Pack._stringAnimBoolMap.Keys) using (HORIZONTAL) { SetAnimBoolTarget(key, _Toggle(key.ToString(), GetAnimBoolTarget(key))); _Slider(GetAnimBoolFaded(key)); }
                 }
             }
         }
