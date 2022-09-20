@@ -256,7 +256,7 @@ namespace IceEditor.Internal
         #region 【定制】
 
         [MenuItem("IceEngine/Style Box", false, 20)]
-        static IceGUIStyleBox OpenWindow() => GetWindow<IceGUIStyleBox>();
+        public static IceGUIStyleBox OpenWindow() => GetWindow<IceGUIStyleBox>();
         protected override string Title => InGameSkin ? "GUIStyle 样例窗口 - InGameSkin" : "GUIStyle 样例窗口";
         public override void AddItemsToMenu(GenericMenu menu)
         {

@@ -4,12 +4,11 @@ using System.Threading;
 using System.Threading.Tasks;
 using UnityEngine;
 using IceEngine;
-using IceEngine.Framework;
 using System;
 
 namespace Ice
 {
-    public sealed class Save : IceSystem<IceEngine.Internal.SettingSave>
+    public sealed class Save : IceEngine.Framework.IceSystem<IceEngine.Internal.SettingSave>
     {
         #region Path Configuration
         public static string DataPath => Application.persistentDataPath;

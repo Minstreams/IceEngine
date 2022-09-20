@@ -1,10 +1,9 @@
 ﻿using System.Net;
-using IceEngine.Framework;
 
 namespace IceEngine.Internal
 {
     [IceSettingPath("IceEngine/IceSystem/Network")]
-    public class SettingNetwork : IceSetting<SettingNetwork>
+    public class SettingNetwork : Framework.IceSetting<SettingNetwork>
     {
         public int initialBufferSize = 4096;
         public byte magicByte = 0xC9;

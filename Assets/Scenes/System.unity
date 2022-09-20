@@ -167,7 +167,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 963e22386e1306140a518e0e336104c2, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  graphData: 14010000001640ec1f0014030000001400000000140000000014000000000800000016c30000a8c200
+  graphData: 14010000001640ec1f0014030000001400000000140000000014000000000800000000c30000c0c200
   _fieldMap:
   - _tbl: []
 --- !u!1 &1199616986
@@ -199,7 +199,6 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 1521563689}
-  - {fileID: 1705419859}
   m_Father: {fileID: 0}
   m_RootOrder: 3
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -601,12 +600,12 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1705419858}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalPosition: {x: 18.15394, y: 0.3246529, z: 7.9464655}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 1199616987}
-  m_RootOrder: 1
+  m_Father: {fileID: 0}
+  m_RootOrder: 4
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &1705419860
 MonoBehaviour:

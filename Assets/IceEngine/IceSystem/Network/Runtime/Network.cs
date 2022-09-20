@@ -4,13 +4,12 @@ using System.Collections.Generic;
 using System.Net;
 using UnityEngine;
 
-using IceEngine.Framework;
 using IceEngine.Networking;
 using IceEngine.Networking.Framework;
 
 namespace Ice
 {
-    public sealed class Network : IceSystem<IceEngine.Internal.SettingNetwork>
+    public sealed class Network : IceEngine.Framework.IceSystem<IceEngine.Internal.SettingNetwork>
     {
         #region Common
         public static IPAddress LocalIPAddress => LocalIPAddressList.Count > 0 ? LocalIPAddressList[0] : IPAddress.Loopback;

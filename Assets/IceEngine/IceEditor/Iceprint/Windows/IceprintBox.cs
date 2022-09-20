@@ -860,7 +860,7 @@ namespace IceEditor.Internal
         public static IceprintBox Instance { get; private set; } = null;
 
         [MenuItem("IceEngine/Iceprint Box", false, 20)]
-        static void OpenWindow() => GetWindow<IceprintBox>();
+        public static void OpenWindow() => GetWindow<IceprintBox>();
         protected override bool HasScrollScopeOnWindowGUI => false;
         protected override Color DefaultThemeColor => Setting.themeColor;
         protected override string Title => _title ??= "Iceprint Box";

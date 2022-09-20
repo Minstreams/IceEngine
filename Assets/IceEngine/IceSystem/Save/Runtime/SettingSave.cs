@@ -1,9 +1,7 @@
-﻿using IceEngine.Framework;
-
-namespace IceEngine.Internal
+﻿namespace IceEngine.Internal
 {
     [IceSettingPath("IceEngine/IceSystem/Save")]
-    public class SettingSave : IceSetting<SettingSave>
+    public class SettingSave : Framework.IceSetting<SettingSave>
     {
 
     }

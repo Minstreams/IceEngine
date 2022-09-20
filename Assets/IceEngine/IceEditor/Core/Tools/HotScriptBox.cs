@@ -32,7 +32,7 @@ namespace IceEditor.Internal
         };
 
         [MenuItem("IceEngine/热脚本")]
-        static void OpenWindow() => GetWindow<HotScriptBox>();
+        public static void OpenWindow() => GetWindow<HotScriptBox>();
         protected override string Title => "热脚本";
 
         GUIStyle StlAssemblyToggle => _stlAssemblyToggle?.Check() ?? (_stlAssemblyToggle = new GUIStyle("toggle") { richText = true, }); [NonSerialized] GUIStyle _stlAssemblyToggle;
