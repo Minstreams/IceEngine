@@ -40,6 +40,7 @@ namespace IceEditor.Internal
         GUIStyle StlScriptTabOn => _stlScriptTabOn?.Check() ?? (_stlScriptTabOn = new GUIStyle("dragtab") { padding = new RectOffset(7, 24, 0, 0), stretchWidth = false, }); [NonSerialized] GUIStyle _stlScriptTabOn;
         GUIStyle StlScriptTabOnFirst => _stlScriptTabOnFirst?.Check() ?? (_stlScriptTabOnFirst = new GUIStyle("dragtab first") { padding = new RectOffset(7, 24, 0, 0), stretchWidth = false, }); [NonSerialized] GUIStyle _stlScriptTabOnFirst;
         GUIStyle StlScriptTabDock => _stlScriptTabDock?.Check() ?? (_stlScriptTabDock = new GUIStyle("dockarea") { padding = new RectOffset(0, 4, 3, 0), }); [NonSerialized] GUIStyle _stlScriptTabDock;
+        GUIStyle StlCodeBox => _stlCodeBox?.Check() ?? (_stlCodeBox = new GUIStyle("textfield") { stretchHeight = true, }); GUIStyle _stlCodeBox;
 
         protected override void OnThemeColorChange()
         {
@@ -279,7 +280,7 @@ using static IceEditor.IceGUIAuto;
             {
                 using (Area(rMain)) using (GUICHECK)
                 {
-                    var code = CurScript.code = GUILayout.TextArea(CurScript.code, "textarea", GUILayout.ExpandHeight(true));
+                    var code = CurScript.code = GUILayout.TextArea(CurScript.code, StlCodeBox);
                     if (GUIChanged)
                     {
                         Setting.Save();
