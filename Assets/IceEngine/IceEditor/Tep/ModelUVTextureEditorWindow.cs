@@ -17,10 +17,10 @@ namespace IceEditor
     public class ModelUVTextureEditorWindow : IceEditorWindow
     {
         #region 定制
-        [MenuItem("测试/贴图裁剪UV重排工具")]
+        [MenuItem("IceEngine/贴图裁剪UV重排工具")]
         public static void OpenWindow() => GetWindow<ModelUVTextureEditorWindow>();
-        public override GUIContent TitleContent => new GUIContent("贴图裁剪UV重排");
-        protected override Color DefaultThemeColor => new Color(0.38f, 0.85f, 0.85f);
+        protected override string Title => "贴图裁剪UV重排";
+        protected override Color DefaultThemeColor => new(0.38f, 0.85f, 0.85f);
         protected override void OnThemeColorChange()
         {
             _stlItemOn = null;
@@ -51,8 +51,8 @@ namespace IceEditor
             public Mesh mesh;
             public Rect bound;
             public List<int> triangleList;
-            public List<Line> lineList = new List<Line>();  // 线框
-            public List<Line> edgeList = new List<Line>();  // 边缘
+            public List<Line> lineList = new();  // 线框
+            public List<Line> edgeList = new();  // 边缘
 
             public MeshUnit(Mesh mesh, List<int> triangleList)
             {
@@ -64,14 +64,14 @@ namespace IceEditor
         public class MeshResource
         {
             public Mesh mesh;
-            public List<MeshUnit> meshUnits = new List<MeshUnit>();
+            public List<MeshUnit> meshUnits = new();
             public MeshResource(Mesh mesh, Action<string, float> progressCallback = null)
             {
                 this.mesh = mesh;
                 var triangles = mesh.triangles;
                 var uv = mesh.uv;
 
-                Dictionary<Vector2, List<int>> unitMap = new Dictionary<Vector2, List<int>>();
+                var unitMap = new Dictionary<Vector2, List<int>>();
                 Vector2 Compress(Vector2 p)
                 {
                     const float k = 512;
@@ -86,7 +86,7 @@ namespace IceEditor
                     Vector2 p3 = Compress(uv[triangles[i - 3]]);
 
                     // 生成UnitMap
-                    List<int> newUnit = new List<int>() { i - 3 };
+                    var newUnit = new List<int>() { i - 3 };
 
                     void MergeToP(Vector2 p)
                     {
@@ -114,7 +114,7 @@ namespace IceEditor
                 }
 
                 // 收集UnitSet
-                HashSet<List<int>> unitSet = new HashSet<List<int>>();
+                var unitSet = new HashSet<List<int>>();
                 foreach (var unit in unitMap) unitSet.Add(unit.Value);
 
                 // 初始化Unit
@@ -123,7 +123,7 @@ namespace IceEditor
                     var u = new MeshUnit(mesh, unit);
 
                     // 预处理点
-                    HashSet<(Vector2 p1, Vector2 p2)> rawLineSet = new HashSet<(Vector2, Vector2)>();
+                    HashSet<(Vector2 p1, Vector2 p2)> rawLineSet = new();
                     foreach (var i in unit)
                     {
                         Vector2 p1 = Compress(uv[triangles[i + 0]]);
@@ -146,8 +146,8 @@ namespace IceEditor
                     }
 
                     // 探测线框,边缘,包围盒
-                    HashSet<(Vector2, Vector2)> lineSet = new HashSet<(Vector2, Vector2)>();
-                    HashSet<(Vector2, Vector2)> edgeSet = new HashSet<(Vector2, Vector2)>();
+                    HashSet<(Vector2, Vector2)> lineSet = new();
+                    HashSet<(Vector2, Vector2)> edgeSet = new();
                     float xMin = 1;
                     float xMax = 0;
                     float yMin = 1;
@@ -182,10 +182,10 @@ namespace IceEditor
         public class MeshPack
         {
             public string name;
-            public IceDictionary<string, MeshResource> meshResMap = new IceDictionary<string, MeshResource>();
-            public List<Texture2D> meshTextures = new List<Texture2D>();
-            public List<MeshGroup> meshGroups = new List<MeshGroup>();
-            public List<MeshGroup> deletedGroups = new List<MeshGroup>();
+            public IceDictionary<string, MeshResource> meshResMap = new();
+            public List<Texture2D> meshTextures = new();
+            public List<MeshGroup> meshGroups = new();
+            public List<MeshGroup> deletedGroups = new();
 
             public int outputTextureIndex = 0;
             public Texture2D OutputTexture => (outputTextureIndex >= 0 && outputTextureIndex < meshTextures.Count) ? meshTextures[outputTextureIndex] : null;
@@ -209,7 +209,7 @@ namespace IceEditor
         {
             public string name;
             public Color tintColor;
-            public List<MeshUnit> meshUnits = new List<MeshUnit>();
+            public List<MeshUnit> meshUnits = new();
 
             Mesh _mesh;
             public Mesh Mesh => _mesh != null ? _mesh : UpdateMesh();
@@ -324,7 +324,7 @@ namespace IceEditor
                 var uv2 = Mesh.uv2;
                 var uv3 = Mesh.uv3;
 
-                var scaleUV = Vector2.one * Scale * factor;
+                var scaleUV = factor * Scale * Vector2.one;
                 for (int i = 0; i < uv2.Length; ++i)
                 {
                     // 在这里对uv做变换
@@ -451,15 +451,15 @@ namespace IceEditor
         }
         static Mesh MergeMesh(IEnumerable<MeshUnit> units)
         {
-            List<Vector3> vertexList = new List<Vector3>();
-            List<Vector3> normalList = new List<Vector3>();
-            List<Vector4> tangentList = new List<Vector4>();
-            List<Vector2> uvList = new List<Vector2>();
-            List<Vector2> uv3List = new List<Vector2>();
-            List<int> triangleList = new List<int>();
+            var vertexList = new List<Vector3>();
+            var normalList = new List<Vector3>();
+            var tangentList = new List<Vector4>();
+            var uvList = new List<Vector2>();
+            var uv3List = new List<Vector2>();
+            var triangleList = new List<int>();
 
             EditorUtility.DisplayProgressBar("Mesh融合中", "正在收集Mesh信息……", 0);
-            Dictionary<Mesh, List<int>> outputMap = new Dictionary<Mesh, List<int>>();
+            var outputMap = new Dictionary<Mesh, List<int>>();
             foreach (var u in units)
             {
                 var tl = u.mesh.triangles;
@@ -472,9 +472,9 @@ namespace IceEditor
                 }
             }
 
-            HashSet<int> sortSet = new HashSet<int>();
+            var sortSet = new HashSet<int>();
             List<int> sortList;
-            Dictionary<int, int> redirMap = new Dictionary<int, int>();
+            var redirMap = new Dictionary<int, int>();
 
             int id = 0;
             foreach (var kv in outputMap)
@@ -527,11 +527,11 @@ namespace IceEditor
         static Mesh MergeMesh(IEnumerable<MeshGroup> groups)
         {
             // 用于生成导出的Mesh
-            List<Vector3> vertexList = new List<Vector3>();
-            List<Vector3> normalList = new List<Vector3>();
-            List<Vector4> tangentList = new List<Vector4>();
-            List<Vector2> uvList = new List<Vector2>();
-            List<int> triangleList = new List<int>();
+            var vertexList = new List<Vector3>();
+            var normalList = new List<Vector3>();
+            var tangentList = new List<Vector4>();
+            var uvList = new List<Vector2>();
+            var triangleList = new List<int>();
 
             EditorUtility.DisplayProgressBar("Mesh融合中", "正在收集Mesh信息……", 0);
             int offset = 0;
@@ -567,7 +567,6 @@ namespace IceEditor
         #endregion
 
         #region GUI Shortcut
-        Event e => Event.current;
         GUIStyle GetItemStyle(bool on, bool hover = false) => (on, hover) switch
         {
             (false, false) => StlItem,
@@ -575,10 +574,10 @@ namespace IceEditor
             (true, false) => StlItemOn,
             (true, true) => StlItemOnHover,
         };
-        static bool GetKeyDown(KeyCode key) => Event.current.type == EventType.KeyDown && Event.current.keyCode == key && !Event.current.control && !Event.current.alt && !Event.current.shift;
-        static bool GetKeyDownWithControl(KeyCode key) => Event.current.type == EventType.KeyDown && Event.current.keyCode == key && Event.current.control && !Event.current.alt && !Event.current.shift;
-        static bool GetKeyDownWithAlt(KeyCode key) => Event.current.type == EventType.KeyDown && Event.current.keyCode == key && !Event.current.control && Event.current.alt && !Event.current.shift;
-        static bool GetKeyDownWithShift(KeyCode key) => Event.current.type == EventType.KeyDown && Event.current.keyCode == key && !Event.current.control && !Event.current.alt && Event.current.shift;
+        static bool GetKeyDown(KeyCode key) => E.type == EventType.KeyDown && E.keyCode == key && !E.control && !E.alt && !E.shift;
+        static bool GetKeyDownWithControl(KeyCode key) => E.type == EventType.KeyDown && E.keyCode == key && E.control && !E.alt && !E.shift;
+        static bool GetKeyDownWithAlt(KeyCode key) => E.type == EventType.KeyDown && E.keyCode == key && !E.control && E.alt && !E.shift;
+        static bool GetKeyDownWithShift(KeyCode key) => E.type == EventType.KeyDown && E.keyCode == key && !E.control && !E.alt && E.shift;
         void DrawOutline(Rect rect)
         {
             Handles.DrawLine(new Vector3(rect.xMin, rect.yMin), new Vector3(rect.xMin, rect.yMax));
@@ -590,29 +589,29 @@ namespace IceEditor
         float SeparatorHorizontal(Rect rect, GUIStyle style, float width, bool inverse = false)
         {
             EditorGUIUtility.AddCursorRect(rect, MouseCursor.ResizeHorizontal);
-            var separator = GUIUtility.GetControlID(FocusType.Passive);
-            switch (e.type)
+            var separator = GetControlID();
+            switch (E.type)
             {
                 case EventType.MouseDown:
-                    if (Event.current.button == 0 && rect.Contains(Event.current.mousePosition))
+                    if (E.button == 0 && rect.Contains(E.mousePosition))
                     {
-                        GUIUtility.hotControl = separator;
-                        SetFloat("MouseDownXOffset", width + (inverse ? Event.current.mousePosition.x : -Event.current.mousePosition.x));
-                        e.Use();
+                        GUIHotControl = separator;
+                        SetFloat("MouseDownXOffset", width + (inverse ? E.mousePosition.x : -E.mousePosition.x));
+                        E.Use();
                     }
                     break;
                 case EventType.MouseUp:
-                    if (GUIUtility.hotControl == separator)
+                    if (GUIHotControl == separator)
                     {
-                        GUIUtility.hotControl = 0;
-                        e.Use();
+                        GUIHotControl = 0;
+                        E.Use();
                     }
                     break;
                 case EventType.MouseDrag:
-                    if (GUIUtility.hotControl == separator)
+                    if (GUIHotControl == separator)
                     {
-                        width = GetFloat("MouseDownXOffset") + (inverse ? -Event.current.mousePosition.x : Event.current.mousePosition.x);
-                        e.Use();
+                        width = GetFloat("MouseDownXOffset") + (inverse ? -E.mousePosition.x : E.mousePosition.x);
+                        E.Use();
                         Repaint();
                     }
                     break;
@@ -628,9 +627,9 @@ namespace IceEditor
             Vector2 offset = GetVector2("ViewOffset");
             float unscaledSize = Mathf.Min(workspace.height, workspace.width) * 0.5f * ViewWidth / 1024;
 
-            int preMoveViewControl = GUIUtility.GetControlID(FocusType.Passive);
-            int moveViewControl = GUIUtility.GetControlID(FocusType.Passive);
-            bool CanMoveView() => workspace.Contains(Event.current.mousePosition);
+            int preMoveViewControl = GetControlID();
+            int moveViewControl = GetControlID();
+            bool CanMoveView() => workspace.Contains(E.mousePosition);
 
             var center = workspace.center;
             float size = unscaledSize * scale;
@@ -639,56 +638,56 @@ namespace IceEditor
             float borderY = Mathf.Max(workspace.height / unscaledSize * 0.5f, scale);
             offset.y = Mathf.Clamp(offset.y, -borderY, borderY);
 
-            switch (e.type)
+            switch (E.type)
             {
                 case EventType.KeyDown:
-                    if (GUIUtility.hotControl == 0 && CanMoveView() && e.keyCode == KeyCode.Space)
+                    if (GUIHotControl == 0 && CanMoveView() && E.keyCode == KeyCode.Space)
                     {
-                        GUIUtility.hotControl = preMoveViewControl;
-                        e.Use();
+                        GUIHotControl = preMoveViewControl;
+                        E.Use();
                     }
                     break;
                 case EventType.KeyUp:
-                    if (GUIUtility.hotControl == preMoveViewControl && e.keyCode == KeyCode.Space)
+                    if (GUIHotControl == preMoveViewControl && E.keyCode == KeyCode.Space)
                     {
-                        GUIUtility.hotControl = 0;
-                        e.Use();
+                        GUIHotControl = 0;
+                        E.Use();
                     }
                     break;
                 case EventType.MouseDown:
-                    if (CanMoveView() && (GUIUtility.hotControl == preMoveViewControl || (GUIUtility.hotControl == 0 && e.button != 0)))
+                    if (CanMoveView() && (GUIHotControl == preMoveViewControl || (GUIHotControl == 0 && E.button != 0)))
                     {
-                        GUIUtility.hotControl = moveViewControl;
-                        SetVector2("MouseDownPosOffset", offset * unscaledSize - e.mousePosition);
-                        e.Use();
+                        GUIHotControl = moveViewControl;
+                        SetVector2("MouseDownPosOffset", offset * unscaledSize - E.mousePosition);
+                        E.Use();
                     }
                     break;
                 case EventType.MouseUp:
-                    if (GUIUtility.hotControl == moveViewControl)
+                    if (GUIHotControl == moveViewControl)
                     {
-                        GUIUtility.hotControl = 0;
-                        e.Use();
+                        GUIHotControl = 0;
+                        E.Use();
                     }
                     break;
                 case EventType.MouseDrag:
-                    if (GUIUtility.hotControl == moveViewControl)
+                    if (GUIHotControl == moveViewControl)
                     {
-                        SetVector2("ViewOffset", offset = (GetVector2("MouseDownPosOffset") + e.mousePosition) / unscaledSize);
-                        e.Use();
+                        SetVector2("ViewOffset", offset = (GetVector2("MouseDownPosOffset") + E.mousePosition) / unscaledSize);
+                        E.Use();
                     }
                     break;
                 case EventType.ScrollWheel:
                     if (CanMoveView())
                     {
-                        Vector2 delta = offset + (workspace.center - e.mousePosition) / unscaledSize;
-                        var newScale = Mathf.Clamp(scale * (1 - e.delta.y * 0.05f), 0.1f, 32);
+                        Vector2 delta = offset + (workspace.center - E.mousePosition) / unscaledSize;
+                        var newScale = Mathf.Clamp(scale * (1 - E.delta.y * 0.05f), 0.1f, 32);
                         SetVector2("ViewOffset", offset += delta * (newScale / scale - 1));
                         SetFloat("ViewScale", scale = newScale);
-                        e.Use();
+                        E.Use();
                     }
                     break;
                 case EventType.Repaint:
-                    if (GUIUtility.hotControl == moveViewControl || GUIUtility.hotControl == preMoveViewControl)
+                    if (GUIHotControl == moveViewControl || GUIHotControl == preMoveViewControl)
                     {
                         EditorGUIUtility.AddCursorRect(workspace, MouseCursor.Pan);
                     }
@@ -705,22 +704,22 @@ namespace IceEditor
         }
         void ImportMeshBox(string text = "将Mesh拖入此处")
         {
-            bool performDrag = e.type == EventType.DragPerform;
+            bool performDrag = E.type == EventType.DragPerform;
 
             // 新增Mesh
             ObjectField(ref meshDropper);
-            if (e.type == EventType.Repaint) GUI.Label(GUILayoutUtility.GetLastRect().MoveEdge(2, -20, 2, -2), text, StlDockField);
+            if (E.type == EventType.Repaint) GUI.Label(GUILayoutUtility.GetLastRect().MoveEdge(2, -20, 2, -2), text, StlDockField);
 
 
             if (performDrag && meshDropper != null) SetBool("ImportResource", true);
         }
         void ImportTextureBox(string text = "将贴图拖入此处")
         {
-            bool performDrag = e.type == EventType.DragPerform;
+            bool performDrag = E.type == EventType.DragPerform;
 
             // 新增贴图
             ObjectField(ref texDropper);
-            if (e.type == EventType.Repaint) GUI.Label(GUILayoutUtility.GetLastRect().MoveEdge(2, -20, 2, -2), text, StlDockField);
+            if (E.type == EventType.Repaint) GUI.Label(GUILayoutUtility.GetLastRect().MoveEdge(2, -20, 2, -2), text, StlDockField);
 
             if (performDrag && texDropper != null) SetBool("ImportResource", true);
         }
@@ -744,13 +743,13 @@ namespace IceEditor
                 }
             }
 
-            if (e.type == EventType.Repaint)
+            if (E.type == EventType.Repaint)
             {
                 var sRect = GetLastRect();
 
                 // 处理 hover
                 var margin = StlItem.margin;
-                if ((hoveringGroups.Count != 1 || !hoveringGroups.Contains(g)) && sRect.MoveEdge(-margin.left, margin.right, -margin.top, margin.bottom).Contains(e.mousePosition))
+                if ((hoveringGroups.Count != 1 || !hoveringGroups.Contains(g)) && sRect.MoveEdge(-margin.left, margin.right, -margin.top, margin.bottom).Contains(E.mousePosition))
                 {
                     hoveringGroups.Clear();
                     hoveringGroups.Add(g);
@@ -855,17 +854,17 @@ namespace IceEditor
         }
         void PreviewBox(float height = 322, GUIStyle styleOverride = null, IEnumerable<MeshGroup> groupSetOverride = null)
         {
-            int control = GUIUtility.GetControlID(FocusType.Passive);
+            int control = GetControlID();
             var r = GetRect(GUILayout.ExpandWidth(true), GUILayout.Height(height));
             if (r.width <= 0 || r.height <= 0) return;
 
-            switch (e.type)
+            switch (E.type)
             {
                 case EventType.MouseDown:
-                    var mousePos = e.mousePosition;
+                    var mousePos = E.mousePosition;
                     if (r.ApplyBorder(-16).Contains(mousePos))
                     {
-                        if (e.button == 1)
+                        if (E.button == 1)
                         {
                             var gm = new GenericMenu();
                             gm.AddItem(new GUIContent("重置视角"), false, () =>
@@ -876,24 +875,24 @@ namespace IceEditor
                         }
                         else
                         {
-                            GUIUtility.hotControl = control;
+                            GUIHotControl = control;
                             SetVector2("MouseDownPreviewOffset", GetVector2("previewAngle") - mousePos / r.width);
                         }
-                        e.Use();
+                        E.Use();
                     }
                     break;
                 case EventType.MouseUp:
-                    if (GUIUtility.hotControl == control)
+                    if (GUIHotControl == control)
                     {
-                        GUIUtility.hotControl = 0;
-                        e.Use();
+                        GUIHotControl = 0;
+                        E.Use();
                     }
                     break;
                 case EventType.MouseDrag:
-                    if (GUIUtility.hotControl == control)
+                    if (GUIHotControl == control)
                     {
-                        SetVector2("previewAngle", GetVector2("MouseDownPreviewOffset") + e.mousePosition / r.width);
-                        e.Use();
+                        SetVector2("previewAngle", GetVector2("MouseDownPreviewOffset") + E.mousePosition / r.width);
+                        E.Use();
                     }
                     break;
                 case EventType.Repaint:
@@ -945,7 +944,7 @@ namespace IceEditor
         #region 选择组
         void SelectGroup(bool forceMultiSelect, params MeshGroup[] gs)
         {
-            if (!forceMultiSelect && !e.control && !e.shift) selectedGroups.Clear();
+            if (!forceMultiSelect && !E.control && !E.shift) selectedGroups.Clear();
             if (gs.All(g => selectedGroups.Contains(g)))
             {
                 foreach (var g in gs) selectedGroups.Remove(g);
@@ -992,7 +991,7 @@ namespace IceEditor
             int _index = name.LastIndexOf("_00");
             if (_index > 0) name = name.Substring(0, _index);
 
-            List<MeshUnit> units = new List<MeshUnit>();
+            var units = new List<MeshUnit>();
             foreach (var g in groups)
             {
                 units.AddRange(g.meshUnits);
@@ -1061,12 +1060,12 @@ namespace IceEditor
 
             ResetGroup(MeshGroups, resetPos: false);
 
-            List<Rect> l = new List<Rect>() { new Rect(0, 0, 1, 1) };
+            var l = new List<Rect>() { new Rect(0, 0, 1, 1) };
 
             bool CheckContain(Rect r, Vector2 size) => r.width >= size.x && r.height >= size.y;
             HashSet<Rect> Split(Rect r, Rect obj)
             {
-                HashSet<Rect> res = new HashSet<Rect>();
+                var res = new HashSet<Rect>();
                 if (r.xMin < obj.xMin)
                 {
                     res.Add(Rect.MinMaxRect(r.xMin, r.yMin, obj.xMin, r.yMax));
@@ -1519,18 +1518,18 @@ namespace IceEditor
         }
         [NonSerialized] MeshPack _editingPack = null;
         [NonSerialized] MeshPack inspectingPack = null;
-        List<MeshPack> meshPacks = new List<MeshPack>();
+        List<MeshPack> meshPacks = new();
 
         public List<MeshGroup> MeshGroups => EditingPack?.meshGroups ?? _meshGroups;
-        List<MeshGroup> _meshGroups = new List<MeshGroup>();
+        List<MeshGroup> _meshGroups = new();
 
-        readonly HashSet<MeshGroup> selectedGroups = new HashSet<MeshGroup>();
-        readonly HashSet<MeshGroup> hoveringGroups = new HashSet<MeshGroup>();
+        readonly HashSet<MeshGroup> selectedGroups = new();
+        readonly HashSet<MeshGroup> hoveringGroups = new();
 
         [NonSerialized] Mesh meshDropper;
         [NonSerialized] Texture2D texDropper;
 
-        readonly Queue<Action> commandQueue = new Queue<Action>();
+        readonly Queue<Action> commandQueue = new();
 
         PreviewRenderUtility Preview => _preview ?? (_preview = new PreviewRenderUtility()); PreviewRenderUtility _preview = null;
 
@@ -1542,8 +1541,8 @@ namespace IceEditor
         [NonSerialized] float? yRefLine = null;
         [NonSerialized] List<Rect> xRefRect = null;
         [NonSerialized] List<Rect> yRefRect = null;
-        readonly Dictionary<float, List<Rect>> xRefMap = new Dictionary<float, List<Rect>>();
-        readonly Dictionary<float, List<Rect>> yRefMap = new Dictionary<float, List<Rect>>();
+        readonly Dictionary<float, List<Rect>> xRefMap = new();
+        readonly Dictionary<float, List<Rect>> yRefMap = new();
         #endregion
 
         #region Events & Callbacks
@@ -1671,7 +1670,7 @@ namespace IceEditor
                                 }
 
                                 // 标题
-                                if (e.type == EventType.Repaint) StyleBox(GetLastRect(), StlPackName, p.name);
+                                if (E.type == EventType.Repaint) StyleBox(GetLastRect(), StlPackName, p.name);
 
                                 // 快捷选择Texture
                                 int texWidth = 96;
@@ -1706,13 +1705,13 @@ namespace IceEditor
 
                     // 空白区域
                     var emptyRect = GetRect(GUILayout.ExpandWidth(true), GUILayout.ExpandHeight(true));
-                    if (emptyRect.Contains(e.mousePosition))
+                    if (emptyRect.Contains(E.mousePosition))
                     {
-                        if (e.type == EventType.Repaint)
+                        if (E.type == EventType.Repaint)
                         {
                             hoveringGroups.Clear();
                         }
-                        else if (e.type == EventType.MouseDown && e.button == 0)
+                        else if (E.type == EventType.MouseDown && E.button == 0)
                         {
                             inspectingPack = null;
                             Repaint();
@@ -1736,7 +1735,7 @@ namespace IceEditor
                             }
 
                             // 标题
-                            if (e.type == EventType.Repaint) StyleBox(GetLastRect(), StlPackName, p.name);
+                            if (E.type == EventType.Repaint) StyleBox(GetLastRect(), StlPackName, p.name);
 
                             // 快捷选择Texture
                             int texWidth = 112;
@@ -1751,13 +1750,13 @@ namespace IceEditor
                     }
                     // 空白区域
                     var emptyRect = GetRect(GUILayout.ExpandWidth(true), GUILayout.ExpandHeight(true));
-                    if (emptyRect.Contains(e.mousePosition))
+                    if (emptyRect.Contains(E.mousePosition))
                     {
-                        if (e.type == EventType.Repaint)
+                        if (E.type == EventType.Repaint)
                         {
                             hoveringGroups.Clear();
                         }
-                        else if (e.type == EventType.MouseDown && e.button == 0)
+                        else if (E.type == EventType.MouseDown && E.button == 0)
                         {
                             SelectNoneGroup();
                         }
@@ -1841,24 +1840,24 @@ namespace IceEditor
 
             // 视口缩放
             Rect tRect = MovableViewport(wRect);
-            bool mouseInRect = wRect.Contains(e.mousePosition);
+            bool mouseInRect = wRect.Contains(E.mousePosition);
 
             // 处理hover
-            if (e.type == EventType.MouseMove)
+            if (E.type == EventType.MouseMove)
             {
                 if (mouseInRect)
                 {
                     hoveringGroups.Clear();
                     foreach (var g in MeshGroups)
                     {
-                        if (g.Contains(tRect.InverseSample(e.mousePosition, true))) hoveringGroups.Add(g);
+                        if (g.Contains(tRect.InverseSample(E.mousePosition, true))) hoveringGroups.Add(g);
                     }
                 }
                 Repaint();
             }
 
             // 绘制
-            if (e.type == EventType.Repaint)
+            if (E.type == EventType.Repaint)
             {
                 if (bEditingPack)
                 {
@@ -1926,7 +1925,7 @@ namespace IceEditor
                 void SelectPoint()
                 {
                     // 单选判断
-                    if (!e.shift && !e.control) selectedGroups.Clear();
+                    if (!E.shift && !E.control) selectedGroups.Clear();
 
                     int gi = GetInt("LastSelectedGroupIndex");
                     int i = 0;
@@ -1946,12 +1945,12 @@ namespace IceEditor
                 // 框选
                 void SelectRect()
                 {
-                    Vector2 p1 = e.mousePosition;
+                    Vector2 p1 = E.mousePosition;
                     Vector2 p2 = GetVector2("MouseDownPos");
                     selectRect = Rect.MinMaxRect(Mathf.Min(p1.x, p2.x), Mathf.Min(p1.y, p2.y), Mathf.Max(p1.x, p2.x), Mathf.Max(p1.y, p2.y));
                     var sr = selectRect.Value;
 
-                    if (!e.shift && !e.control) selectedGroups.Clear();
+                    if (!E.shift && !E.control) selectedGroups.Clear();
                     foreach (var g in MeshGroups)
                     {
                         var gr = tRect.Viewport(g.Bound, true);
@@ -1969,7 +1968,7 @@ namespace IceEditor
                         double delta = EditorApplication.timeSinceStartup - lastMouseUpTime;
                         return delta > 0 && delta < 0.25;
                     }
-                    if (!e.shift && !e.control && IsDoubleClick() && selectedGroups.Count == 1 && hoveringGroups.Count == 1)
+                    if (!E.shift && !E.control && IsDoubleClick() && selectedGroups.Count == 1 && hoveringGroups.Count == 1)
                     {
                         var g = selectedGroups.First();
                         EditingPack = meshPacks.Find(p => p.meshGroups.Contains(g));
@@ -1978,59 +1977,59 @@ namespace IceEditor
                     lastMouseUpTime = EditorApplication.timeSinceStartup;
                 }
 
-                bool mouseDownInRect = mouseInRect && e.type == EventType.MouseDown;
+                bool mouseDownInRect = mouseInRect && E.type == EventType.MouseDown;
 
                 // 全局逻辑
-                if (GUIUtility.hotControl == 0 && mouseDownInRect)
+                if (GUIHotControl == 0 && mouseDownInRect)
                 {
                     if (inspectingPack != null) inspectingPack = null;
-                    SetVector2("MouseDownPos", e.mousePosition);
+                    SetVector2("MouseDownPos", E.mousePosition);
                 }
-                if (e.type == EventType.MouseMove)
+                if (E.type == EventType.MouseMove)
                 {
                     SetInt("LastSelectedGroupIndex", 0);
                     Repaint();
                 }
 
                 // 控件
-                int selPoint = GUIUtility.GetControlID(FocusType.Passive);  // 点选
-                int selRect = GUIUtility.GetControlID(FocusType.Passive);   // 框选
+                int selPoint = GetControlID();  // 点选
+                int selRect = GetControlID();   // 框选
 
-                if (GUIUtility.hotControl == 0 && mouseDownInRect)
+                if (GUIHotControl == 0 && mouseDownInRect)
                 {
-                    if (e.button == 0)
+                    if (E.button == 0)
                     {
-                        GUIUtility.hotControl = selPoint;   // 默认点选
+                        GUIHotControl = selPoint;   // 默认点选
                     }
                 }
 
                 // 点选
-                if (GUIUtility.hotControl == selPoint)
+                if (GUIHotControl == selPoint)
                 {
-                    if (e.type == EventType.MouseDrag)
+                    if (E.type == EventType.MouseDrag)
                     {
-                        GUIUtility.hotControl = selRect;
+                        GUIHotControl = selRect;
                     }
-                    else if (e.type == EventType.MouseUp)
+                    else if (E.type == EventType.MouseUp)
                     {
                         SelectPoint();
-                        GUIUtility.hotControl = 0;
-                        e.Use();
+                        GUIHotControl = 0;
+                        E.Use();
                     }
                 }
                 // 框选
-                if (GUIUtility.hotControl == selRect)
+                if (GUIHotControl == selRect)
                 {
-                    if (e.type == EventType.MouseDrag)
+                    if (E.type == EventType.MouseDrag)
                     {
                         SelectRect();
-                        e.Use();
+                        E.Use();
                     }
-                    else if (e.type == EventType.MouseUp)
+                    else if (E.type == EventType.MouseUp)
                     {
                         selectRect = null;
-                        GUIUtility.hotControl = 0;
-                        e.Use();
+                        GUIHotControl = 0;
+                        E.Use();
                     }
                 }
 
@@ -2039,13 +2038,13 @@ namespace IceEditor
                     var outterBound = tRect.Viewport(MergeBounds(selectedGroups.Select(g => g.Bound).ToArray()), true);
 
                     // 主界面物体编辑控件
-                    int preObj = GUIUtility.GetControlID(FocusType.Passive);    // 准备对物体操作
-                    int dragObj = GUIUtility.GetControlID(FocusType.Passive);   // 拖拽
+                    int preObj = GetControlID();    // 准备对物体操作
+                    int dragObj = GetControlID();   // 拖拽
 
                     // 激活条件
                     bool HoveringOnSelected()
                     {
-                        if (e.control) return true;
+                        if (E.control) return true;
                         foreach (var g in hoveringGroups)
                         {
                             if (selectedGroups.Contains(g))
@@ -2055,40 +2054,40 @@ namespace IceEditor
                         }
                         return false;
                     }
-                    if (mouseDownInRect && e.button == 0 && HoveringOnSelected())
+                    if (mouseDownInRect && E.button == 0 && HoveringOnSelected())
                     {
-                        GUIUtility.hotControl = preObj;
+                        GUIHotControl = preObj;
                         foreach (var g in selectedGroups) g.offsetCache = g.Offset;
                         xRefMap.Clear();
                         yRefMap.Clear();
-                        e.Use();
+                        E.Use();
                     }
 
-                    if (e.type == EventType.Repaint && HoveringOnSelected())
+                    if (E.type == EventType.Repaint && HoveringOnSelected())
                     {
                         EditorGUIUtility.AddCursorRect(wRect, MouseCursor.MoveArrow);
                     }
 
                     // 分配操作
-                    if (GUIUtility.hotControl == preObj)
+                    if (GUIHotControl == preObj)
                     {
                         // 拖拽
-                        if (e.type == EventType.MouseDrag)
+                        if (E.type == EventType.MouseDrag)
                         {
-                            GUIUtility.hotControl = dragObj;
-                            e.Use();
+                            GUIHotControl = dragObj;
+                            E.Use();
                         }
                     }
                     // 拖拽
-                    if (GUIUtility.hotControl == dragObj)
+                    if (GUIHotControl == dragObj)
                     {
-                        if (e.type == EventType.MouseDrag)
+                        if (E.type == EventType.MouseDrag)
                         {
 
-                            var off = (e.mousePosition - GetVector2("MouseDownPos")) / tRect.size;
+                            var off = (E.mousePosition - GetVector2("MouseDownPos")) / tRect.size;
                             foreach (var g in selectedGroups) g.Offset = g.offsetCache + off;
 
-                            if (GetBool("边缘吸附") != e.alt)
+                            if (GetBool("边缘吸附") != E.alt)
                             {
                                 outterBound = tRect.Viewport(MergeBounds(selectedGroups.Select(g => g.Bound).ToArray()), true);
 
@@ -2164,9 +2163,9 @@ namespace IceEditor
                             }
 
                             if (autoFulfill) RenderCanvas();
-                            e.Use();
+                            E.Use();
                         }
-                        else if (e.type == EventType.Repaint)
+                        else if (E.type == EventType.Repaint)
                         {
                             Handles.color = ThemeColor;
                             if (xRefLine != null) Handles.DrawLine(new Vector3(xRefLine.Value, wRect.yMin), new Vector3(xRefLine.Value, wRect.yMax));
@@ -2177,12 +2176,12 @@ namespace IceEditor
                     }
 
                     // 结束操作
-                    if (e.type == EventType.MouseUp)
+                    if (E.type == EventType.MouseUp)
                     {
                         // 结束编辑
-                        if (GUIUtility.hotControl == dragObj)
+                        if (GUIHotControl == dragObj)
                         {
-                            GUIUtility.hotControl = 0;
+                            GUIHotControl = 0;
                             if (autoFulfill)
                             {
                                 FulfillCanvas();
@@ -2192,25 +2191,25 @@ namespace IceEditor
                                 RenderCanvas();
                             }
                             Repaint();
-                            e.Use();
+                            E.Use();
                         }
                         // 点选
-                        else if (GUIUtility.hotControl == preObj)
+                        else if (GUIHotControl == preObj)
                         {
                             SelectPoint();
                             EditPack();
-                            GUIUtility.hotControl = 0;
-                            e.Use();
+                            GUIHotControl = 0;
+                            E.Use();
                         }
                     }
 
-                    if (e.type == EventType.MouseMove)
+                    if (E.type == EventType.MouseMove)
                     {
                         lastMouseUpTime = 0;
                     }
 
                     // 绘制
-                    if (e.type == EventType.Repaint)
+                    if (E.type == EventType.Repaint)
                     {
                         Handles.color = Color.white;
                         DrawOutline(outterBound);
@@ -2235,17 +2234,17 @@ namespace IceEditor
                     }
                     void RotateControl(Rect r)
                     {
-                        int id = GUIUtility.GetControlID(FocusType.Passive);
-                        int idDrag = GUIUtility.GetControlID(FocusType.Passive);
-                        switch (e.type)
+                        int id = GetControlID();
+                        int idDrag = GetControlID();
+                        switch (E.type)
                         {
                             case EventType.Repaint:
-                                if (GUIUtility.hotControl == idDrag)
+                                if (GUIHotControl == idDrag)
                                 {
-                                    r.center = e.mousePosition;
+                                    r.center = E.mousePosition;
                                     Vector2 center = outterBound.center;
                                     Vector2 vec = GetVector2("RotateCenterVector");
-                                    Vector2 newVec = e.mousePosition - outterBound.center;
+                                    Vector2 newVec = E.mousePosition - outterBound.center;
                                     var rot = Quaternion.FromToRotation(vec, newVec);
                                     float x1 = center.x - vec.x;
                                     float x2 = center.x + vec.x;
@@ -2278,20 +2277,20 @@ namespace IceEditor
                                     oVec = new Vector2(Mathf.Sign(-oVec.y) * Mathf.Abs(oVec.x), Mathf.Sign(oVec.x) * Mathf.Abs(oVec.y));
                                     Handles.DrawLine(p11, oVec + center);
 
-                                    Handles.DrawLine(p21, e.mousePosition);
+                                    Handles.DrawLine(p21, E.mousePosition);
 
                                     Handles.color = ThemeColor * 0.3f;
                                     Handles.DrawSolidArc(center, Vector3.forward, vec, Vector2.SignedAngle(vec, newVec), vec.magnitude);
                                 }
                                 EditorGUIUtility.AddCursorRect(r, MouseCursor.RotateArrow);
-                                StyleBox(r, StlRotateHandle, "↻", isActive: GUIUtility.hotControl == id);
+                                StyleBox(r, StlRotateHandle, "↻", isActive: GUIHotControl == id);
                                 Handles.color = Color.white;
                                 Handles.DrawWireDisc(r.center, Vector3.forward, rotateControlRadius);
 
                                 DrawOutline(outterBound);
                                 break;
                             case EventType.MouseDown:
-                                if (r.Contains(e.mousePosition))
+                                if (r.Contains(E.mousePosition))
                                 {
                                     SetVector2("RotateCenterVector", new Vector2(outterBound.xMax, outterBound.yMin) - outterBound.center);
                                     var center = tRect.InverseSample(outterBound.center, true);
@@ -2304,12 +2303,12 @@ namespace IceEditor
                                     SetVector2("RotateCenterUV", center);
 
 
-                                    GUIUtility.hotControl = id;
-                                    e.Use();
+                                    GUIHotControl = id;
+                                    E.Use();
                                 }
                                 break;
                             case EventType.MouseUp:
-                                if (GUIUtility.hotControl == id)
+                                if (GUIHotControl == id)
                                 {
                                     // 旋转90度
                                     var center = tRect.InverseSample(outterBound.center, true);
@@ -2327,22 +2326,22 @@ namespace IceEditor
                                     FulfillCanvas();
                                     Repaint();
 
-                                    GUIUtility.hotControl = 0;
-                                    e.Use();
+                                    GUIHotControl = 0;
+                                    E.Use();
                                 }
-                                else if (GUIUtility.hotControl == idDrag)
+                                else if (GUIHotControl == idDrag)
                                 {
                                     FulfillCanvas();
                                     Repaint();
-                                    GUIUtility.hotControl = 0;
-                                    e.Use();
+                                    GUIHotControl = 0;
+                                    E.Use();
                                 }
                                 break;
                             case EventType.MouseDrag:
-                                if (GUIUtility.hotControl == id) GUIUtility.hotControl = idDrag;
-                                if (GUIUtility.hotControl == idDrag)
+                                if (GUIHotControl == id) GUIHotControl = idDrag;
+                                if (GUIHotControl == idDrag)
                                 {
-                                    float angle = Vector2.SignedAngle(GetVector2("RotateCenterVector"), e.mousePosition - outterBound.center);
+                                    float angle = Vector2.SignedAngle(GetVector2("RotateCenterVector"), E.mousePosition - outterBound.center);
                                     int angleStep = (Mathf.RoundToInt(angle / 90.0f) + 4) % 4;
                                     var center = GetVector2("RotateCenterUV");
 
@@ -2368,7 +2367,7 @@ namespace IceEditor
                                     }
                                     if (changed) RenderCanvas();
 
-                                    e.Use();
+                                    E.Use();
                                 }
                                 break;
                         }
@@ -2381,25 +2380,25 @@ namespace IceEditor
                     ScaleControl(new Rect(outterBound.xMax - scaleControlRadius, outterBound.yMin - scaleControlRadius, scaleControlSize, scaleControlSize), MouseCursor.ResizeUpRight, LockPivotToCenter(new Vector2(outterBound.xMin, outterBound.yMax)));
                     ScaleControl(new Rect(outterBound.xMin - scaleControlRadius, outterBound.yMax - scaleControlRadius, scaleControlSize, scaleControlSize), MouseCursor.ResizeUpRight, LockPivotToCenter(new Vector2(outterBound.xMax, outterBound.yMin)));
                     ScaleControl(new Rect(outterBound.xMax - scaleControlRadius, outterBound.yMax - scaleControlRadius, scaleControlSize, scaleControlSize), MouseCursor.ResizeUpLeft, LockPivotToCenter(new Vector2(outterBound.xMin, outterBound.yMin)));
-                    Vector2 LockPivotToCenter(Vector2 pivot) => (e.control || e.shift) ? outterBound.center : pivot;
+                    Vector2 LockPivotToCenter(Vector2 pivot) => (E.control || E.shift) ? outterBound.center : pivot;
                     float GetPivotLength(Vector2 pivot)
                     {
-                        var off = e.mousePosition - pivot;
+                        var off = E.mousePosition - pivot;
                         return Mathf.Sign(off.x) * off.magnitude;
                     }
                     void ScaleControl(Rect r, MouseCursor cursor, Vector2 pivot)
                     {
-                        int id = GUIUtility.GetControlID(FocusType.Passive);
-                        switch (e.type)
+                        int id = GetControlID();
+                        switch (E.type)
                         {
                             case EventType.Repaint:
-                                StyleBox(r, "WinBtnInactiveMac", isActive: GUIUtility.hotControl == id);
+                                StyleBox(r, "WinBtnInactiveMac", isActive: GUIHotControl == id);
                                 EditorGUIUtility.AddCursorRect(r, cursor);
                                 break;
                             case EventType.MouseDown:
-                                if (r.Contains(e.mousePosition))
+                                if (r.Contains(E.mousePosition))
                                 {
-                                    GUIUtility.hotControl = id;
+                                    GUIHotControl = id;
                                     var pivotUV = tRect.InverseSample(pivot, true);
                                     SetFloat("ScaleCenterLength", GetPivotLength(pivot));
                                     SetVector2("ScalePivotUV", pivotUV);
@@ -2409,13 +2408,13 @@ namespace IceEditor
                                         g.scaleCache = g.Scale;
                                         g.offsetCache = g.Bound.center - pivotUV;
                                     }
-                                    e.Use();
+                                    E.Use();
                                 }
                                 break;
                             case EventType.MouseUp:
-                                if (GUIUtility.hotControl == id)
+                                if (GUIHotControl == id)
                                 {
-                                    GUIUtility.hotControl = 0;
+                                    GUIHotControl = 0;
                                     foreach (var g in selectedGroups)
                                     {
                                         if (g.Scale < 0)
@@ -2433,11 +2432,11 @@ namespace IceEditor
                                         RenderCanvas();
                                     }
                                     Repaint();
-                                    e.Use();
+                                    E.Use();
                                 }
                                 break;
                             case EventType.MouseDrag:
-                                if (GUIUtility.hotControl == id)
+                                if (GUIHotControl == id)
                                 {
                                     var pivotUV = GetVector2("ScalePivotUV");
                                     var factor = GetPivotLength(GetVector2("ScalePivot")) / GetFloat("ScaleCenterLength");
@@ -2447,7 +2446,7 @@ namespace IceEditor
                                         g.OffsetInversed = g.offsetCache * factor + pivotUV - g.RawBound.center;
                                     }
                                     if (autoFulfill) RenderCanvas();
-                                    e.Use();
+                                    E.Use();
                                 }
                                 break;
                         }
@@ -2547,7 +2546,7 @@ namespace IceEditor
                 DockSeparator();
 
                 var mag = IceToggle("边缘吸附", true, "    ", tooltip: "边缘吸附模式，按住Alt切换");
-                if (e.type == EventType.Repaint)
+                if (E.type == EventType.Repaint)
                 {
                     var text = "⋑".Size(18);
                     if (mag) text = text.Color(ThemeColorExp);

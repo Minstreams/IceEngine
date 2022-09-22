@@ -276,7 +276,7 @@ using static IceEditor.IceGUIAuto;
             }
 
             var r = position.MoveEdge(top: 24);
-            using (SubArea(r, out var rMain, out var rSub, "MainArea", 280, IceGUIDirection.Left, "dragtab scroller next"))
+            using (SubArea(r, out var rMain, out var rSub, "MainArea", 280, IceGUIDirection.Left, "dragtab scroller prev"))
             {
                 using (Area(rMain)) using (GUICHECK)
                 {
