@@ -62,16 +62,6 @@ namespace IceEditor
         }
 
         /// <summary>
-        /// 尝试创建目录
-        /// </summary>
-        public static bool TryCreateDirectory(string path)
-        {
-            if (Directory.Exists(path)) return false;
-            Directory.CreateDirectory(path);
-            return true;
-        }
-
-        /// <summary>
         /// 筛选一个string集合
         /// </summary>
         /// <param name="origin">待筛选的string集合</param>

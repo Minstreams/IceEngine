@@ -44,8 +44,6 @@ namespace IceEditor.Internal
             "verticalSlider",
             "verticalSliderThumb"
         };
-        const string filterColorStr = "#F80";
-        const string activeColorStr = "#F80";
         #endregion
 
         #region 【接口】
@@ -79,112 +77,6 @@ namespace IceEditor.Internal
                 {
                     _inGameSkin = value;
                     InitializeGUISkin();
-                }
-            }
-        }
-
-        /// <summary>
-        /// 筛选并生成列表
-        /// </summary>
-        public void DoFilterStyleList()
-        {
-            using var _ = PACK;
-
-            /// <summary>
-            /// 比较两个char的值，并指定是否区分大小写
-            /// </summary>
-            /// <param name="caseSensitive">是否区分大小写</param>
-            static bool CompareChar(char self, char other, bool caseSensitive = true)
-            {
-                if (caseSensitive) return self == other;
-                else return char.ToLower(self) == char.ToLower(other);
-            }
-
-            bool useRegex = GetBool("正则表达式");
-            bool continuousMatching = GetBool("连续匹配");
-            bool caseSensitive = GetBool("区分大小写");
-
-            stlListFiltered.Clear();
-            if (string.IsNullOrWhiteSpace(filterStr))
-            {
-                stlListFiltered.Add(new KeyValuePair<string, GUIStyle>("None", new GUIStyle()));
-                foreach (var stl in stlList)
-                {
-                    stlListFiltered.Add(new KeyValuePair<string, GUIStyle>(stl.name, stl));
-                }
-            }
-            else
-            {
-                if (useRegex)
-                {
-                    // 正则表达式匹配
-                    foreach (var stl in stlList)
-                    {
-                        try
-                        {
-                            var option = caseSensitive ? RegexOptions.None : RegexOptions.IgnoreCase;
-                            if (Regex.IsMatch(stl.name, filterStr, option))
-                            {
-                                string name = Regex.Replace(stl.name, filterStr, $"<color={filterColorStr}>$0</color>", option);
-                                stlListFiltered.Add(new KeyValuePair<string, GUIStyle>(name, stl));
-                            }
-                        }
-                        catch (Exception)
-                        {
-                            return;
-                        }
-                    }
-                }
-                else
-                {
-                    // 判断是否包含filter关键字
-                    if (continuousMatching)
-                    {
-                        foreach (var stl in stlList)
-                        {
-                            // 连续匹配
-                            int index = stl.name.IndexOf(filterStr, caseSensitive ? StringComparison.CurrentCulture : StringComparison.CurrentCultureIgnoreCase);
-                            if (index < 0) continue;
-
-                            // 替换关键字为指定颜色
-                            string name = stl.name
-                                .Insert(index + filterStr.Length, "</color>")
-                                .Insert(index, $"<color={filterColorStr}>");
-
-                            stlListFiltered.Add(new KeyValuePair<string, GUIStyle>(name, stl));
-                        }
-                    }
-                    else
-                    {
-                        foreach (var stl in stlList)
-                        {
-                            int l = filterStr.Length;
-                            {
-                                // 离散匹配
-                                int i = 0;
-                                foreach (char c in stl.name) if (CompareChar(c, filterStr[i], caseSensitive) && ++i == l) break;
-                                // 不包含则跳过
-                                if (i < l) continue;
-                            }
-
-
-                            string name = string.Empty;
-                            {
-                                // 替换关键字为指定颜色
-                                int i = 0;
-                                foreach (char c in stl.name)
-                                {
-                                    if (i < l && CompareChar(c, filterStr[i], caseSensitive))
-                                    {
-                                        name += $"<color={filterColorStr}>{c}</color>";
-                                        ++i;
-                                    }
-                                    else name += c;
-                                }
-                            }
-                            stlListFiltered.Add(new KeyValuePair<string, GUIStyle>(name, stl));
-                        }
-                    }
                 }
             }
         }
@@ -235,7 +127,7 @@ namespace IceEditor.Internal
             var hasInit = !string.IsNullOrWhiteSpace(initCode);
 
             if (!hasItor && !hasInit && !InGameSkin) return $"GUIStyle Stl{styleName} => \"{stlInspectingOrigin.name}\";";
-            else return $"GUIStyle Stl{styleName} => _stl{styleName}?.Check() ?? (_stl{styleName} = new GUIStyle({(string.IsNullOrEmpty(stlInspectingOrigin.name) ? "" : (InGameSkin ? $"EditorGUIUtility.GetBuiltinSkin(EditorSkin.Game).FindStyle(\"{stlInspectingOrigin.name}\")" : $"\"{stlInspectingOrigin.name}\""))}){ (hasItor ? $" {{ {itorCode}}}" : "")}{(hasInit ? $".Initialize(stl => {{ {initCode}}})" : "")}); GUIStyle _stl{styleName};";
+            else return $"GUIStyle Stl{styleName} => _stl{styleName}?.Check() ?? (_stl{styleName} = new GUIStyle({(string.IsNullOrEmpty(stlInspectingOrigin.name) ? "" : (InGameSkin ? $"EditorGUIUtility.GetBuiltinSkin(EditorSkin.Game).FindStyle(\"{stlInspectingOrigin.name}\")" : $"\"{stlInspectingOrigin.name}\""))}){(hasItor ? $" {{ {itorCode}}}" : "")}{(hasInit ? $".Initialize(stl => {{ {initCode}}})" : "")}); GUIStyle _stl{styleName};";
 
         }
         #endregion
@@ -243,9 +135,8 @@ namespace IceEditor.Internal
         #region 【字段】
         bool _inGameSkin = false;
 
-        readonly List<GUIStyle> stlList = new List<GUIStyle>();
-        readonly List<KeyValuePair<string, GUIStyle>> stlListFiltered = new List<KeyValuePair<string, GUIStyle>>();
-        string filterStr = string.Empty;
+        readonly Dictionary<string, GUIStyle> stlMap = new Dictionary<string, GUIStyle>();
+        [NonSerialized] List<(string displayName, string name)> stlFiltered = null;
 
         [SerializeField] GUIStyle stlInspectingOrigin = new GUIStyle();
         [SerializeField] GUIStyle stlInspecting = new GUIStyle();
@@ -258,6 +149,12 @@ namespace IceEditor.Internal
         [MenuItem("IceEngine/Style Box", false, 20)]
         public static IceGUIStyleBox OpenWindow() => GetWindow<IceGUIStyleBox>();
         protected override string Title => InGameSkin ? "GUIStyle 样例窗口 - InGameSkin" : "GUIStyle 样例窗口";
+        protected override Color DefaultThemeColor => new Color(1, 0.7f, 0);
+        protected override void OnThemeColorChange()
+        {
+            base.OnThemeColorChange();
+            stlFiltered = null;
+        }
         public override void AddItemsToMenu(GenericMenu menu)
         {
             menu.AddItem(new GUIContent("InGameSkin"), InGameSkin, () => InGameSkin = !InGameSkin);
@@ -271,14 +168,15 @@ namespace IceEditor.Internal
         }
         void InitializeGUISkin()
         {
+            stlFiltered = null;
+
             var skin = EditorGUIUtility.GetBuiltinSkin(InGameSkin ? EditorSkin.Game : EditorSkin.Scene);
             var sList = skin.customStyles;
 
-            stlList.Clear();
-            foreach (var d in dList) stlList.Add(skin.GetStyle(d));
-            stlList.AddRange(sList);
+            stlMap.Clear();
+            foreach (var d in dList) stlMap.Add(d, skin.GetStyle(d));
+            foreach (var s in sList) stlMap.Add(s.name, s);
 
-            DoFilterStyleList();
 
             RefreshTitleContent();
         }
@@ -447,7 +345,6 @@ namespace IceEditor.Internal
         GUIStyle StlCode => _stlCode?.Check() ?? (_stlCode = new GUIStyle("label") { margin = new RectOffset(1, 1, 0, 0), padding = new RectOffset(0, 0, 1, 1), fontSize = 14, fontStyle = FontStyle.Bold, richText = true }).Initialize(stl => stl.normal.textColor = Color.white); GUIStyle _stlCode;
         GUIStyle StlGUIBorder => _stlGUIBorder?.Check() ?? (_stlGUIBorder = new GUIStyle("grey_border") { margin = new RectOffset(0, 16, 0, 0), }); GUIStyle _stlGUIBorder;
         GUIStyle StlGUIBorderHighlight => _stlGUIBorderHighlight?.Check() ?? (_stlGUIBorderHighlight = new GUIStyle("LightmapEditorSelectedHighlight") { overflow = new RectOffset(7, 7, 7, 7), fontSize = 10, alignment = TextAnchor.LowerCenter, wordWrap = true, imagePosition = ImagePosition.TextOnly, contentOffset = new Vector2(0f, -70f), }.Initialize(stl => { stl.normal.textColor = new Color(1f, 0.9862055f, 0f); })); GUIStyle _stlGUIBorderHighlight;
-        GUIStyle StlSearchTextField => _stlSearchTextField?.Check() ?? (_stlSearchTextField = new GUIStyle("SearchTextField") { padding = new RectOffset(14, 3, 2, 1), fontSize = 12, fixedHeight = 0f, }); GUIStyle _stlSearchTextField;
         #endregion
 
         #region Shortcuts
@@ -546,7 +443,7 @@ namespace IceEditor.Internal
                                 if (!path.StartsWith("Assets"))
                                 {
                                     elements += "null, ";
-                                    LogError($"贴图路径不在Assets中！Property: { Regex.Replace(p.propertyPath, "(?:stlInspecting\\.)?m_(.)", m => m.Groups[1].Value.ToLower())}[{i}] | Path: {path}");
+                                    LogError($"贴图路径不在Assets中！Property: {Regex.Replace(p.propertyPath, "(?:stlInspecting\\.)?m_(.)", m => m.Groups[1].Value.ToLower())}[{i}] | Path: {path}");
                                 }
                                 else
                                 {
@@ -589,52 +486,36 @@ namespace IceEditor.Internal
         Rect sideRect;
         protected override void OnWindowGUI(Rect position)
         {
-            const string useRegexKey = "正则表达式";
-            const string continuousMatchingKey = "连续匹配";
-            const string caseSensitiveKey = "区分大小写";
-
             using (SubArea(position, out var mainRect, out var subRect, "HierachyArea", 512, IceGUIDirection.Left))
             {
                 // 左侧区域
                 using (Area(subRect)) using (BOX)
                 {
                     // 搜索框
-                    using (BOX) using (HORIZONTAL)
-                    {
-                        EditorGUI.BeginChangeCheck();
-
-                        //GUILayout.Label((GetBool(useRegexKey) ? $"<color={activeColorStr}>表达式</color>" : "关键字"), StlLabel, GUILayout.ExpandWidth(false));
-                        filterStr = EditorGUILayout.TextField(filterStr, StlSearchTextField);
-                        if (!GetBool(useRegexKey))
-                        {
-                            IceToggle(continuousMatchingKey, false, "连", "连续匹配");
-                        }
-                        IceToggle(caseSensitiveKey, false, "Aa", "区分大小写");
-                        IceToggle(useRegexKey, false, ".*".Bold(), "使用正则表达式");
-
-                        if (EditorGUI.EndChangeCheck()) DoFilterStyleList();
-                    }
+                    using (BOX) SearchField(stlMap.Keys, ref stlFiltered);
 
                     // 在这显示.
                     using (SCROLL)
                     {
                         // 显示样式列表
-                        for (int i = 0; i < stlListFiltered.Count; ++i)
+                        for (int i = 0; i < stlFiltered.Count; ++i)
                         {
                             using (Horizontal(GUILayout.Height(32)))
                             {
-                                var stl = stlListFiltered[i];
+
+                                (var displayName, var name) = stlFiltered[i];
+                                var stl = stlMap[name];
                                 using (Vertical(GUILayout.Width(160)))
                                 {
                                     // 标签
-                                    if (GUILayout.Button(stl.Key, StlLabelBtn))
+                                    if (GUILayout.Button(displayName, StlLabelBtn))
                                     {
                                         // 复制样式名
-                                        GUIUtility.systemCopyBuffer = stl.Value.name;
+                                        GUIUtility.systemCopyBuffer = name;
 
                                         // 刷新监控对象
-                                        stlInspectingOrigin = new GUIStyle(stl.Value);
-                                        stlInspecting = new GUIStyle(stl.Value);
+                                        stlInspectingOrigin = new GUIStyle(stl);
+                                        stlInspecting = new GUIStyle(stl);
                                         PropertyObj.Update();
                                         SetBool("Property Dirty", false);
                                     }
@@ -648,14 +529,14 @@ namespace IceEditor.Internal
                                 // 显示
                                 if (guiType == GUIType.GUILayout)
                                 {
-                                    DisplayStyle(stl.Value);
+                                    DisplayStyle(stl);
                                 }
                                 else
                                 {
                                     // GUI
                                     GUILayout.Box(GUIContent.none, GetBool("显示边框") ? StlGUIBorder : GUIStyle.none, GUILayout.Width(GetFloat("Val GUIRect width", 64)), GUILayout.Height(GetFloat("Val GUIRect height", 64)));
                                     var rect = GUILayoutUtility.GetLastRect();
-                                    DisplayStyle(rect, stl.Value);
+                                    DisplayStyle(rect, stl);
                                 }
                             }
 
@@ -972,10 +853,6 @@ namespace IceEditor.Internal
                     }
                 }
             }
-        }
-        protected override void OnDebugGUI(Rect position)
-        {
-
         }
         #endregion
     }

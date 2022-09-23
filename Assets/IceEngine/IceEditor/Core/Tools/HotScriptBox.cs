@@ -31,6 +31,16 @@ namespace IceEditor.Internal
             "IceEditor",
         };
 
+        readonly static string baseUsingCode =
+@"using System;
+using UnityEngine;
+using UnityEditor;
+
+using IceEngine;
+using IceEditor;
+
+";
+
         [MenuItem("IceEngine/热脚本")]
         public static void OpenWindow() => GetWindow<HotScriptBox>();
         protected override string Title => "热脚本";
@@ -152,16 +162,8 @@ namespace IceEditor.Internal
             const string FuncName = "DynamicMethod";
 
             // 1. 预处理代码
-            StringBuilder codeBuilder = new();
-            codeBuilder.Append(
-@"using System;
-using UnityEngine;
-using UnityEditor;
-
-using IceEngine;
-using IceEditor;
-
-");
+            var codeBuilder = new StringBuilder();
+            codeBuilder.Append(baseUsingCode);
             if (bGUI)
             {
                 codeBuilder.Append(
@@ -201,7 +203,7 @@ using static IceEditor.IceGUIAuto;
             LogDebug(code);
 
             // 2. 编译参数
-            CompilerParameters objCompilerParameters = new CompilerParameters();
+            var objCompilerParameters = new CompilerParameters();
             foreach (var a in curAssemlySet)
             {
                 objCompilerParameters.ReferencedAssemblies.Add(a);

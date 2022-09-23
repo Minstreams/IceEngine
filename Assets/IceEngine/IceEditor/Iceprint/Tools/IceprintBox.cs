@@ -942,7 +942,7 @@ namespace IceEditor.Internal
         int? baseStack = null;
         void OnLog(string log)
         {
-            string curLog = Pack.GetString("Console");
+            string curLog = GetString("Console");
 
             string prefix = "";
             System.Diagnostics.StackTrace st = new();
@@ -975,7 +975,7 @@ namespace IceEditor.Internal
 
             curLog += log;
 
-            Pack.SetString("Console", curLog);
+            SetString("Console", curLog);
         }
         IceBinaryUtility.LogScope LOG
         {
@@ -983,7 +983,7 @@ namespace IceEditor.Internal
             {
                 if (!DebugMode) return null;
                 baseStack = null;
-                Pack.SetString("Console", "");
+                SetString("Console", "");
                 return new IceBinaryUtility.LogScope(OnLog);
             }
         }

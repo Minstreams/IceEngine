@@ -62,16 +62,16 @@ namespace IceEditor.Internal
         {
             // Path calculation
             string path = $"{SubSystemFolder}/{name}";
-            IceEditorUtility.TryCreateDirectory(path);
+            path.TryCreateFolder();
 
             string resPath = $"{path}/Resources";
-            IceEditorUtility.TryCreateDirectory(resPath);
+            resPath.TryCreateFolder();
 
             string runtimePath = $"{path}/Runtime";
-            IceEditorUtility.TryCreateDirectory(runtimePath);
+            runtimePath.TryCreateFolder();
 
             string editorPath = $"{path}/Editor";
-            IceEditorUtility.TryCreateDirectory(editorPath);
+            editorPath.TryCreateFolder();
 
             // Code
             string settingPath = $"{runtimePath}/Setting{name}.cs";
