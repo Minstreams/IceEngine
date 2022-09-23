@@ -194,7 +194,8 @@ using static IceEditor.IceGUIAuto;
             {
                 codeBuilder.AppendLine($"public static void {FuncName}() => GetWindow<{ClassName}>();");
                 codeBuilder.AppendLine("protected override Color DefaultThemeColor => new Color(0.8f, 0.2f, 0.5f);");
-                if (!title.IsNullOrWhiteSpace()) codeBuilder.AppendLine($"protected override string Title => \"{title}\";");
+                string guiTitle = title.IsNullOrWhiteSpace() ? "热窗口" : title;
+                codeBuilder.AppendLine($"protected override string Title => \"{guiTitle}\";");
             }
             codeBuilder.Append("}}");
 
