@@ -96,46 +96,46 @@ namespace IceEditor.Framework
         #region 【接口】
 
         #region 临时数据托管
-        protected Color GetColor(string key) => Pack.GetColor(key);
-        protected Color GetColor(string key, Color defaultVal) => Pack.GetColor(key, defaultVal);
-        protected Color SetColor(string key, Color value) => Pack.SetColor(key, value);
+        public Color GetColor(string key) => Pack.GetColor(key);
+        public Color GetColor(string key, Color defaultVal) => Pack.GetColor(key, defaultVal);
+        public Color SetColor(string key, Color value) => Pack.SetColor(key, value);
 
-        protected bool GetBool(string key, bool defaultVal = false) => Pack.GetBool(key, defaultVal);
-        protected bool SetBool(string key, bool value) => Pack.SetBool(key, value);
+        public bool GetBool(string key, bool defaultVal = false) => Pack.GetBool(key, defaultVal);
+        public bool SetBool(string key, bool value) => Pack.SetBool(key, value);
 
-        protected AnimBool GetAnimBool(string key, bool defaultVal = false) => Pack.GetAnimBool(key, defaultVal);
-        protected bool GetAnimBoolValue(string key, bool defaultVal = false) => Pack.GetAnimBoolValue(key, defaultVal);
-        protected bool GetAnimBoolTarget(string key, bool defaultVal = false) => Pack.GetAnimBoolTarget(key, defaultVal);
-        protected float GetAnimBoolFaded(string key, bool defaultVal = false) => Pack.GetAnimBoolFaded(key, defaultVal);
-        protected bool SetAnimBoolValue(string key, bool value) => Pack.SetAnimBoolValue(key, value);
-        protected bool SetAnimBoolTarget(string key, bool value) => Pack.SetAnimBoolTarget(key, value);
+        public AnimBool GetAnimBool(string key, bool defaultVal = false) => Pack.GetAnimBool(key, defaultVal);
+        public bool GetAnimBoolValue(string key, bool defaultVal = false) => Pack.GetAnimBoolValue(key, defaultVal);
+        public bool GetAnimBoolTarget(string key, bool defaultVal = false) => Pack.GetAnimBoolTarget(key, defaultVal);
+        public float GetAnimBoolFaded(string key, bool defaultVal = false) => Pack.GetAnimBoolFaded(key, defaultVal);
+        public bool SetAnimBoolValue(string key, bool value) => Pack.SetAnimBoolValue(key, value);
+        public bool SetAnimBoolTarget(string key, bool value) => Pack.SetAnimBoolTarget(key, value);
 
-        protected int GetInt(string key, int defaultVal = 0) => Pack.GetInt(key, defaultVal);
-        protected int SetInt(string key, int value) => Pack.SetInt(key, value);
+        public int GetInt(string key, int defaultVal = 0) => Pack.GetInt(key, defaultVal);
+        public int SetInt(string key, int value) => Pack.SetInt(key, value);
 
-        protected float GetFloat(string key, float defaultVal = 0) => Pack.GetFloat(key, defaultVal);
-        protected float SetFloat(string key, float value) => Pack.SetFloat(key, value);
+        public float GetFloat(string key, float defaultVal = 0) => Pack.GetFloat(key, defaultVal);
+        public float SetFloat(string key, float value) => Pack.SetFloat(key, value);
 
-        protected string GetString(string key, string defaultVal = "") => Pack.GetString(key, defaultVal);
-        protected string SetString(string key, string value) => Pack.SetString(key, value);
+        public string GetString(string key, string defaultVal = "") => Pack.GetString(key, defaultVal);
+        public string SetString(string key, string value) => Pack.SetString(key, value);
 
-        protected Vector2 GetVector2(int key, Vector2 defaultVal = default) => Pack.GetVector2(key, defaultVal);
-        protected Vector2 SetVector2(int key, Vector2 value) => Pack.SetVector2(key, value);
+        public Vector2 GetVector2(int key, Vector2 defaultVal = default) => Pack.GetVector2(key, defaultVal);
+        public Vector2 SetVector2(int key, Vector2 value) => Pack.SetVector2(key, value);
 
-        protected Vector2 GetVector2(string key, Vector2 defaultVal = default) => Pack.GetVector2(key, defaultVal);
-        protected Vector2 SetVector2(string key, Vector2 value) => Pack.SetVector2(key, value);
+        public Vector2 GetVector2(string key, Vector2 defaultVal = default) => Pack.GetVector2(key, defaultVal);
+        public Vector2 SetVector2(string key, Vector2 value) => Pack.SetVector2(key, value);
 
-        protected Vector3 GetVector3(string key, Vector3 defaultVal = default) => Pack.GetVector3(key, defaultVal);
-        protected Vector3 SetVector3(string key, Vector3 value) => Pack.SetVector3(key, value);
+        public Vector3 GetVector3(string key, Vector3 defaultVal = default) => Pack.GetVector3(key, defaultVal);
+        public Vector3 SetVector3(string key, Vector3 value) => Pack.SetVector3(key, value);
 
-        protected Vector4 GetVector4(string key, Vector4 defaultVal = default) => Pack.GetVector4(key, defaultVal);
-        protected Vector4 SetVector4(string key, Vector4 value) => Pack.SetVector4(key, value);
+        public Vector4 GetVector4(string key, Vector4 defaultVal = default) => Pack.GetVector4(key, defaultVal);
+        public Vector4 SetVector4(string key, Vector4 value) => Pack.SetVector4(key, value);
 
-        protected Vector2Int GetVector2Int(string key, Vector2Int defaultVal = default) => Pack.GetVector2Int(key, defaultVal);
-        protected Vector2Int SetVector2Int(string key, Vector2Int value) => Pack.SetVector2Int(key, value);
+        public Vector2Int GetVector2Int(string key, Vector2Int defaultVal = default) => Pack.GetVector2Int(key, defaultVal);
+        public Vector2Int SetVector2Int(string key, Vector2Int value) => Pack.SetVector2Int(key, value);
 
-        protected Vector3Int GetVector3Int(string key, Vector3Int defaultVal = default) => Pack.GetVector3Int(key, defaultVal);
-        protected Vector3Int SetVector3Int(string key, Vector3Int value) => Pack.SetVector3Int(key, value);
+        public Vector3Int GetVector3Int(string key, Vector3Int defaultVal = default) => Pack.GetVector3Int(key, defaultVal);
+        public Vector3Int SetVector3Int(string key, Vector3Int value) => Pack.SetVector3Int(key, value);
         #endregion
 
         #region 标题
