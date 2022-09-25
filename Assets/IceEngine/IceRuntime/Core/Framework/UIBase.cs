@@ -202,27 +202,27 @@ namespace IceEngine.DebugUI
             return SetBool(key, _ToggleButton(label, value, expandWidth));
         }
 
-        protected string _TextField(string label, string value)
+        protected string _TextField(string label, string value, params GUILayoutOption[] options)
         {
             using var _ = HORIZONTAL;
             Label(label, AutoWidth(label));
-            return GUILayout.TextField(value);
+            return GUILayout.TextField(value, options);
         }
-        protected string TextField(string label, ref string value) => value = _TextField(label, value);
-        protected string TextField(string key, string defaultValue = null, string labelOverride = null)
+        protected string TextField(string label, ref string value, params GUILayoutOption[] options) => value = _TextField(label, value, options);
+        protected string TextField(string key, string defaultValue = null, string labelOverride = null, params GUILayoutOption[] options)
         {
             var label = string.IsNullOrEmpty(labelOverride) ? key : labelOverride;
             var value = GetString(key, defaultValue);
 
-            return SetString(key, _TextField(label, value));
+            return SetString(key, _TextField(label, value, options));
         }
 
-        protected int _IntField(int value)
+        protected int _IntField(int value, params GUILayoutOption[] options)
         {
             int res;
             try
             {
-                res = int.Parse(GUILayout.TextField(value.ToString()));
+                res = int.Parse(GUILayout.TextField(value.ToString(), options));
                 return res;
             }
             catch
@@ -230,28 +230,28 @@ namespace IceEngine.DebugUI
                 return value;
             }
         }
-        protected int IntField(ref int value) => value = _IntField(value);
-        protected int IntFieldNoLabel(string key, int defaultValue = 0) => SetInt(key, _IntField(GetInt(key, defaultValue)));
-        protected int _IntField(string label, int value)
+        protected int IntField(ref int value, params GUILayoutOption[] options) => value = _IntField(value, options);
+        protected int IntFieldNoLabel(string key, int defaultValue = 0, params GUILayoutOption[] options) => SetInt(key, _IntField(GetInt(key, defaultValue), options));
+        protected int _IntField(string label, int value, params GUILayoutOption[] options)
         {
             using var _ = HORIZONTAL;
             Label(label, AutoWidth(label));
-            return _IntField(value);
+            return _IntField(value, options);
         }
-        protected int IntField(string label, ref int value) => value = _IntField(label, value);
-        protected int IntField(string key, int defaultValue = 0, string labelOverride = null)
+        protected int IntField(string label, ref int value, params GUILayoutOption[] options) => value = _IntField(label, value, options);
+        protected int IntField(string key, int defaultValue = 0, string labelOverride = null, params GUILayoutOption[] options)
         {
             var label = string.IsNullOrEmpty(labelOverride) ? key : labelOverride;
             var value = GetInt(key, defaultValue);
 
-            return SetInt(key, _IntField(label, value));
+            return SetInt(key, _IntField(label, value, options));
         }
 
-        protected int _SliderInt(int value, int min = 0, int max = 1)
+        protected int _SliderInt(int value, int min = 0, int max = 1, params GUILayoutOption[] options)
         {
             try
             {
-                int res = (int)GUILayout.HorizontalSlider(value, min, max);
+                int res = (int)GUILayout.HorizontalSlider(value, min, max, options);
                 return res;
             }
             catch
@@ -259,28 +259,28 @@ namespace IceEngine.DebugUI
                 return value;
             }
         }
-        protected int SliderInt(ref int value, int min = 0, int max = 1) => value = _SliderInt(value, min, max);
-        protected int SliderIntNoLabel(string key, int defaultValue = 0, int min = 0, int max = 1) => SetInt(key, _SliderInt(GetInt(key, defaultValue), min, max));
-        protected int _SliderInt(string label, int value, int min = 0, int max = 1)
+        protected int SliderInt(ref int value, int min = 0, int max = 1, params GUILayoutOption[] options) => value = _SliderInt(value, min, max, options);
+        protected int SliderIntNoLabel(string key, int defaultValue = 0, int min = 0, int max = 1, params GUILayoutOption[] options) => SetInt(key, _SliderInt(GetInt(key, defaultValue), min, max, options));
+        protected int _SliderInt(string label, int value, int min = 0, int max = 1, params GUILayoutOption[] options)
         {
             using var _ = HORIZONTAL;
             Label(label, AutoWidth(label));
-            return _SliderInt(value, min, max);
+            return _SliderInt(value, min, max, options);
         }
-        protected int SliderInt(string label, ref int value, int min = 0, int max = 1) => value = _SliderInt(label, value, min, max);
-        protected int SliderInt(string key, int defaultValue = 0, int min = 0, int max = 1, string labelOverride = null)
+        protected int SliderInt(string label, ref int value, int min = 0, int max = 1, params GUILayoutOption[] options) => value = _SliderInt(label, value, min, max, options);
+        protected int SliderInt(string key, int defaultValue = 0, int min = 0, int max = 1, string labelOverride = null, params GUILayoutOption[] options)
         {
             var label = string.IsNullOrEmpty(labelOverride) ? key : labelOverride;
             var value = GetInt(key, defaultValue);
 
-            return SetInt(key, _SliderInt(label, value, min, max));
+            return SetInt(key, _SliderInt(label, value, min, max, options));
         }
 
-        protected float _FloatField(float value)
+        protected float _FloatField(float value, params GUILayoutOption[] options)
         {
             try
             {
-                float res = float.Parse(GUILayout.TextField(value.ToString()));
+                float res = float.Parse(GUILayout.TextField(value.ToString(), options));
                 return res;
             }
             catch
@@ -288,28 +288,28 @@ namespace IceEngine.DebugUI
                 return value;
             }
         }
-        protected float FloatField(ref float value) => value = _FloatField(value);
-        protected float FloatFieldNoLabel(string key, float defaultValue = 0) => SetFloat(key, _FloatField(GetFloat(key, defaultValue)));
-        protected float _FloatField(string label, float value)
+        protected float FloatField(ref float value, params GUILayoutOption[] options) => value = _FloatField(value, options);
+        protected float FloatFieldNoLabel(string key, float defaultValue = 0, params GUILayoutOption[] options) => SetFloat(key, _FloatField(GetFloat(key, defaultValue), options));
+        protected float _FloatField(string label, float value, params GUILayoutOption[] options)
         {
             using var _ = HORIZONTAL;
             Label(label, AutoWidth(label));
-            return _FloatField(value);
+            return _FloatField(value, options);
         }
-        protected float FloatField(string label, ref float value) => value = _FloatField(label, value);
-        protected float FloatField(string key, float defaultValue = 0, string labelOverride = null)
+        protected float FloatField(string label, ref float value, params GUILayoutOption[] options) => value = _FloatField(label, value, options);
+        protected float FloatField(string key, float defaultValue = 0, string labelOverride = null, params GUILayoutOption[] options)
         {
             var label = string.IsNullOrEmpty(labelOverride) ? key : labelOverride;
             var value = GetFloat(key, defaultValue);
 
-            return SetFloat(key, _FloatField(label, value));
+            return SetFloat(key, _FloatField(label, value, options));
         }
 
-        protected float _Slider(float value, float min = 0, float max = 1)
+        protected float _Slider(float value, float min = 0, float max = 1, params GUILayoutOption[] options)
         {
             try
             {
-                float res = GUILayout.HorizontalSlider(value, min, max);
+                float res = GUILayout.HorizontalSlider(value, min, max, options);
                 return res;
             }
             catch
@@ -317,21 +317,21 @@ namespace IceEngine.DebugUI
                 return value;
             }
         }
-        protected float Slider(ref float value, float min = 0, float max = 1) => value = _Slider(value, min, max);
-        protected float SliderNoLabel(string key, float defaultValue = 0, float min = 0, float max = 1) => SetFloat(key, _Slider(GetFloat(key, defaultValue), min, max));
-        protected float _Slider(string label, float value, float min = 0, float max = 1)
+        protected float Slider(ref float value, float min = 0, float max = 1, params GUILayoutOption[] options) => value = _Slider(value, min, max, options);
+        protected float SliderNoLabel(string key, float defaultValue = 0, float min = 0, float max = 1, params GUILayoutOption[] options) => SetFloat(key, _Slider(GetFloat(key, defaultValue), min, max, options));
+        protected float _Slider(string label, float value, float min = 0, float max = 1, params GUILayoutOption[] options)
         {
             using var _ = HORIZONTAL;
             Label(label, AutoWidth(label));
-            return _Slider(value, min, max);
+            return _Slider(value, min, max, options);
         }
-        protected float Slider(string label, ref float value, float min = 0, float max = 1) => value = _Slider(label, value, min, max);
-        protected float Slider(string key, float defaultValue = 0, float min = 0, float max = 1, string labelOverride = null)
+        protected float Slider(string label, ref float value, float min = 0, float max = 1, params GUILayoutOption[] options) => value = _Slider(label, value, min, max, options);
+        protected float Slider(string key, float defaultValue = 0, float min = 0, float max = 1, string labelOverride = null, params GUILayoutOption[] options)
         {
             var label = string.IsNullOrEmpty(labelOverride) ? key : labelOverride;
             var value = GetFloat(key, defaultValue);
 
-            return SetFloat(key, _Slider(label, value, min, max));
+            return SetFloat(key, _Slider(label, value, min, max, options));
         }
 
         #endregion
