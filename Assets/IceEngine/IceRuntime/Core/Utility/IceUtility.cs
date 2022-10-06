@@ -273,6 +273,11 @@ namespace IceEngine
         /// <param name="snap">刻度</param>
         public static Vector2 Snap(this Vector2 self, float snap = 1) => new Vector2(Mathf.Round(self.x / snap) * snap, Mathf.Round(self.y / snap) * snap);
         /// <summary>
+        /// 沿某刻度对齐
+        /// </summary>
+        /// <param name="snap">刻度</param>
+        public static Vector3 Snap(this Vector3 self, float snap = 1) => new Vector3(Mathf.Round(self.x / snap) * snap, Mathf.Round(self.y / snap) * snap, Mathf.Round(self.z / snap) * snap);
+        /// <summary>
         /// 从中心点向外扩展成Rect
         /// </summary>
         public static Rect ExpandToRect(this Vector2 center, float radius) => new Rect(center.x - radius, center.y - radius, radius + radius, radius + radius);

@@ -31,9 +31,9 @@ namespace IceEngine
 
     #region Field
     /// <summary>
-    /// 字段绘制时代替标签
+    /// 字段绘制时代替标签，或者给一个类加一个Title
     /// </summary>
-    [AttributeUsage(AttributeTargets.Field, AllowMultiple = false)]
+    [AttributeUsage(AttributeTargets.Field | AttributeTargets.Class, AllowMultiple = false)]
     public sealed class LabelAttribute : Attribute
     {
         public string Label { get; private set; }
@@ -45,6 +45,15 @@ namespace IceEngine
     /// </summary>
     [AttributeUsage(AttributeTargets.Field | AttributeTargets.Class, AllowMultiple = false)]
     public sealed class RuntimeConstAttribute : Attribute { }
+    /// <summary>
+    /// 标记一个Group
+    /// </summary>
+    [AttributeUsage(AttributeTargets.Field, AllowMultiple = false)]
+    public sealed class GroupAttribute : Attribute
+    {
+        public string Label { get; private set; }
+        public GroupAttribute(string label = null) => Label = label;
+    }
     #endregion
 
     #region Method

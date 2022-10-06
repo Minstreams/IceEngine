@@ -9,7 +9,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 16ea2d542aaad584993cfd96e677e49d, type: 3}
-  m_Name: SettingSave
+  m_Script: {fileID: 11500000, guid: d04e5cf5895cb2d4795cef922349bfd0, type: 3}
+  m_Name: SettingLevel
   m_EditorClassIdentifier: 
-  themeColor: {r: 0.4772606, g: 0.7075472, b: 0.49525174, a: 1}
+  themeColor: {r: 1, g: 0.6, b: 0, a: 1}

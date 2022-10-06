@@ -34,6 +34,7 @@ public class TestWindow2 : IceEditorWindow
         public C4 c4;
         public IceEnumMap<Enum1, int> e1;
         [SerializeField] public DateTimeOffset dt;
+        [NonSerialized] public HashSet<string> names;
     }
     [IcePacket]
     [Serializable]
@@ -102,7 +103,8 @@ public class TestWindow2 : IceEditorWindow
                 c3 = new Class2() { /*ff1 = 4123.23f,*/ ss2 = "WWQEE", tt = typeof(int) },
                 c4 = new C4(1.44444f),
                 e1 = new IceEnumMap<Enum1, int>(),
-                dt = DateTimeOffset.Now
+                dt = DateTimeOffset.Now,
+                names = new HashSet<string>() { "as", "dd" }
             });
             if (IceButton("C3")) TB(new Class3()
             {

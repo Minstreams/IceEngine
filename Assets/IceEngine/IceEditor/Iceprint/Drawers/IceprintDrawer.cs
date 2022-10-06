@@ -27,11 +27,6 @@ namespace IceEditor.Internal
         [HierarchyItemGUICallback]
         static void OnHierarchyGUI(Iceprint print, Rect selectionRect)
         {
-            using var _a = AreaRaw(selectionRect);
-            using var _h = HORIZONTAL;
-
-            Space();
-
 #pragma warning disable UNT0008 // Null propagation on Unity objects
             if (IceprintBox.Instance?.Graph == print)
             {

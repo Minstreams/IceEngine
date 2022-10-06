@@ -78,7 +78,6 @@ namespace IceEditor.Internal
             string settingCode =
                 $"namespace IceEngine.Internal\r\n" +
                 $"{{\r\n" +
-                $"    [IceSettingPath(\"IceEngine/IceSystem/{name}\")]\r\n" +
                 $"    public class Setting{name} : Framework.IceSetting<Setting{name}>\r\n" +
                 $"    {{\r\n" +
                 $"\r\n" +

@@ -2,9 +2,13 @@
 
 namespace IceEngine.Internal
 {
-    [IceSettingPath("IceEngine/IceSystem/Network")]
     public class SettingNetwork : Framework.IceSetting<SettingNetwork>
     {
+        public SettingNetwork()
+        {
+            themeColor = new UnityEngine.Color(0.1259f, 0.4575f, 0.6509f);
+        }
+
         public int initialBufferSize = 4096;
         public byte magicByte = 0xC9;
 
