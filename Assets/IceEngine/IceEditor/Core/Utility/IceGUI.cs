@@ -867,7 +867,7 @@ namespace IceEditor
         public static void Header(string text, Color color) => GUILayout.Label(text.Color(color), StlHeader);
         public static void Header(string text) => GUILayout.Label(text.Color(IceGUIUtility.CurrentThemeColor), StlHeader);
 
-        public static void SectionHeader(string text, params GUILayoutOption[] options) => StyleBox(GetRect(TempContent(text), StlSectionHeader, options), StlSectionHeader, text, on: true);
+        public static void LabelSectionHeader(string text, params GUILayoutOption[] options) => StyleBox(GetRect(TempContent(text), StlSectionHeader, options), StlSectionHeader, text, on: true);
 
         public static void Label(string text, GUIStyle style, params GUILayoutOption[] options) => GUILayout.Label(text, style, options);
         public static void Label(GUIContent content, GUIStyle style, params GUILayoutOption[] options) => GUILayout.Label(content, style, options);

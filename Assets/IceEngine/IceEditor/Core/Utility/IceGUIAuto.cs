@@ -92,13 +92,13 @@ namespace IceEditor
                 {
                     using (HORIZONTAL)
                     {
-                        IceGUI.SectionHeader(label);
+                        IceGUI.LabelSectionHeader(label);
                         extraAction();
                     }
                 }
                 else
                 {
-                    IceGUI.SectionHeader(label);
+                    IceGUI.LabelSectionHeader(label);
                 }
                 return null;
             }
