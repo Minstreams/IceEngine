@@ -734,14 +734,34 @@ namespace IceEditor
                         if (onAppStatusBarGUILeft != null) mRoot.Insert(0, new IMGUIContainer()
                         {
                             name = "IceStatusBarLeft",
-                            style = { flexShrink = 0, marginLeft = 4, marginRight = 4 },
+                            style = {
+                                flexShrink = 0,
+                                marginLeft = 2,
+                                marginRight = 0 ,
+                                marginTop = 0,
+                                marginBottom = 0 ,
+                                paddingLeft = 0,
+                                paddingRight = 0 ,
+                                paddingBottom = 0 ,
+                                paddingTop = 0 ,
+                            },
                             onGUIHandler = OnAppStatusBarGUILeft,
                         });
 
                         if (onAppStatusBarGUIRight != null) mRoot.Add(new IMGUIContainer()
                         {
                             name = "IceStatusBarRight",
-                            style = { flexShrink = 0, marginLeft = 4, marginRight = 4 },
+                            style = {
+                                flexShrink = 0,
+                                marginLeft = 0,
+                                marginRight = 2 ,
+                                marginTop = 0,
+                                marginBottom = 0 ,
+                                paddingLeft = 0,
+                                paddingRight = 0 ,
+                                paddingBottom = 0 ,
+                                paddingTop = 0 ,
+                            },
                             onGUIHandler = OnAppStatusBarGUIRight,
                         });
                     }

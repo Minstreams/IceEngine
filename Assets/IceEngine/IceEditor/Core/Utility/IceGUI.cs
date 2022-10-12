@@ -36,6 +36,7 @@ namespace IceEditor
         public static GUIStyle StlGraphPortName => _stlGraphPortName?.Check() ?? (_stlGraphPortName = new GUIStyle("label") { margin = new RectOffset(-1, -1, 0, 0), padding = new RectOffset(0, 0, 0, 0), fontSize = 9, alignment = TextAnchor.MiddleCenter, }.Initialize(stl => { stl.normal.textColor = new Color(0.3962264f, 0.3962264f, 0.3962264f); })); static GUIStyle _stlGraphPortName;
         public static GUIStyle StlGraphPortLabel => _stlGraphPortLabel?.Check() ?? (_stlGraphPortLabel = new GUIStyle("ShurikenValue") { margin = new RectOffset(1, 1, 2, 2), padding = new RectOffset(3, 3, 0, 0), fontSize = 12, alignment = TextAnchor.MiddleCenter, fixedHeight = 0f, }); static GUIStyle _stlGraphPortLabel;
         public static GUIStyle StlSearchTextField => _stlSearchTextField?.Check() ?? (_stlSearchTextField = new GUIStyle("SearchTextField") { padding = new RectOffset(14, 3, 2, 1), fontSize = 12, fixedHeight = 0f, }); static GUIStyle _stlSearchTextField;
+        public static GUIStyle StlFooterBtn => _stlFooterBtn?.Check() ?? (_stlFooterBtn = new GUIStyle("RL FooterButton") { fontSize = 14, fixedWidth = 25f, fixedHeight = 19f, fontStyle = FontStyle.Normal, richText = true }); static GUIStyle _stlFooterBtn;
         #endregion
 
         #region Scope
@@ -1250,10 +1251,10 @@ namespace IceEditor
         }
 
         public static bool IceButton(string text, string tooltip = null, params GUILayoutOption[] options) => GUILayout.Button(TempContent(text, tooltip), StlIce, options);
-        public static bool IceButton(string text, bool on, string tooltip = null, params GUILayoutOption[] options) => GUILayout.Button(TempContent(on ? $"{text.Color(IceGUIUtility.CurrentThemeColor)}" : text, tooltip), StlIce, options);
+        public static bool IceButton(string text, bool on, string tooltip = null, params GUILayoutOption[] options) => GUILayout.Button(TempContent(on ? text.Color(IceGUIUtility.CurrentThemeColor) : text, tooltip), StlIce, options);
         public static bool IceButton(Texture texture, string tooltip = null, params GUILayoutOption[] options) => GUILayout.Button(TempContent(texture, tooltip), StlIce, options);
         public static bool IceButton(GUIContent content, params GUILayoutOption[] options) => GUILayout.Button(content, StlIce, options);
-        public static bool _IceToggle(string text, bool val, string tooltip = null, params GUILayoutOption[] options) => GUILayout.Button(TempContent(val ? $"{text.Color(IceGUIUtility.CurrentThemeColor)}" : text, tooltip), StlIce) ? !val : val;
+        public static bool _IceToggle(string text, bool val, string tooltip = null, params GUILayoutOption[] options) => GUILayout.Button(TempContent(val ? text.Color(IceGUIUtility.CurrentThemeColor) : text, tooltip), StlIce) ? !val : val;
         public static bool IceToggle(string text, ref bool val, string tooltip = null, params GUILayoutOption[] options) => val = _IceToggle(text, val, tooltip, options);
 
         /// <summary>

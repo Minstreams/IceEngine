@@ -38,7 +38,7 @@ namespace IceEditor.Internal
         {
             using (GUICHECK)
             {
-                IceToggle("❂", ref bDeveloperMode, "开发者模式");
+                ToggleLeft(ref bDeveloperMode, new GUIContent(bDeveloperMode ? "❂".Color(IceGUIUtility.CurrentThemeColor) : "❂", "开发者模式"), StlFooterBtn);
                 if (GUIChanged) EditorPrefs.SetBool("DeveloperMode", bDeveloperMode);
             }
         }

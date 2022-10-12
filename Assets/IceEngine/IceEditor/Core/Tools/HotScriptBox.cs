@@ -41,9 +41,24 @@ using IceEditor;
 
 ";
 
-        [MenuItem("IceEngine/热脚本")]
+        [MenuItem("IceEngine/C#热脚本")]
         public static void OpenWindow() => GetWindow<HotScriptBox>();
-        protected override string Title => "热脚本";
+        protected override string Title => "C#热脚本";
+        [AppStatusBarGUICallback]
+        static void OnAppStatusGUI()
+        {
+            if (Button(new GUIContent("C#".Bold(), "C#热脚本"), StlFooterBtn))
+            {
+                var box = GetWindow<HotScriptBox>();
+                var code = GUIUtility.systemCopyBuffer;
+                if (jsonReg.IsMatch(code) && box.Dialog("检测到已复制脚本，要直接运行吗"))
+                {
+                    box.AddScript();
+                    box.PasteCurScript(code);
+                    box.Compile();
+                }
+            }
+        }
 
         GUIStyle StlAssemblyToggle => _stlAssemblyToggle?.Check() ?? (_stlAssemblyToggle = new GUIStyle("toggle") { richText = true, }); [NonSerialized] GUIStyle _stlAssemblyToggle;
         GUIStyle StlScriptTab => _stlScriptTab?.Check() ?? (_stlScriptTab = new GUIStyle("dragtab") { stretchWidth = false, }); [NonSerialized] GUIStyle _stlScriptTab;
@@ -138,8 +153,21 @@ using IceEditor;
         }
         public void PasteCurScript(string json)
         {
-            Log("粘贴热脚本数据\n" + json);
-            EditorJsonUtility.FromJsonOverwrite(json, CurScript);
+            try
+            {
+                Log("粘贴热脚本数据\n" + json);
+                EditorJsonUtility.FromJsonOverwrite(json, CurScript);
+                Setting.Save();
+            }
+            catch
+            {
+                LogError($"无效数据格式\n{json}");
+            }
+        }
+
+        void AddScript()
+        {
+            Setting.scripts.Add(CurScript = new HotScriptItem());
             Setting.Save();
         }
         #endregion
@@ -194,7 +222,7 @@ using static IceEditor.IceGUIAuto;
             {
                 codeBuilder.AppendLine($"public static void {FuncName}() => GetWindow<{ClassName}>();");
                 codeBuilder.AppendLine("protected override Color DefaultThemeColor => new Color(0.8f, 0.2f, 0.5f);");
-                string guiTitle = title.IsNullOrWhiteSpace() ? "热窗口" : title;
+                string guiTitle = title.IsNullOrWhiteSpace() ? "临时窗口" : title;
                 codeBuilder.AppendLine($"protected override string Title => \"{guiTitle}\";");
             }
             codeBuilder.Append("}}");
@@ -234,8 +262,10 @@ using static IceEditor.IceGUIAuto;
                 m?.Invoke(null, null);
             }
         }
+        public void Compile() => Compile(CurScript.code, CurScript.type == HotScriptType.GUI, CurScript.name);
         #endregion
 
+        readonly static Regex jsonReg = new("^\\{\\r?\\n\\s*\"name\":[\\w\\W]*\\}\\s*$", RegexOptions.Multiline);
         protected override void OnWindowGUI(Rect position)
         {
             // Dock
@@ -271,11 +301,7 @@ using static IceEditor.IceGUIAuto;
                     }
                 }
                 Space();
-                if (Button(string.Empty, "OL Plus", GUILayout.ExpandWidth(false)))
-                {
-                    Setting.scripts.Add(CurScript = new HotScriptItem());
-                    Setting.Save();
-                }
+                if (Button(string.Empty, "OL Plus", GUILayout.ExpandWidth(false))) AddScript();
             }
 
             var r = position.MoveEdge(top: 24);
@@ -287,7 +313,7 @@ using static IceEditor.IceGUIAuto;
                     if (GUIChanged)
                     {
                         Setting.Save();
-                        if (code.StartsWith("{\n    \"name\": ") && code.EndsWith("\"\n}"))
+                        if (jsonReg.IsMatch(code))
                         {
                             PasteCurScript(code);
                         }
@@ -367,10 +393,7 @@ using static IceEditor.IceGUIAuto;
                         if (Button("复制")) CopyCurScript();
                         if (Button("粘贴")) PasteCurScript(GUIUtility.systemCopyBuffer);
                     }
-                    if (Button("运行"))
-                    {
-                        Compile(CurScript.code, CurScript.type == HotScriptType.GUI, CurScript.name);
-                    }
+                    if (Button("运行")) Compile();
                 }
             }
         }
