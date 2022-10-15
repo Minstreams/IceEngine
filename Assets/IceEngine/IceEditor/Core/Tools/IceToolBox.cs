@@ -38,7 +38,7 @@ namespace IceEditor.Internal
         {
             using (GUICHECK)
             {
-                ToggleLeft(ref bDeveloperMode, new GUIContent(bDeveloperMode ? "❂".Color(IceGUIUtility.CurrentThemeColor) : "❂", "开发者模式"), StlFooterBtn);
+                ToggleLeft(ref bDeveloperMode, new GUIContent(bDeveloperMode ? "❂".Color(IceGUIUtility.CurrentThemeColor) : "❂", bDeveloperMode ? "开发者模式 开" : "开发者模式 关"), StlFooterBtn);
                 if (GUIChanged) EditorPrefs.SetBool("DeveloperMode", bDeveloperMode);
             }
         }
@@ -180,7 +180,7 @@ namespace IceEditor.Internal
                 Header("其他");
                 using (HORIZONTAL)
                 {
-                    if (Button("热脚本", GUILayout.Height(32))) HotScriptBox.OpenWindow();
+                    if (Button("热指令", GUILayout.Height(32))) HotScriptBox.OpenWindow();
                     if (Button("贴图裁剪UV重排", GUILayout.Height(32))) ModelUVTextureEditorWindow.OpenWindow();
                 }
             }

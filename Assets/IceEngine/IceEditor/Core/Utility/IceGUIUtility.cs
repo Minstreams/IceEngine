@@ -770,11 +770,19 @@ namespace IceEditor
         }
         static void OnAppStatusBarGUILeft()
         {
-            using (HORIZONTAL) onAppStatusBarGUILeft?.Invoke();
+            try
+            {
+                using (HORIZONTAL) onAppStatusBarGUILeft?.Invoke();
+            }
+            catch { }
         }
         static void OnAppStatusBarGUIRight()
         {
-            using (HORIZONTAL) onAppStatusBarGUIRight?.Invoke();
+            try
+            {
+                using (HORIZONTAL) onAppStatusBarGUIRight?.Invoke();
+            }
+            catch { }
         }
         #endregion
 

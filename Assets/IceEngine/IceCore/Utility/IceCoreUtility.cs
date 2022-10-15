@@ -128,7 +128,7 @@ namespace IceEngine
             for (int i = start; i < start + count; ++i)
             {
                 var b = buffer[i];
-                res += $"{b:x2}";
+                res += $"{b:X2}";
                 if (i < buffer.Count - 1)
                 {
                     if (((i + 1) & 3) == 0) res += " |";
@@ -143,7 +143,7 @@ namespace IceEngine
             for (int i = buffer.Count - count; i < buffer.Count; ++i)
             {
                 var b = buffer[i];
-                res += $"{b:x2}";
+                res += $"{b:X2}";
                 if (i < buffer.Count - 1)
                 {
                     if (((i + 1) & 3) == 0) res += " |";
@@ -158,7 +158,7 @@ namespace IceEngine
             for (int i = 0; i < buffer.Count; ++i)
             {
                 var b = buffer[i];
-                res += $"{b:x2}";
+                res += $"{b:X2}";
                 if (i < buffer.Count - 1)
                 {
                     if (((i + 1) & 3) == 0) res += " |";

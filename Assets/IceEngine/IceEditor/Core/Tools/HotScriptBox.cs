@@ -12,6 +12,9 @@ using IceEngine;
 using IceEditor.Framework;
 using static IceEditor.IceGUI;
 using static IceEditor.IceGUIAuto;
+using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
+using System.Reflection.Emit;
 
 namespace IceEditor.Internal
 {
@@ -41,17 +44,17 @@ using IceEditor;
 
 ";
 
-        [MenuItem("IceEngine/C#热脚本")]
+        [MenuItem("IceEngine/C#热指令")]
         public static void OpenWindow() => GetWindow<HotScriptBox>();
-        protected override string Title => "C#热脚本";
+        protected override string Title => "C#热指令";
         [AppStatusBarGUICallback]
         static void OnAppStatusGUI()
         {
-            if (Button(new GUIContent("C#".Bold(), "C#热脚本"), StlFooterBtn))
+            if (Button(new GUIContent("C#".Bold(), "C#热指令"), StlFooterBtn))
             {
                 var box = GetWindow<HotScriptBox>();
                 var code = GUIUtility.systemCopyBuffer;
-                if (jsonReg.IsMatch(code) && box.Dialog("检测到已复制脚本，要直接运行吗"))
+                if (jsonReg.IsMatch(code) && box.Dialog("检测到已复制指令，要直接运行吗"))
                 {
                     box.AddScript();
                     box.PasteCurScript(code);
@@ -85,11 +88,13 @@ using IceEditor;
         }
         AssemblyDisplayMode displayMode;
         readonly Dictionary<string, string> nameAssemblyMap = new();
+        readonly Dictionary<string, string> locationAssemblyMap = new();
         readonly Dictionary<string, string> fullNameAssemblyMap = new();
         readonly static HashSet<string> defaultAssemblyLocations = new();
         void CollectAssemblies()
         {
             nameAssemblyMap.Clear();
+            locationAssemblyMap.Clear();
             fullNameAssemblyMap.Clear();
             defaultAssemblyLocations.Clear();
             foreach (var a in AppDomain.CurrentDomain.GetAssemblies().Where(a => !a.IsDynamic))
@@ -98,6 +103,7 @@ using IceEditor;
                 var fullName = a.FullName;
                 var location = a.Location;
                 nameAssemblyMap.Add(name, location);
+                locationAssemblyMap.Add(location, name);
                 fullNameAssemblyMap.Add(fullName, location);
             }
             foreach (var n in defaultAssemblyNames)
@@ -106,6 +112,21 @@ using IceEditor;
                 {
                     defaultAssemblyLocations.Add(location);
                 }
+            }
+        }
+        void ReloadCurAssemblies()
+        {
+            curAssemlySet.Clear();
+            foreach (var a in defaultAssemblyLocations)
+            {
+                curAssemlySet.Add(a);
+            }
+
+            if (CurScript == null) return;
+            foreach (var a in CurScript.assemblies)
+            {
+                if (nameAssemblyMap.TryGetValue(a, out var location))
+                    curAssemlySet.Add(location);
             }
         }
 
@@ -129,17 +150,7 @@ using IceEditor;
             set
             {
                 _curScript = value;
-                curAssemlySet.Clear();
-                foreach (var a in defaultAssemblyLocations)
-                {
-                    curAssemlySet.Add(a);
-                }
-
-                if (value == null) return;
-                foreach (var a in value.assemblies)
-                {
-                    curAssemlySet.Add(a);
-                }
+                ReloadCurAssemblies();
             }
         }
 
@@ -148,15 +159,16 @@ using IceEditor;
         public void CopyCurScript()
         {
             var json = EditorJsonUtility.ToJson(CurScript, true);
-            Log("复制热脚本数据\n" + json);
+            Log("复制热指令数据\n" + json);
             GUIUtility.systemCopyBuffer = json;
         }
         public void PasteCurScript(string json)
         {
             try
             {
-                Log("粘贴热脚本数据\n" + json);
+                Log("粘贴热指令数据\n" + json);
                 EditorJsonUtility.FromJsonOverwrite(json, CurScript);
+                ReloadCurAssemblies();
                 Setting.Save();
             }
             catch
@@ -177,6 +189,12 @@ using IceEditor;
         {
             base.OnEnable();
             CollectAssemblies();
+
+            mTest = GetType().GetMethod("Test", BindingFlags.Static | BindingFlags.NonPublic);
+        }
+        private void Update()
+        {
+            Repaint();
         }
         #endregion
 
@@ -260,10 +278,147 @@ using static IceEditor.IceGUIAuto;
                 Assembly objAssembly = cr.CompiledAssembly;
                 var m = objAssembly.GetType($"{NamespaceName}.{ClassName}").GetMethod(FuncName, BindingFlags.Public | BindingFlags.Static);
                 m?.Invoke(null, null);
+                mLast = mCur;
+                mCur = m;
             }
         }
         public void Compile() => Compile(CurScript.code, CurScript.type == HotScriptType.GUI, CurScript.name);
         #endregion
+
+        #region ReplaceTest
+        MethodInfo mCur;
+        MethodInfo mLast;
+        MethodInfo mTest;
+        static void Test()
+        {
+            int a = 15;
+            Debug.Log($"{a}");
+        }
+        void Replace(MethodInfo tar, MethodInfo inj)
+        {
+            //var il = inj.GetMethodBody().GetILAsByteArray();
+
+            //// Pin the bytes in the garbage collection.
+            //GCHandle h = GCHandle.Alloc((object)il, GCHandleType.Pinned);
+            //IntPtr addr = h.AddrOfPinnedObject();
+            //int size = il.Length;
+
+            //// Swap the method.
+            //MethodRental.SwapMethodBody(tar.DeclaringType, tar.MetadataToken, addr, size, MethodRental.JitOnDemand);
+            //return;
+
+            RuntimeHelpers.PrepareMethod(tar.MethodHandle);
+            RuntimeHelpers.PrepareMethod(inj.MethodHandle);
+            unsafe
+            {
+                byte* pTar = (byte*)tar.MethodHandle.Value.ToPointer();
+                byte* pInj = (byte*)inj.MethodHandle.Value.ToPointer();
+
+                long* ppTar = (long*)*(long*)(pTar + 8);
+                long* ppInj = (long*)*(long*)(pInj + 8);
+
+                void ReplaceInt(int offset)
+                {
+                    int* t1 = (int*)(pTar + offset);
+                    int* t2 = (int*)(pInj + offset);
+                    *t1 = *t2;
+                }
+                //void ReplaceLong(int offset)
+                //{
+                //    long* t1 = (long*)(ppTar + offset);
+                //    long* t2 = (long*)(ppInj + offset);
+                //    *t1 = *t2;
+                //}
+
+                //ReplaceInt(0);
+                ReplaceInt(4);
+                ReplaceInt(8);
+                ReplaceInt(12);
+                //ReplaceInt(16);
+                //ReplaceInt(20);
+                ////ReplaceInt(24);
+                ////ReplaceInt(28);
+                //ReplaceInt(40);
+                //ReplaceInt(44);
+                //ReplaceInt(48);
+                //ReplaceInt(52);
+                //ReplaceLong(0);
+                //ReplaceLong(0);
+            }
+        }
+        void GUI_Test()
+        {
+            if (Button("Test")) Test();
+            if (Button("RunCur")) mCur?.Invoke(null, null);
+            if (Button("RunLast")) mLast?.Invoke(null, null);
+            if (Button("Replace test with mCur")) Replace(mTest, mCur);
+            if (Button("Replace mLast with mCur")) Replace(mLast, mCur);
+            if (Button("Reload")) EditorUtility.RequestScriptReload();
+            if (Button("RR")) AppDomain.Unload(AppDomain.CurrentDomain);
+
+            if (System.Diagnostics.Debugger.IsAttached)
+            {
+                Label("Debugger is attached.");
+            }
+
+            using (ScrollInvisible("Testt"))
+            {
+                unsafe
+                {
+                    int count = IntField("Count");
+                    int highlight = IntField("Highlight");
+
+                    void Field(byte* p)
+                    {
+                        string res = "";
+                        for (int i = 0; i < count; ++i)
+                        {
+                            byte* pp = p + i;
+                            byte b = *pp;
+                            if ((i & 15) == 0) res += $"[{IceBinaryUtility.GetBytes((long)pp).Hex(false)}] ";
+                            res += $"{b:X2} ".Color(b == highlight ? ThemeColor : b == 0 ? Color.black : Color.white);
+                            if (((i + 1) & 3) == 0) res += "| ";
+                            if (((i + 1) & 15) == 0) res += "\n";
+                        }
+                        using (GROUP)
+                        {
+                            Label(res);
+                        }
+                    }
+                    void AllFields(MethodInfo m)
+                    {
+                        if (m == null) return;
+                        byte* p = (byte*)m.MethodHandle.Value.ToPointer();
+                        using (BOX)
+                        {
+                            Label(m.Name, StlSectionHeader);
+                            Field(p);
+                            var ppp = (byte*)*((long*)(p + 8));
+                            Field(ppp);
+                            //Field(ppp + (*(ushort*)(p + 4)));
+                            //Field((byte*)*((long*)(p + 48)));
+
+                            string res = "";
+                            var bts = m.GetMethodBody().GetILAsByteArray();
+                            foreach (var b in bts)
+                            {
+                                res += $"{b:X2} ";
+                            }
+                            Label(res);
+                        }
+                    }
+
+                    using (HORIZONTAL)
+                    {
+                        AllFields(mTest);
+                        AllFields(mCur);
+                        AllFields(mLast);
+                    }
+                }
+            }
+        }
+        #endregion
+
 
         readonly static Regex jsonReg = new("^\\{\\r?\\n\\s*\"name\":[\\w\\W]*\\}\\s*$", RegexOptions.Multiline);
         protected override void OnWindowGUI(Rect position)
@@ -276,7 +431,7 @@ using static IceEditor.IceGUIAuto;
                     var script = Setting.scripts[i];
                     using (HORIZONTAL)
                     {
-                        var name = script.name.IsNullOrEmpty() ? $"脚本{i}" : script.name;
+                        var name = script.name.IsNullOrEmpty() ? $"指令{i}" : script.name;
                         bool selected = CurScript == script;
                         if (selected)
                         {
@@ -318,6 +473,8 @@ using static IceEditor.IceGUIAuto;
                             PasteCurScript(code);
                         }
                     }
+
+                    GUI_Test();
                 }
                 using (Area(rSub)) using (LabelWidth(32))
                 {
@@ -374,12 +531,12 @@ using static IceEditor.IceGUIAuto;
                                             if (val)
                                             {
                                                 curAssemlySet.Add(location);
-                                                CurScript.assemblies.Add(location);
+                                                CurScript.assemblies.Add(locationAssemblyMap[location]);
                                             }
                                             else
                                             {
                                                 curAssemlySet.Remove(location);
-                                                CurScript.assemblies.Remove(location);
+                                                CurScript.assemblies.Remove(locationAssemblyMap[location]);
                                             }
                                             Setting.Save();
                                         }
