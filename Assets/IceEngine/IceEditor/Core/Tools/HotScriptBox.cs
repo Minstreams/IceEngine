@@ -361,12 +361,14 @@ using static IceEditor.IceGUIAuto;
                 Label("Debugger is attached.");
             }
 
+            int count = IntField("Count");
+            int highlight = IntField("Highlight");
+            int searchRangeMin = IntField("SearchRangeMin");
+            int searchRange = IntField("SearchRange");
             using (ScrollInvisible("Testt"))
             {
                 unsafe
                 {
-                    int count = IntField("Count");
-                    int highlight = IntField("Highlight");
 
                     void Field(byte* p)
                     {
@@ -385,7 +387,7 @@ using static IceEditor.IceGUIAuto;
                             Label(res);
                         }
                     }
-                    void AllFields(MethodInfo m)
+                    void AllFields(MethodInfo m, bool search = false)
                     {
                         if (m == null) return;
                         byte* p = (byte*)m.MethodHandle.Value.ToPointer();
@@ -405,14 +407,40 @@ using static IceEditor.IceGUIAuto;
                                 res += $"{b:X2} ";
                             }
                             Label(res);
+
+                            if (search)
+                            {
+                                byte* pppp = (byte*)*(long*)*(long*)(ppp + 16);
+                                int offset = 0;
+                                for (int i = searchRangeMin; i < searchRange; ++i)
+                                {
+                                    if (*(pppp + i) == 42 && *(pppp + i - 1) == 10)
+                                    {
+                                        offset = i;
+                                        break;
+                                    }
+                                }
+                                using (HORIZONTAL)
+                                {
+                                    string attr;
+                                    fixed (byte* b = bts)
+                                    {
+                                        attr = IceBinaryUtility.GetBytes((long)b).Hex(false);
+                                    }
+                                    Label($"{offset} | {IceBinaryUtility.GetBytes(offset).Hex(false)} | {attr}");
+                                    if (offset > 0 && IceButton("Next")) SetInt("SearchRangeMin", offset + 1);
+                                }
+                                Field(pppp);
+                                Field(pppp + offset - 16);
+                            }
                         }
                     }
 
                     using (HORIZONTAL)
                     {
                         AllFields(mTest);
-                        AllFields(mCur);
-                        AllFields(mLast);
+                        AllFields(mCur, true);
+                        //AllFields(mLast);
                     }
                 }
             }
