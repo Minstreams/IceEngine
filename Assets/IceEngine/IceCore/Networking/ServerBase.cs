@@ -181,7 +181,7 @@ namespace IceEngine.Networking.Framework
             {
                 if (isDestroyed) return;
                 stream?.Write(data, 0, data.Length);
-                Log("Send to " + NetId + ": " + data.Hex());
+                //Log("Send to " + NetId + ": " + data.Hex());
             }
             public void Send(byte[] data)
             {
@@ -190,7 +190,11 @@ namespace IceEngine.Networking.Framework
                 stream?.Write(IceBinaryUtility.GetBytes((ushort)data.Length), 0, 2);
                 SendRaw(data);
             }
-            public void Send(Pkt pkt) => Send(IceBinaryUtility.ToBytes(pkt));
+            public void Send(Pkt pkt)
+            {
+                Send(IceBinaryUtility.ToBytes(pkt));
+                Log("Send to " + NetId + ": " + pkt);
+            }
 
             #region PRIVATE
 
@@ -263,8 +267,8 @@ namespace IceEngine.Networking.Framework
                         // Data
                         ReadStream(length);
                         Pkt pkt = IceBinaryUtility.FromBytes(buffer) as Pkt;
-                        ServerInstance.CallProcess(pkt, this);
                         Log($"Receive{client.Client.LocalEndPoint}:{pkt}|{buffer.Hex(0, length)}");
+                        ServerInstance.CallProcess(pkt, this);
                     }
                 }
                 catch (ThreadAbortException)

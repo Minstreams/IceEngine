@@ -357,8 +357,8 @@ namespace IceEngine.Networking.Framework
                     // Data
                     ReadStream(length);
                     Pkt pkt = IceBinaryUtility.FromBytes(buffer) as Pkt;
-                    CallReceive(pkt);
                     Log($"Receive{client.Client.LocalEndPoint}:{pkt}|{buffer.Hex(0, length)}");
+                    CallReceive(pkt);
                 }
             }
             catch (ThreadAbortException)
