@@ -15,18 +15,18 @@ namespace IceEngine.Networking.Framework
         protected abstract int ServerTCPPort { get; }
         protected abstract int ClientUDPPort { get; }
         protected abstract int LocalTCPPort { get; }
-        protected abstract int InitialBufferSize { get; }
         protected abstract byte MagicByte { get; }
+        protected virtual int InitialBufferSize => 2048;
 
         // Methods
         protected abstract void CallLog(string message);
-        protected abstract void CallShutdownServer();
 
         // Events
-        protected abstract void CallUDPProcess(Pkt pkt, IPEndPoint remote);
-        protected abstract void CallProcess(Pkt pkt, Connection connection);
-        protected abstract void CallServerConnection(Connection connection);
-        protected abstract void CallServerDisconnection(Connection connection);
+        protected abstract void CallDestroy();
+        protected virtual void CallUDPProcess(Pkt pkt, IPEndPoint remote) => IceNetworkUtility.CallUDPProcess(pkt, remote);
+        protected virtual void CallProcess(Pkt pkt, Connection connection) => IceNetworkUtility.CallProcess(pkt, connection);
+        protected virtual void CallServerConnection(Connection connection) => IceNetworkUtility.CallServerConnection(connection);
+        protected virtual void CallServerDisconnection(Connection connection) => IceNetworkUtility.CallServerDisconnection(connection);
         #endregion
 
         #region Instance
@@ -137,7 +137,7 @@ namespace IceEngine.Networking.Framework
                 catch (Exception ex)
                 {
                     Log(ex);
-                    CallShutdownServer();
+                    Destroy();
                     return;
                 }
             }

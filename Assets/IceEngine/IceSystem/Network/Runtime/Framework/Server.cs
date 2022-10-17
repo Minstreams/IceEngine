@@ -17,11 +17,6 @@ namespace IceEngine.Networking
         protected override byte MagicByte => Setting.magicByte;
 
         protected override void CallLog(string message) => Ice.Network.CallLog(message);
-        protected override void CallShutdownServer() => Ice.Network.CallMainThread(Ice.Network.ShutdownServer);
-
-        protected override void CallUDPProcess(Pkt pkt, IPEndPoint remote) => Ice.Network.CallUDPProcess(pkt, remote);
-        protected override void CallProcess(Pkt pkt, Connection connection) => Ice.Network.CallProcess(pkt, connection);
-        protected override void CallServerConnection(Connection connection) => Ice.Network.CallServerConnection(connection);
-        protected override void CallServerDisconnection(Connection connection) => Ice.Network.CallServerDisconnection(connection);
+        protected override void CallDestroy() => Ice.Network.CallServerDestroy();
     }
 }

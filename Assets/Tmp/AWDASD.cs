@@ -7,27 +7,12 @@ using static Ice.Network;
 
 public class AWDASD : NetworkObject
 {
-    void Start()
-    {
-        LaunchServer();
-        LaunchClient();
-        ClientOpenUDP();
-        ServerOpenTCP();
-        ClientConnectTo(LocalIPAddressList[0]);
-    }
-    protected override void OnDestroy()
-    {
-        base.OnDestroy();
-        ClientDisconnect();
-        ServerCloseTCP();
-        ClientCloseUDP();
-        ShutdownClient();
-        ShutdownServer();
-    }
+    public int id;
+
     [Button]
     public void SetId()
     {
-        ID = Ice.Network.NetId;
+        ID.ID = id;
     }
     [Button]
     public void TServerBroadcast()
@@ -73,42 +58,49 @@ public class AWDASD : NetworkObject
     [TCPReceive]
     public void OnRec(PktTest pkt)
     {
-        Debug.Log("TCPReceive" + pkt.data.ToString());
+        Log("TCPReceive" + pkt.data.ToString());
     }
     [TCPReceive]
     public void OnRec(PktTestId pkt)
     {
-        Debug.Log("TCPReceiveId" + pkt.data.ToString());
+        Log("TCPReceiveId" + pkt.data.ToString());
     }
     [TCPProcess]
     public void OnProc(PktTest pkt, ServerBase.Connection conn)
     {
-        Debug.Log("TCPProcess" + pkt.data.ToString() + "|" + conn.NetId);
+        Log("TCPProcess" + pkt.data.ToString() + "|" + conn.NetId);
     }
     [TCPProcess]
     public void OnProc(PktTestId pkt, ServerBase.Connection conn)
     {
-        Debug.Log("TCPProcessId" + pkt.data.ToString() + "|" + conn.NetId);
+        Log("TCPProcessId" + pkt.data.ToString() + "|" + conn.NetId);
     }
     [UDPReceive]
     public void OnRec(PktTest pkt, IPEndPoint remote)
     {
-        Debug.Log("UDPReceive" + pkt.data.ToString() + "|" + remote.ToString());
+        Log("UDPReceive" + pkt.data.ToString() + "|" + remote.ToString());
     }
     [UDPReceive]
     public void OnRec(PktTestId pkt, IPEndPoint remote)
     {
-        Debug.Log("UDPReceiveId" + pkt.data.ToString() + "|" + remote.ToString());
+        Log("UDPReceiveId" + pkt.data.ToString() + "|" + remote.ToString());
     }
     [UDPProcess]
     public void OnProc(PktTest pkt, IPEndPoint remote)
     {
-        Debug.Log("UDPProcess" + pkt.data.ToString() + "|" + remote.ToString());
+        Log("UDPProcess" + pkt.data.ToString() + "|" + remote.ToString());
     }
     [UDPProcess]
     public void OnProc(PktTestId pkt, IPEndPoint remote)
     {
-        Debug.Log("UDPProcessId" + pkt.data.ToString() + "|" + remote.ToString());
+        Log("UDPProcessId" + pkt.data.ToString() + "|" + remote.ToString());
+    }
+    void Log(string msg)
+    {
+        CallMainThread(() =>
+        {
+            Debug.Log($"[{gameObject.name}] {msg}");
+        });
     }
 }
 

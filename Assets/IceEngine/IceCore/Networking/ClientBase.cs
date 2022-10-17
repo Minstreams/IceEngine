@@ -9,28 +9,25 @@ namespace IceEngine.Networking.Framework
     public abstract class ClientBase
     {
         #region Configuration
-
         protected abstract IPAddress LocalIPAddress { get; }
-        public IPAddress ServerIPAddress { get; private set; }
         protected abstract int ServerTCPPort { get; }
         protected abstract int ClientUDPPort { get; }
-        protected abstract int InitialBufferSize { get; }
         protected abstract byte MagicByte { get; }
+        protected virtual int InitialBufferSize => 2048;
 
         // Methods
         protected abstract void CallLog(string message);
-        protected abstract void CallShutdownClient();
 
         // Events
-        protected abstract void CallConnection();
-        protected abstract void CallDisconnection();
-        protected abstract void CallReceive(Pkt pkt);
-        protected abstract void CallUDPReceive(Pkt pkt, IPEndPoint remote);
+        protected abstract void CallDestroy();
+        protected virtual void CallConnection() => IceNetworkUtility.CallConnection();
+        protected virtual void CallDisconnection() => IceNetworkUtility.CallDisconnection();
+        protected virtual void CallReceive(Pkt pkt) => IceNetworkUtility.CallReceive(pkt);
+        protected virtual void CallUDPReceive(Pkt pkt, IPEndPoint remote) => IceNetworkUtility.CallUDPReceive(pkt, remote);
         #endregion
 
         #region Instance
         bool isDestroyed = false;
-
         public void Destroy()
         {
             if (isDestroyed)
@@ -43,6 +40,7 @@ namespace IceEngine.Networking.Framework
             Log("Destroy");
             CloseUDP();
             StopTCPConnecting();
+            CallDestroy();
         }
 
         public ClientBase()
@@ -56,7 +54,7 @@ namespace IceEngine.Networking.Framework
             catch (Exception ex)
             {
                 Log(ex);
-                CallShutdownClient();
+                Destroy();
                 return;
             }
         }
@@ -187,6 +185,8 @@ namespace IceEngine.Networking.Framework
         public int NetId { get; private set; }
         public bool IsConnected => client != null && client.Connected;
         public int Port => (client?.Client?.LocalEndPoint as IPEndPoint)?.Port ?? 0;
+        public IPAddress ServerIPAddress { get; private set; }
+
 
         /// <summary>
         /// Start connecting to given IP address (LoaclIPAddress & ServerIPAddress should be set)
