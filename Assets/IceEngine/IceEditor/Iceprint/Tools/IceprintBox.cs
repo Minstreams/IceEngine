@@ -512,6 +512,7 @@ namespace IceEditor.Internal
                         E.Use();
                     }
                     break;
+
             }
 
             // Node
@@ -871,9 +872,9 @@ namespace IceEditor.Internal
             // 内部鼠标事件
             if (viewport.ClipRect.Contains(E.mousePosition))
             {
-                // 右键菜单
                 switch (E.type)
                 {
+                    // 右键菜单
                     case EventType.MouseDown:
                         if (E.button == 0 && GUIHotControl == 0)
                         {
@@ -898,6 +899,36 @@ namespace IceEditor.Internal
                             GUIHotControl = 0;
                             E.Use();
                         }
+                        break;
+                    // 拖拽
+                    case EventType.DragPerform:
+                        var objs = DragAndDrop.objectReferences;
+                        foreach (var o in objs)
+                        {
+                            if (o is GameObject go)
+                            {
+                                var comps = go.GetComponents<IceprintNodeComponent>();
+                                if (comps.Length > 0) selectedNodes.Clear();
+                                Vector2 offset = Vector2.zero;
+                                foreach (var comp in comps)
+                                {
+                                    var node = Graph.AddNode(new NodeMonoBehaviour()
+                                    {
+                                        targetType = comp.GetType(),
+                                    }, E.mousePosition + offset) as NodeMonoBehaviour;
+
+                                    node.target.Value = comp;
+
+                                    selectedNodes.Add(node);
+
+                                    offset += Vector2.one * 32;
+                                }
+                                if (comps.Length > 0) RecordForUndo();
+                            }
+                        }
+                        break;
+                    case EventType.DragUpdated:
+                        if (viewport.ClipRect.Contains(E.mousePosition)) DragAndDrop.visualMode = DragAndDropVisualMode.Link;
                         break;
                 }
             }

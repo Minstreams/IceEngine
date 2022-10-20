@@ -202,7 +202,7 @@ namespace IceEditor.Framework
 
         #region Log & Dialog
         /// <summary>
-        /// 输出一个的Log
+        /// 输出一个Log
         /// </summary>
         protected void Log(string text, UnityEngine.Object context = null)
         {
