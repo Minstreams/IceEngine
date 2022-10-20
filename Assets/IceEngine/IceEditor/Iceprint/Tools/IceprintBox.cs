@@ -169,14 +169,28 @@ namespace IceEditor.Internal
             AvailablePorts.Clear();
         }
 
-        Color GetColor(IceprintPort port)
+        //Color GetColor(IceprintPort port)
+        //{
+        //    Color c = Color.white;
+        //    for (int i = 0; i < port.ParamsList.Count; ++i)
+        //    {
+        //        c = Color.LerpUnclamped(GetColor(port.ParamsList[i]), c, i / ((float)(i + 1)));
+        //    }
+        //    return c;
+        //}
+
+        readonly List<Color> colorsCache = new();
+        Color[] GetColors(IceprintPort port)
         {
-            Color c = Color.white;
-            for (int i = 0; i < port.ParamsList.Count; ++i)
+            var count = port.ParamsList.Count;
+            if (count == 0) return new Color[] { Color.white };
+
+            colorsCache.Clear();
+            for (int i = 0; i < count; ++i)
             {
-                c = Color.LerpUnclamped(GetColor(port.ParamsList[i]), c, i / ((float)(i + 1)));
+                colorsCache.Add(GetColor(port.ParamsList[i]));
             }
-            return c;
+            return colorsCache.ToArray();
         }
         #endregion
 
@@ -587,9 +601,9 @@ namespace IceEditor.Internal
             {
                 var pos = DraggingPort.GetPos();
                 var tagent = DraggingPort.GetTangent();
-                var color = GetColor(DraggingPort);
-                IceGUIUtility.DrawPortLine(pos, E.mousePosition, tagent, color, color);
-                IceGUIUtility.DrawPortLine(E.mousePosition, pos, -tagent, color, color);
+                var colors = GetColors(DraggingPort);
+                IceGUIUtility.DrawPortLine(pos, E.mousePosition, tagent, colors, colors);
+                IceGUIUtility.DrawPortLine(E.mousePosition, pos, -tagent, colors, colors);
             }
             foreach (var node in Graph.nodeList)
             {
@@ -601,16 +615,16 @@ namespace IceEditor.Internal
                 if (E.type == EventType.Repaint && port.IsConnected)
                 {
                     Vector2 pos = port.GetPos();
-                    var color = GetColor(port);
+                    var colors = GetColors(port);
 
                     var tagent = port.GetTangent();
                     if (port is IceprintInport pin)
                     {
-                        foreach (var pp in pin.connectedPorts) IceGUIUtility.DrawPortLine(pos, pp.GetPos(), tagent, color, GetColor(pp));
+                        foreach (var pp in pin.connectedPorts) IceGUIUtility.DrawPortLine(pos, pp.GetPos(), tagent, colors, GetColors(pp));
                     }
                     else if (port is IceprintOutport pout)
                     {
-                        foreach (var pp in pout.connectedPorts) IceGUIUtility.DrawPortLine(pos, pp.port.GetPos(), tagent, color, GetColor(pp.port));
+                        foreach (var pp in pout.connectedPorts) IceGUIUtility.DrawPortLine(pos, pp.port.GetPos(), tagent, colors, GetColors(pp.port));
                     }
                 }
             }
@@ -623,7 +637,7 @@ namespace IceEditor.Internal
             void OnGUI_Port(IceprintPort port)
             {
                 Vector2 pos = port.GetPos();
-                var color = GetColor(port);
+                var colors = GetColors(port);
 
                 Rect rPort = pos.ExpandToRect(IceGUIUtility.PORT_RADIUS);
                 bool bHover = rPort.Contains(E.mousePosition);
@@ -678,7 +692,7 @@ namespace IceEditor.Internal
                                 if (DraggingPort == port)
                                 {
                                     // 被拖拽的 Port
-                                    DiscSolid(0.15f, color);
+                                    DiscSolid(0.15f, colors);
                                 }
                                 else
                                 {
@@ -686,24 +700,24 @@ namespace IceEditor.Internal
                                     if (port.IsConnected)
                                     {
                                         // 连接状态
-                                        DiscSolid(0.3f, color);
+                                        DiscSolid(0.3f, colors);
                                     }
 
                                     if (AvailablePorts.Contains(port))
                                     {
                                         // 备选状态
-                                        DiscWire(0.2f, color * 0.8f);
-                                        DiscWire(0.8f, color * 0.7f);
+                                        DiscWire(0.2f, 0.8f, colors);
+                                        DiscWire(0.8f, 0.7f, colors);
 
                                         if (bHover)
                                         {
                                             // hover
-                                            DiscWire(0.8f, IceGUIUtility.CurrentThemeColor);
+                                            DiscWire(0.8f, 1, IceGUIUtility.CurrentThemeColor);
                                         }
                                         else
                                         {
                                             // 未hover
-                                            DiscWire(0.8f, IceGUIUtility.CurrentThemeColor * 0.7f);
+                                            DiscWire(0.8f, 1, IceGUIUtility.CurrentThemeColor * 0.7f);
                                         }
                                     }
                                     else
@@ -717,44 +731,77 @@ namespace IceEditor.Internal
                                 if (port.IsConnected)
                                 {
                                     // 连接状态
-                                    DiscSolid(0.3f, color);
+                                    DiscSolid(0.3f, colors);
                                 }
                                 else
                                 {
                                     // 普通
-                                    DiscWire(0.3f, color * 0.8f);
+                                    DiscWire(0.3f, 0.8f, colors);
                                 }
 
                                 if (bHover)
                                 {
                                     // hover
-                                    DiscWire(0.6f, color);
+                                    DiscWire(0.6f, 1, colors);
                                 }
                             }
 
 
                             // 画 Port 内圈
-                            void DiscWire(float radius, Color color)
+                            void DiscWire(float radius, float intensity, params Color[] colors)
                             {
                                 radius *= IceGUIUtility.PORT_RADIUS;
-                                using (HandlesColor(color)) Handles.DrawWireDisc(pos, Vector3.forward, radius);
+                                DiscWireRaw(radius, intensity, colors);
+
                                 // 柔化边缘
-                                color.a *= 0.4f;
-                                using (HandlesColor(color))
+                                float off = 0.3f / GUI.matrix[0];
+                                DiscWireRaw(radius + off, intensity * 0.4f, colors);
+                                DiscWireRaw(radius - off, intensity * 0.4f, colors);
+                            }
+                            void DiscWireRaw(float radius, float intensity, params Color[] colors)
+                            {
+                                var count = colors.Length;
+                                var arc = 1.0f / count;
+                                var arcAngle = arc * 360;
+                                var arcRad = arc * Mathf.PI * 2;
+                                for (int i = 0; i < count; ++i)
                                 {
-                                    float off = 0.3f / GUI.matrix[0];
-                                    Handles.DrawWireDisc(pos, Vector3.forward, radius + off);
-                                    Handles.DrawWireDisc(pos, Vector3.forward, radius - off);
+                                    var c = colors[i];
+                                    c.a *= intensity;
+                                    var rad = arcRad * i - Mathf.PI;
+                                    using (HandlesColor(c))
+                                    {
+                                        Handles.DrawWireArc(pos, Vector3.forward, new Vector3(Mathf.Cos(rad), Mathf.Sin(rad)), arcAngle, radius);
+                                    }
                                 }
                             }
                             // 画 Port
-                            void DiscSolid(float radius, Color color)
+                            void DiscSolid(float radius, params Color[] colors)
                             {
                                 radius *= IceGUIUtility.PORT_RADIUS;
-                                using (HandlesColor(color)) Handles.DrawSolidDisc(pos, Vector3.forward, radius);
+                                DiscSolidRaw(radius, 1, colors);
+
                                 // 柔化边缘
-                                color.a *= 0.4f;
-                                using (HandlesColor(color)) Handles.DrawWireDisc(pos, Vector3.forward, radius + 0.3f / GUI.matrix[0]);
+                                float off = 0.3f / GUI.matrix[0];
+                                DiscWireRaw(radius + off, 0.4f, colors);
+                                DiscWireRaw(radius - off, 0.4f, colors);
+                            }
+                            void DiscSolidRaw(float radius, float intensity, params Color[] colors)
+                            {
+                                var count = colors.Length;
+                                var arc = 1.0f / count;
+                                var arcAngle = arc * 360;
+                                var arcRad = arc * Mathf.PI * 2;
+                                for (int i = 0; i < count; ++i)
+                                {
+                                    var c = colors[i];
+                                    c.a *= intensity;
+                                    var rad = arcRad * i - Mathf.PI;
+                                    using (HandlesColor(c))
+                                    {
+                                        Handles.DrawSolidArc(pos, Vector3.forward, new Vector3(Mathf.Cos(rad), Mathf.Sin(rad)), arcAngle, radius);
+                                    }
+                                }
                             }
                         }
 
@@ -885,7 +932,10 @@ namespace IceEditor.Internal
 
             EditorApplication.playModeStateChanged -= OnPlayModeChange;
         }
-
+        void Update()
+        {
+            Repaint();
+        }
         void OnPlayModeChange(PlayModeStateChange mode)
         {
             Graph = null;

@@ -194,13 +194,14 @@ namespace IceEngine
             typeof(Action<,,,,,,,,,,,,,,,>),
         };
 
+        public static readonly Type objectType = typeof(object);
+        public static readonly Type nullableType = typeof(Nullable<>);
+        public static readonly Type iCollectionType = typeof(ICollection);
+        public static readonly Type delegateType = typeof(Delegate);
+        public static readonly Type icePacketBaseType = typeof(IcePacketBase);
+        public static readonly Type icePacketAttributeType = typeof(IcePacketAttribute);
+
         static readonly Dictionary<string, Type> _typeCacheMap = new();
-        static readonly Type objectType = typeof(object);
-        static readonly Type nullableType = typeof(Nullable<>);
-        static readonly Type iCollectionType = typeof(ICollection);
-        static readonly Type delegateType = typeof(Delegate);
-        static readonly Type icePacketBaseType = typeof(IcePacketBase);
-        static readonly Type icePacketAttributeType = typeof(IcePacketAttribute);
         static readonly HashSet<Type> serializableCollection = new()
         {
             GetType("UnityEngine.Vector2"),
@@ -348,6 +349,11 @@ namespace IceEngine
         public static bool IsPacketType(this Type type) => Pkt2HashMap.ContainsKey(type);
         public static bool IsNotNullPacket(this Type type) => PktNotNullSet.Contains(type);
         public static bool IsSerialzableType(this Type type) => type.IsSerializable || serializableCollection.Contains(type);
+        public static bool IsSystemType(this Type type)
+        {
+            var ns = type.GetRootType().Namespace;
+            return ns != null && (ns.StartsWith("System") || ns.StartsWith("Unity"));
+        }
         #endregion
 
         #endregion

@@ -3,102 +3,66 @@ using UnityEditor;
 using UnityEditorInternal;
 using UnityEngine.Events;
 
+using IceEngine;
+using static IceEditor.IceGUI;
+
 namespace IceEditor.Internal
 {
     // TODO: 优化
     [CustomPropertyDrawer(typeof(UnityEventBase), true)]
     internal class IceEventDrawer : UnityEventDrawer
     {
-        bool initialized;
-        bool activated;
-        bool empty;
+        static GUIStyle StlEventHeaderCounter => _stlEventHeaderCounter?.Check() ?? (_stlEventHeaderCounter = new GUIStyle("WinBtnInactiveMac") { padding = new RectOffset(5, 0, 0, 0), fontSize = 10, fontStyle = FontStyle.Bold, alignment = TextAnchor.MiddleLeft, wordWrap = false, }.Initialize(stl => { stl.normal.textColor = new Color(1f, 1f, 1f); })); static GUIStyle _stlEventHeaderCounter;
+        static GUIStyle StlEventHeaderBtn => "FloatFieldLinkButton";
+        static GUIStyle StlEventHeaderEmpty => _stlEventHeaderEmpty?.Check() ?? (_stlEventHeaderEmpty = new GUIStyle("sv_label_0") { padding = new(16, 0, 0, 2), fontSize = 12, alignment = TextAnchor.MiddleLeft, fixedHeight = 0f, border = new(8, 8, 4, 4), }).Initialize(stl => { stl.hover.background = stl.normal.background; stl.hover.textColor = Color.white; }); static GUIStyle _stlEventHeaderEmpty;
+        GUIStyle StlEventHeader => _stlEventHeader?.Check() ?? (_stlEventHeader = new GUIStyle($"sv_label_{IceGUIUtility.GetThemeColorHueIndex(IceGUIUtility.CurrentThemeColor, true)}") { padding = new(16, 0, 0, 2), fontSize = 12, alignment = TextAnchor.MiddleLeft, fixedHeight = 0f, border = new(8, 8, 4, 4), }).Initialize(stl => { stl.hover.background = stl.normal.background; stl.hover.textColor = Color.white; }); GUIStyle _stlEventHeader;
+        GUIStyle HeaderStyle => callCount == 0 ? StlEventHeaderEmpty : StlEventHeader;
 
-        static GUIStyle headerEmptyStyle = null;
-        static GUIStyle HeaderEmptyStyle
-        {
-            get
-            {
-                if (headerEmptyStyle == null)
-                {
-                    headerEmptyStyle = new GUIStyle("flow node 0");
-                    headerEmptyStyle.alignment = TextAnchor.MiddleLeft;
-                    headerEmptyStyle.padding = new RectOffset(8, 0, 0, 0);
-                    headerEmptyStyle.contentOffset = Vector2.zero;
-                }
-                return headerEmptyStyle;
-            }
-        }
-        static GUIStyle headerNormalStyle = null;
-        static GUIStyle HeaderNormalStyle
-        {
-            get
-            {
-                if (headerNormalStyle == null)
-                {
-                    headerNormalStyle = new GUIStyle("flow node 5");
-                    headerNormalStyle.alignment = TextAnchor.MiddleLeft;
-                    headerNormalStyle.padding = new RectOffset(8, 0, 0, 0);
-                    headerNormalStyle.contentOffset = Vector2.zero;
-                }
-                return headerNormalStyle;
-            }
-        }
-        GUIStyle HeaderStyle => empty ? HeaderEmptyStyle : HeaderNormalStyle;
+        GUIContent label;
+        bool bFoldout;
+        int callCount;
 
         protected override void DrawEventHeader(Rect headerRect)
         {
-            if (GUI.Button(new Rect(headerRect.x - 6, headerRect.y - 1, headerRect.width + 12, headerRect.height), GUIContent.none, HeaderStyle))
+            var r = headerRect.MoveEdge(-22, 6, 0, 0);
+
+            bFoldout = EditorGUI.Toggle(r, GUIContent.none, bFoldout, StlEventHeaderBtn);
+            var labelText = label.text;
+
+            var t = fieldInfo.FieldType;
+            if (t.IsGenericType)
             {
-                activated = false;
-                //HandleUtility.Repaint();
+                var args = t.GetGenericArguments();
+                labelText += " (";
+                for (int i = 0; i < args.Length; i++)
+                {
+                    System.Type a = args[i];
+                    labelText += i > 0 ? $", {a.Name}" : a.Name;
+                }
+                labelText += ")";
             }
-            base.DrawEventHeader(headerRect);
+
+            StyleBox(r.MoveEdge(16), HeaderStyle, labelText, isHover: r.Contains(E.mousePosition));
+            if (callCount > 0)
+            {
+                var rCounter = new Rect() { x = r.x + 17, y = r.y + 1, width = 16, height = 16 };
+                StyleBox(rCounter, StlEventHeaderCounter, callCount.ToString());
+            }
         }
 
         public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
         {
-            position.y += 1;
-            position.height -= 1;
-            if (!initialized)
-            {
-                base.OnGUI(position, property, label);
-                initialized = true;
-            }
-            else if (activated) base.OnGUI(position, property, label);
-            else
-            {
-                if (GUI.Button(new Rect(position.x, position.y + 1, 16, position.height), GUIContent.none, "ObjectFieldButton")
-                    || GUI.Button(new Rect(position.x + 16, position.y, position.width - 16, position.height), label.text, HeaderStyle))
-                {
-                    activated = true;
-                    //HandleUtility.Repaint();
-                }
-            }
+            callCount = property.FindPropertyRelative("m_PersistentCalls.m_Calls").arraySize;
+            this.label = label;
+
+            if (bFoldout) base.OnGUI(position, property, label);
+            else DrawEventHeader(position.MoveEdge(6, -6, 1, -1));
         }
 
         public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
         {
-            if (activated) return base.GetPropertyHeight(property, label);
-            else return HeaderStyle.CalcSize(label).y + 3;
-        }
-
-        protected override void SetupReorderableList(ReorderableList list)
-        {
-            base.SetupReorderableList(list);
-            empty = list.count == 0;
-        }
-        protected override void OnAddEvent(ReorderableList list)
-        {
-            base.OnAddEvent(list);
-            empty = false;
-        }
-        protected override void OnRemoveEvent(ReorderableList list)
-        {
-            base.OnRemoveEvent(list);
-            if (list.count == 0)
-            {
-                empty = true;
-            }
+            if (bFoldout) return base.GetPropertyHeight(property, label);
+            return 20;
         }
     }
 }

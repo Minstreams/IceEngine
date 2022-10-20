@@ -4,16 +4,17 @@ using UnityEngine;
 using IceEngine;
 using System;
 using IceEngine.Framework;
+using UnityEngine.Events;
 
 [ThemeColor(1, 0, 1)]
 public class TestComp : IceprintNodeComponent
 {
-    [System.Serializable]
-    public class IntEvent : UnityEngine.Events.UnityEvent<int> { }
-    public UnityEngine.Events.UnityEvent<int> testEvent2;
-    [Header("testHeader")]
+    [IceprintPort]
+    public UnityEvent<int, string, bool> testEvent2;
+    //[Header("testHeader")]
+    [IceprintPort]
     [Label("标签te")]
-    public IntEvent testEvent;
+    public UnityEvent<int> testEvent;
 
     public string testStr;
     public float a;
@@ -54,6 +55,15 @@ public class TestComp : IceprintNodeComponent
     [IceprintPort]
     public void DoSomething()
     {
-        onJJJ?.Invoke("Fff" + bs.bb);
+        onJJJ?.Invoke("onJJJ");
+        onEvt?.Invoke("onEvt");
+    }
+
+    [IceprintPort]
+    public UnityEvent<string> onEvt;
+
+    public void DebugLog(string msg)
+    {
+        Debug.Log(msg);
     }
 }

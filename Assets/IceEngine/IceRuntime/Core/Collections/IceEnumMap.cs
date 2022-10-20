@@ -9,7 +9,6 @@ namespace IceEngine
         /// <summary>
         /// 与枚举挂钩的Map基类，用于反射
         /// </summary>
-        [HasPropertyDrawer]
         public class IceEnumMap { }
     }
 

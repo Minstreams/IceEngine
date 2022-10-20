@@ -309,7 +309,7 @@ namespace IceEngine.Networking
                         {
                             var action = Expression.Lambda<Action<PktId, IPEndPoint>>(Expression.Call(Expression.Constant(instance), m, Expression.Convert(pPktId, t), pIp), pPktId, pIp).Compile();
 
-                            id.HandleUDPReceiveWithId(t, m, action, ref onDestroy);
+                            id.HandleUDPReceiveWithId(t, action, ref onDestroy);
                         }
                         else
                         {
@@ -327,7 +327,7 @@ namespace IceEngine.Networking
                         {
                             var action = Expression.Lambda<Action<PktId, IPEndPoint>>(Expression.Call(Expression.Constant(instance), m, Expression.Convert(pPktId, t), pIp), pPktId, pIp).Compile();
 
-                            id.HandleUDPProcessWithId(t, m, action, ref onDestroy);
+                            id.HandleUDPProcessWithId(t, action, ref onDestroy);
                         }
                         else
                         {
@@ -345,7 +345,7 @@ namespace IceEngine.Networking
                         {
                             var action = Expression.Lambda<Action<PktId>>(Expression.Call(Expression.Constant(instance), m, Expression.Convert(pPktId, t)), pPktId).Compile();
 
-                            id.HandleTCPReceiveWithId(t, m, action, ref onDestroy);
+                            id.HandleTCPReceiveWithId(t, action, ref onDestroy);
                         }
                         else
                         {
@@ -363,7 +363,7 @@ namespace IceEngine.Networking
                         {
                             var action = Expression.Lambda<Action<PktId, ServerBase.Connection>>(Expression.Call(Expression.Constant(instance), m, Expression.Convert(pPktId, t), pConn), pPktId, pConn).Compile();
 
-                            id.HandleTCPProcessWithId(t, m, action, ref onDestroy);
+                            id.HandleTCPProcessWithId(t, action, ref onDestroy);
                         }
                         else
                         {

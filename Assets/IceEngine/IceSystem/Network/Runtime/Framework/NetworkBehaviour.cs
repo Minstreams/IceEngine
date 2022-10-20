@@ -32,10 +32,7 @@ namespace IceEngine.Networking.Framework
         protected virtual void OnDestroy()
         {
             _onDestroy?.Invoke();
-            if (ID != null)
-            {
-                ID.ID = 0;
-            }
+            ID?.ClearID();
         }
     }
 }

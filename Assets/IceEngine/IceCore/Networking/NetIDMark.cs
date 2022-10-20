@@ -14,33 +14,40 @@ namespace IceEngine.Networking
     /// </summary>
     public class NetIDMark
     {
+        int? _id = null;
+
         public int ID
         {
-            get => _id;
-            set
-            {
-                if (_id == value) return;
-                if (_id != 0)
-                {
-                    StopListenUDPPacketToId(_id, UDPReceive);
-                    StopProcessUDPPacketFromId(_id, UDPProcess);
-                    StopListenPacketToId(_id, TCPReceive);
-                    StopProcessPacketFromId(_id, TCPProcess);
-                }
-                if (value != 0)
-                {
-                    ListenUDPPacketToId(value, UDPReceive);
-                    ProcessUDPPacketFromId(value, UDPProcess);
-                    ListenPacketToId(value, TCPReceive);
-                    ProcessPacketFromId(value, TCPProcess);
-                }
-                _id = value;
-            }
+            get => _id ?? throw new NullReferenceException("ID is null. Use HasID to check null before get id");
+            set => SetID(value);
+        }
+        public bool HasID => _id != null;
+        public void SetID(int id)
+        {
+            if (_id == id) return;
+            ClearID();
+            ListenUDPPacketToId(id, UDPReceive);
+            ProcessUDPPacketFromId(id, UDPProcess);
+            ListenPacketToId(id, TCPReceive);
+            ProcessPacketFromId(id, TCPProcess);
+            _id = id;
+        }
+        public void ClearID()
+        {
+            if (!HasID) return;
+            StopListenUDPPacketToId(ID, UDPReceive);
+            StopProcessUDPPacketFromId(ID, UDPProcess);
+            StopListenPacketToId(ID, TCPReceive);
+            StopProcessPacketFromId(ID, TCPProcess);
+            _id = null;
         }
 
-        int _id = 0;
-        ~NetIDMark() => ID = 0;
+        public static implicit operator int(NetIDMark idMark) => idMark.ID;
 
+
+        ~NetIDMark() => ClearID();
+
+        #region Attributes Handler
         /// <summary>
         /// for client to receive udp packets
         /// </summary>
@@ -79,31 +86,30 @@ namespace IceEngine.Networking
             if (tcpProcessors.ContainsKey(t)) tcpProcessors[t]?.Invoke(pktId, conn);
         }
 
-        public void HandleUDPReceiveWithId(Type t, MethodInfo m, Action<PktId, IPEndPoint> action, ref Action _onDestroyEvent)
+        internal void HandleUDPReceiveWithId(Type t, Action<PktId, IPEndPoint> action, ref Action _onDestroyEvent)
         {
             if (!udpDistributors.ContainsKey(t)) udpDistributors.Add(t, null);
             udpDistributors[t] += action;
             _onDestroyEvent += () => udpDistributors[t] -= action;
         }
-        public void HandleUDPProcessWithId(Type t, MethodInfo m, Action<PktId, IPEndPoint> action, ref Action _onDestroyEvent)
+        internal void HandleUDPProcessWithId(Type t, Action<PktId, IPEndPoint> action, ref Action _onDestroyEvent)
         {
             if (!udpProcessors.ContainsKey(t)) udpProcessors.Add(t, null);
             udpProcessors[t] += action;
             _onDestroyEvent += () => udpProcessors[t] -= action;
         }
-        public void HandleTCPReceiveWithId(Type t, MethodInfo m, Action<PktId> action, ref Action _onDestroyEvent)
+        internal void HandleTCPReceiveWithId(Type t, Action<PktId> action, ref Action _onDestroyEvent)
         {
             if (!tcpDistributors.ContainsKey(t)) tcpDistributors.Add(t, null);
             tcpDistributors[t] += action;
             _onDestroyEvent += () => tcpDistributors[t] -= action;
         }
-        public void HandleTCPProcessWithId(Type t, MethodInfo m, Action<PktId, ServerBase.Connection> action, ref Action _onDestroyEvent)
+        internal void HandleTCPProcessWithId(Type t, Action<PktId, ServerBase.Connection> action, ref Action _onDestroyEvent)
         {
             if (!tcpProcessors.ContainsKey(t)) tcpProcessors.Add(t, null);
             tcpProcessors[t] += action;
             _onDestroyEvent += () => tcpProcessors[t] -= action;
         }
-
-        public static implicit operator int(NetIDMark idMark) => idMark.ID;
+        #endregion
     }
 }

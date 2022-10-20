@@ -167,8 +167,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 963e22386e1306140a518e0e336104c2, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  graphData: 14020000001640ec1f0014030000001400000000140000000014000000000800000060c3000080c20016427b1100140000000008000000c042000000000000
+  graphData: 140300000016c8984a001404000000140000000014000000001400000000140200000008000100000000000000080001000000010000000800f09db0c208d495c10010080054657374436f6d701504000000000016427b15001400000000080068e57843a8743542000f020072721640ec29001403000000140100000008000000000000000000140000000014000000000800db3c84c30463454200
   _fieldMap:
+  - _tbl:
+    - {fileID: 1705419860}
   - _tbl: []
   - _tbl: []
 --- !u!1 &1199616986
@@ -318,6 +320,9 @@ MonoBehaviour:
   bs:
     bb: 13
     bd: 0
+  onEvt:
+    m_PersistentCalls:
+      m_Calls: []
 --- !u!1 &1550458137
 GameObject:
   m_ObjectHideFlags: 0
@@ -754,12 +759,27 @@ MonoBehaviour:
   map:
     _: 0
     list:
-    - 
-    - 
-    - 
+    - qqq
+    - ad
+    - qd
   bs:
     bb: 13
     bd: 0
+  onEvt:
+    m_PersistentCalls:
+      m_Calls:
+      - m_Target: {fileID: 1705419860}
+        m_TargetAssemblyTypeName: TestComp, Assembly-CSharp
+        m_MethodName: DebugLog
+        m_Mode: 0
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!1 &1790978332
 GameObject:
   m_ObjectHideFlags: 0

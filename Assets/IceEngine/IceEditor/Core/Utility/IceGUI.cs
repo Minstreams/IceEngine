@@ -26,7 +26,7 @@ namespace IceEditor
         public static GUIStyle StlNode => _stlNode?.Check() ?? (_stlNode = new GUIStyle("flow node 0") { margin = new RectOffset(6, 6, 4, 4), padding = new RectOffset(10, 10, 6, 6), contentOffset = new Vector2(0f, 0f), }); static GUIStyle _stlNode;
         public static GUIStyle StlHighlight => _stlHighlight?.Check() ?? (_stlHighlight = new GUIStyle("LightmapEditorSelectedHighlight") { margin = new RectOffset(6, 6, 4, 4), padding = new RectOffset(10, 10, 10, 10), overflow = new RectOffset(0, 0, 0, 0), }); static GUIStyle _stlHighlight;
         public static GUIStyle StlButton => _stlButton?.Check() ?? (_stlButton = new GUIStyle("button") { richText = true, }); static GUIStyle _stlButton;
-        public static GUIStyle StlError => _stlError?.Check() ?? (_stlError = new GUIStyle("Wizard Error") { border = new RectOffset(32, 0, 32, 0), padding = new RectOffset(32, 0, 7, 7), fixedHeight = 0f, }.Initialize(stl => { stl.normal.textColor = new Color(1f, 0.8469602f, 0f); })); static GUIStyle _stlError;
+        public static GUIStyle StlError => _stlError?.Check() ?? (_stlError = new GUIStyle("Wizard Error") { border = new RectOffset(32, 0, 32, 0), padding = new RectOffset(32, 0, 7, 7), fixedHeight = 0f, richText = true }.Initialize(stl => { stl.normal.textColor = new Color(1f, 0.8469602f, 0f); })); static GUIStyle _stlError;
         public static GUIStyle StlIce => _stlIce?.Check() ?? (_stlIce = new GUIStyle("BoldTextField") { padding = new RectOffset(3, 3, 2, 2), fontSize = 11, richText = true, fixedHeight = 0f, stretchWidth = false, imagePosition = ImagePosition.ImageLeft, fontStyle = FontStyle.Normal }); static GUIStyle _stlIce;
         public static GUIStyle StlSectionHeader => IceGUIUtility.HasPack ? IceGUIUtility.CurrentPack.StlSectionHeader : _stlSectionHeader?.Check() ?? (_stlSectionHeader = IceGUIUtility.GetStlSectionHeader(IceGUIUtility.DefaultThemeColor)); static GUIStyle _stlSectionHeader;
         public static GUIStyle StlPrefix => IceGUIUtility.HasPack ? IceGUIUtility.CurrentPack.StlPrefix : _stlPrefix?.Check() ?? (_stlPrefix = IceGUIUtility.GetStlPrefix(IceGUIUtility.DefaultThemeColor)); static GUIStyle _stlPrefix;
@@ -961,7 +961,6 @@ namespace IceEditor
                 GL.End();
             }
         }
-
         #endregion
 
         #region Button & Fields

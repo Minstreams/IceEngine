@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Reflection;
 
 using UnityEngine;
+using UnityEngine.UIElements;
 using UnityEditor;
 
 using IceEngine;
@@ -14,8 +16,6 @@ using IceEditor.Framework.Internal;
 using IceEditor.Internal;
 using static IceEditor.IceGUI;
 using static IceEditor.IceGUIAuto;
-using UnityEngine.UIElements;
-using System.Linq.Expressions;
 
 namespace IceEditor
 {
@@ -46,9 +46,25 @@ namespace IceEditor
             {
                 if (_typesWithCustomDrawer == null)
                 {
+                    var tDrawer = typeof(CustomPropertyDrawer);
+                    var fType = tDrawer.GetField("m_Type", BindingFlags.Instance | BindingFlags.NonPublic);
+                    var param = Expression.Parameter(tDrawer);
+                    Func<CustomPropertyDrawer, Type> getTypeOfPropertyDrawer =
+                        Expression.Lambda<Func<CustomPropertyDrawer, Type>>(
+                            Expression.Field(param, fType),
+                            param
+                            ).Compile();
+
                     _typesWithCustomDrawer = new HashSet<Type>();
-                    var candidates = TypeCache.GetTypesWithAttribute<HasPropertyDrawerAttribute>();
-                    foreach (var c in candidates) _typesWithCustomDrawer.Add(c);
+
+                    var drawers = TypeCache.GetTypesWithAttribute<CustomPropertyDrawer>();
+                    foreach (var d in drawers)
+                    {
+                        var attr = d.GetCustomAttribute<CustomPropertyDrawer>();
+                        var t = getTypeOfPropertyDrawer(attr);
+
+                        if (!t.IsSystemType()) _typesWithCustomDrawer.Add(t);
+                    }
                 }
                 return _typesWithCustomDrawer;
             }
@@ -180,16 +196,10 @@ namespace IceEditor
 
                     // 生成子结构
                     var tt = f.FieldType;
-                    if (!IsSystemType(tt) && tt.GetCustomAttribute<SerializableAttribute>() is not null && !tt.HasCustomDrawer())
+                    if (!tt.IsSystemType() && tt.GetCustomAttribute<SerializableAttribute>() is not null && !tt.HasCustomDrawer())
                     {
                         childrenMap.Add(path, GetInfo(tt));
                     }
-                }
-
-                static bool IsSystemType(Type t)
-                {
-                    var ns = t.GetRootType().Namespace;
-                    return ns != null && (ns.StartsWith("System") || ns.StartsWith("Unity"));
                 }
 
                 // 只对根类型处理Methods
@@ -502,6 +512,7 @@ namespace IceEditor
         #region IceGraphPort
         public const float PORT_SIZE = 16;
         public const float PORT_RADIUS = PORT_SIZE * 0.5f;
+        public const double PORT_LINE_FREQUENCY = 2;
 
         public static Vector2 GetPos(this IceprintPort port)
         {
@@ -533,6 +544,50 @@ namespace IceEditor
             if (E.type != EventType.Repaint) return;
 
             Vector2 center = 0.5f * (position + target);
+            Color centerColor = 0.5f * (startColor + endColor);
+
+            float tangentLength = Mathf.Clamp(Vector2.Dot(tangent, center - position) * 0.6f, 8, 32);
+            Vector2 tangentPoint = position + tangent * tangentLength;
+
+            DrawBezierLine(position, center, tangentPoint, startColor, centerColor, width, edge);
+        }
+        public static void DrawPortLine(Vector2 position, Vector2 target, Vector2 tangent, Color[] startColors, Color[] endColors, float width = 1.5f, float edge = 1)
+        {
+            if (E.type != EventType.Repaint) return;
+
+            Vector2 center = 0.5f * (position + target);
+
+            double t = EditorApplication.timeSinceStartup * PORT_LINE_FREQUENCY;
+            int cc = startColors.Length * endColors.Length;
+            t /= cc;
+            t = (t - Math.Floor(t)) * cc;
+            float tf = (float)t;
+
+            Color startColor;
+            {
+                var count = startColors.Length;
+                int tFloor = Mathf.FloorToInt(tf);
+                int tCeil = Mathf.CeilToInt(tf);
+                float f = tf - tFloor;
+                tFloor %= count;
+                tCeil %= count;
+                f *= f;
+                f *= f;
+                startColor = Color.Lerp(startColors[tFloor], startColors[tCeil], f);
+            }
+            Color endColor;
+            {
+                var count = endColors.Length;
+                int tFloor = Mathf.FloorToInt(tf);
+                int tCeil = Mathf.CeilToInt(tf);
+                float f = tf - tFloor;
+                tFloor %= count;
+                tCeil %= count;
+                f *= f;
+                f *= f;
+                endColor = Color.Lerp(endColors[tFloor], endColors[tCeil], f);
+            }
+
             Color centerColor = 0.5f * (startColor + endColor);
 
             float tangentLength = Mathf.Clamp(Vector2.Dot(tangent, center - position) * 0.6f, 8, 32);

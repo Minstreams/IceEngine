@@ -11,6 +11,7 @@ using IceEngine.Framework;
 using IceEngine.Internal;
 
 using static IceEngine.IceprintUtility;
+using UnityEngine.Events;
 
 namespace IceEngine.Framework
 {
@@ -126,33 +127,27 @@ namespace IceEngine.Framework
                 if (attr is null) continue;
 
                 var fName = f.Name;
-                if (fName.StartsWith("on")) fName = fName.Substring(2);
+                var labelAttr = f.GetCustomAttribute<LabelAttribute>();
+                if (labelAttr != null) fName = labelAttr.Label;
+                else if (fName.StartsWith("on")) fName = fName.Substring(2);
 
                 var at = f.FieldType;
-                if (at == IceCoreUtility.actionTypes[0])
+                bool isUnityEvent = false;
+                if (at.IsGenericType)
                 {
-                    var port = AddOutport(fName);
-
-#if UNITY_EDITOR
-                    if (UnityEditor.EditorApplication.isPlayingOrWillChangePlaymode)
-#endif
-                        if (instance != null)
-                        {
-                            var m = OutportInvokeMethods[0];
-                            var exp = Expression.Lambda(
-                                IceCoreUtility.actionTypes[0],
-                                Expression.Call(Expression.Constant(port), m)
-                                );
-
-                            f.SetValue(instance, exp.Compile());
-                        }
-                }
-                else if (at.IsGenericType)
-                {
+                    // 有参数
                     var pts = at.GetGenericArguments();
                     int psCount = pts.Length;
 
-                    if (pts.Length > 16 || !at.GetGenericTypeDefinition().Equals(IceCoreUtility.actionTypes[psCount])) throw new Exception($"Invalid IceprintPort! {at.Name} {f.Name}");
+                    if (psCount < unityEventTypes.Length && at.GetGenericTypeDefinition().Equals(unityEventTypes[psCount]))
+                    {
+                        isUnityEvent = true;
+                    }
+                    else if (psCount < IceCoreUtility.actionTypes.Length && at.GetGenericTypeDefinition().Equals(IceCoreUtility.actionTypes[psCount]))
+                    {
+                        isUnityEvent = false;
+                    }
+                    else throw new Exception($"Invalid IceprintPort! {at.Name} {f.Name}");
 
                     var port = AddOutport(fName, pts);
 
@@ -163,15 +158,42 @@ namespace IceEngine.Framework
                         {
                             var m = OutportInvokeMethods[psCount].MakeGenericMethod(pts);
                             var prs = pts.Select(pt => Expression.Parameter(pt)).ToArray();
+                            var tAction = isUnityEvent ? unityActionTypes[psCount].MakeGenericType(at.GetGenericArguments()) : at;
                             var exp = Expression.Lambda(
-                                    at,
+                                    tAction,
                                     Expression.Call(Expression.Constant(port), m, prs),
                                     prs);
 
-                            f.SetValue(instance, exp.Compile());
+                            if (isUnityEvent) at.GetMethod("AddListener", BindingFlags.Instance | BindingFlags.Public).Invoke(f.GetValue(instance), new object[] { exp.Compile() });
+                            else f.SetValue(instance, exp.Compile());
                         }
                 }
-                else throw new Exception($"Invalid IceprintPort! {at.Name} {f.Name}");
+                else
+                {
+                    // 无参数
+                    if (at != IceCoreUtility.actionTypes[0])
+                    {
+                        if (unityEventTypes[0].IsAssignableFrom(at)) isUnityEvent = true;
+                        else throw new Exception($"Invalid IceprintPort! {at.Name} {f.Name}");
+                    }
+
+                    var port = AddOutport(fName);
+
+#if UNITY_EDITOR
+                    if (UnityEditor.EditorApplication.isPlayingOrWillChangePlaymode)
+#endif
+                        if (instance != null)
+                        {
+                            var m = OutportInvokeMethods[0];
+                            var exp = Expression.Lambda(
+                                isUnityEvent ? unityActionTypes[0] : IceCoreUtility.actionTypes[0],
+                                Expression.Call(Expression.Constant(port), m)
+                                );
+
+                            if (isUnityEvent) (f.GetValue(instance) as UnityEvent).AddListener(exp.Compile() as UnityAction);
+                            else f.SetValue(instance, exp.Compile());
+                        }
+                }
             }
         }
         static readonly Type nodeFieldType = typeof(NodeField);

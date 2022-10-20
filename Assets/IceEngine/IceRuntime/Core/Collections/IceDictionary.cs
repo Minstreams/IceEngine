@@ -6,7 +6,6 @@ namespace IceEngine
 {
     namespace Internal
     {
-        [HasPropertyDrawer]
         public class IceDictionary { }
     }
 
