@@ -312,6 +312,33 @@ namespace IceEditor.Internal
 
         #endregion
 
+        #region NodeComponent
+        static GUIStyle StlNodeLabel => _stlNodeLabel?.Check() ?? (_stlNodeLabel = new GUIStyle("CN CountBadge") { border = new RectOffset(6, 6, 6, 6), margin = new RectOffset(2, 2, 2, 2), padding = new RectOffset(4, 4, 0, 0), fontSize = 10, fixedHeight = 12f, }.Initialize(stl => { stl.normal.textColor = new Color(0f, 0f, 0f); })); static GUIStyle _stlNodeLabel;
+        static GUIStyle StlIceprintLabel => _stlIceprintLabel?.Check() ?? (_stlIceprintLabel = new GUIStyle("label") { margin = new RectOffset(2, 2, 0, 0), padding = new RectOffset(2, 2, 0, 0), richText = true, }); static GUIStyle _stlIceprintLabel;
+        static GUIStyle StlItemButton => _stlItemButton?.Check() ?? (_stlItemButton = new GUIStyle("textfield") { margin = new RectOffset(2, 2, 0, 0), padding = new RectOffset(4, 4, 1, 1), fontSize = 11, richText = true, stretchWidth = false, }); static GUIStyle _stlItemButton;
+
+        [HierarchyItemGUICallback]
+        static void NodeComponentMarkGUI(IceprintNodeComponent comp, Rect selectionRect)
+        {
+            Label(comp.GetType().Name, StlNodeLabel);
+        }
+
+        [HierarchyItemGUICallback]
+        static void OnHierarchyGUI(Iceprint print, Rect selectionRect)
+        {
+#pragma warning disable UNT0008 // Null propagation on Unity objects
+            if (Instance?.Graph == print)
+            {
+                Label("编辑中...".Color(Setting.themeColor), StlIceprintLabel);
+            }
+            else
+            {
+                if (Button("编辑".Color(Setting.themeColor), StlItemButton)) OpenPrint(print);
+            }
+#pragma warning restore UNT0008 // Null propagation on Unity objects
+        }
+        #endregion
+
         #region Utility
         public void ResetGraphView()
         {

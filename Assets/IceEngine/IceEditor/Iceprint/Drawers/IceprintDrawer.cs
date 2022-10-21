@@ -24,21 +24,6 @@ namespace IceEditor.Internal
             }
         }
 
-        [HierarchyItemGUICallback]
-        static void OnHierarchyGUI(Iceprint print, Rect selectionRect)
-        {
-#pragma warning disable UNT0008 // Null propagation on Unity objects
-            if (IceprintBox.Instance?.Graph == print)
-            {
-                Label("编辑中...".Color(IceprintBox.Setting.themeColor));
-            }
-            else
-            {
-                if (IceButton("编辑")) IceprintBox.OpenPrint(print);
-            }
-#pragma warning restore UNT0008 // Null propagation on Unity objects
-        }
-
         // TODO: Draw nodes in preview area
     }
 }

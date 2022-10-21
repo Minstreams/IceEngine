@@ -884,14 +884,13 @@ namespace IceEditor
             try
             {
                 selectionRect = selectionRect.MoveEdge(right: -16);
-                using (AreaRaw(selectionRect)) using (HORIZONTAL)
+                using (Area(selectionRect)) using (HORIZONTAL)
                 {
                     Space();
                     foreach ((Type t, var callback) in hierarchyItemGUICallbackMap)
                     {
-                        var comp = go.GetComponent(t);
-                        if (comp == null) continue;
-                        callback?.Invoke(comp, selectionRect);
+                        var comps = go.GetComponents(t);
+                        foreach (var comp in comps) callback?.Invoke(comp, selectionRect);
                     }
                 }
             }

@@ -90,7 +90,11 @@ namespace IceEditor.Internal
         public override void OnSelect(NodeMonoBehaviour node)
         {
             var target = node.target.Value;
-            if (target != null) Selection.activeObject = target;
+            if (target != null)
+            {
+                Selection.activeObject = target;
+                EditorGUIUtility.PingObject(target);
+            }
         }
     }
 }
