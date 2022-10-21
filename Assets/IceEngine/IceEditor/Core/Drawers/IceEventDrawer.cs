@@ -28,6 +28,7 @@ namespace IceEditor.Internal
 
             bFoldout = EditorGUI.Toggle(r, GUIContent.none, bFoldout, StlEventHeaderBtn);
             var labelText = label.text;
+            if (labelText.StartsWith("On ")) labelText = labelText.Substring(3);
 
             var t = fieldInfo.FieldType;
             if (t.IsGenericType)
