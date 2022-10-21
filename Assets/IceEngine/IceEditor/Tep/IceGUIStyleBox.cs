@@ -83,7 +83,7 @@ namespace IceEditor.Internal
         /// <summary>
         /// 生成样式代码
         /// </summary>
-        public string GetStyleCode(string styleName)
+        public string GetStyleCode(string styleName, bool bStatic = false)
         {
             styleName = Regex.Replace(styleName, "^Stl", "");
 
@@ -126,8 +126,10 @@ namespace IceEditor.Internal
             var hasItor = !string.IsNullOrWhiteSpace(itorCode);
             var hasInit = !string.IsNullOrWhiteSpace(initCode);
 
-            if (!hasItor && !hasInit && !InGameSkin) return $"GUIStyle Stl{styleName} => \"{stlInspectingOrigin.name}\";";
-            else return $"GUIStyle Stl{styleName} => _stl{styleName}?.Check() ?? (_stl{styleName} = new GUIStyle({(string.IsNullOrEmpty(stlInspectingOrigin.name) ? "" : (InGameSkin ? $"EditorGUIUtility.GetBuiltinSkin(EditorSkin.Game).FindStyle(\"{stlInspectingOrigin.name}\")" : $"\"{stlInspectingOrigin.name}\""))}){(hasItor ? $" {{ {itorCode}}}" : "")}{(hasInit ? $".Initialize(stl => {{ {initCode}}})" : "")}); GUIStyle _stl{styleName};";
+            string staticExp = bStatic ? "static " : "";
+
+            if (!hasItor && !hasInit && !InGameSkin) return $"{staticExp}GUIStyle Stl{styleName} => \"{stlInspectingOrigin.name}\";";
+            else return $"{staticExp}GUIStyle Stl{styleName} => _stl{styleName}?.Check() ?? (_stl{styleName} = new GUIStyle({(string.IsNullOrEmpty(stlInspectingOrigin.name) ? "" : (InGameSkin ? $"EditorGUIUtility.GetBuiltinSkin(EditorSkin.Game).FindStyle(\"{stlInspectingOrigin.name}\")" : $"\"{stlInspectingOrigin.name}\""))}){(hasItor ? $" {{ {itorCode}}}" : "")}{(hasInit ? $".Initialize(stl => {{ {initCode}}})" : "")}); {staticExp}GUIStyle _stl{styleName};";
 
         }
         #endregion
@@ -774,9 +776,10 @@ namespace IceEditor.Internal
                         using (BOX) using (HORIZONTAL)
                         {
                             TextWithLabel("名字", ref styleName);
+                            var bStatic = IceToggle("静态");
                             if (IceButton("生成代码"))
                             {
-                                GUIUtility.systemCopyBuffer = GetStyleCode(styleName);
+                                GUIUtility.systemCopyBuffer = GetStyleCode(styleName, bStatic);
                                 Log("样式代码已生成！");
                             }
                         }
