@@ -3,7 +3,7 @@ using IceEngine.Framework;
 
 namespace IceEngine.IceprintNodes
 {
-    [IceprintMenuItem("MonoBehaviour")]
+    [IceprintMenuItem("Events/MonoBehaviour")]
     public class NodeMonoBehaviour : IceprintNode
     {
         #region Serialized Data

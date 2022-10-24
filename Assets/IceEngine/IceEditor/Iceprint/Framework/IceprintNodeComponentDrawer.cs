@@ -27,7 +27,7 @@ namespace IceEditor.Framework
                 using var _ = Area(rect);
 
                 Space(8);
-                Label(node.GetPath());
+                Label(node.GetPath(), GUILayout.ExpandWidth(true));
             }
             public virtual string GetDisplayName(IceprintNodeComponent node) => node.GetType().Name;
             #endregion
