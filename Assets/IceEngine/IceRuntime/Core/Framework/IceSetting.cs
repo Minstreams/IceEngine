@@ -14,7 +14,12 @@ namespace IceEngine.Framework
         public abstract class IceSetting : ScriptableObject
         {
             // 默认配置项
-            public Color themeColor = new Color(1, 0.6f, 0);
+            public Color themeColor;
+            public abstract Color DefaultThemeColor { get; }
+            public IceSetting()
+            {
+                themeColor = DefaultThemeColor;
+            }
         }
     }
 
@@ -44,12 +49,7 @@ namespace IceEngine.Framework
                         // 编辑时创建
 
                         // 计算path
-                        string filePath = "Assets";
-
-                        var path = tT.GetCustomAttribute<IceSettingPathAttribute>()?.Path;
-                        if (!string.IsNullOrEmpty(path)) filePath += $"/{path}";
-
-                        filePath += $"/Resources/{tName}.asset";
+                        string filePath = GetPath();
 
                         // 创建目录
                         filePath.TryCreateFolderOfPath();
@@ -66,6 +66,23 @@ namespace IceEngine.Framework
 
                 return _setting;
             }
+        }
+        public static string GetPath()
+        {
+#if UNITY_EDITOR
+            var tT = typeof(T);
+            var tName = tT.Name;
+
+            string filePath = "Assets";
+
+            var path = tT.GetCustomAttribute<IceSettingPathAttribute>()?.Path;
+            if (!string.IsNullOrEmpty(path)) filePath += $"/{path}";
+
+            filePath += $"/Resources/{tName}.asset";
+            return filePath;
+#else
+            throw new Exception($"{typeof(T).FullName}运行时不存在Path！");
+#endif
         }
     }
 }

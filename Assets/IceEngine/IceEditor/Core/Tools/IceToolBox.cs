@@ -58,74 +58,70 @@ namespace IceEditor.Internal
 
         #region Code Generation
         public const string SubSystemFolder = "Assets/IceEngine/IceSystem";
+
+        public static string GetDefaultThemeColorCode(Color color) => $"public override Color DefaultThemeColor => new({color.r}f, {color.g}f, {color.b}f);";
+        static string GetSubSystemSettingCode(string name) =>
+            $"using UnityEngine;\r\n" +
+            $"\r\n" +
+            $"namespace IceEngine.Internal\r\n" +
+            $"{{\r\n" +
+            $"    public class Setting{name} : Framework.IceSetting<Setting{name}>\r\n" +
+            $"    {{\r\n" +
+            $"        #region ThemeColor\r\n" +
+            $"        {GetDefaultThemeColorCode(UnityEngine.Random.ColorHSV())}\r\n" +
+            $"        #endregion\r\n" +
+            $"    }}\r\n" +
+            $"}}";
+        static string GetSubSystemCode(string name) =>
+            $"namespace Ice\r\n" +
+            $"{{\r\n" +
+            $"    public sealed class {name} : IceEngine.Framework.IceSystem<IceEngine.Internal.Setting{name}>\r\n" +
+            $"    {{\r\n" +
+            $"\r\n" +
+            $"    }}\r\n" +
+            $"}}";
+        static string GetSubSystemDrawerCode(string name) =>
+            $"using System;\r\n" +
+            $"using IceEngine;\r\n" +
+            $"\r\n" +
+            $"using static IceEditor.IceGUI;\r\n" +
+            $"using static IceEditor.IceGUIAuto;\r\n" +
+            $"using Sys = Ice.{name};\r\n" +
+            $"using SysSetting = IceEngine.Internal.Setting{name};\r\n" +
+            $"\r\n" +
+            $"namespace IceEditor.Internal\r\n" +
+            $"{{\r\n" +
+            $"    internal sealed class {name}Drawer : Framework.IceSystemDrawer<Sys, SysSetting>\r\n" +
+            $"    {{\r\n" +
+            $"        public override void OnToolBoxGUI()\r\n" +
+            $"        {{\r\n" +
+            $"            Label(\"{name}\");\r\n" +
+            $"        }}\r\n" +
+            $"    }}\r\n" +
+            $"}}";
+
+        static string AsmrefCode =>
+            $"{{\n" +
+            $"    \"reference\": \"IceEditor\"\n" +
+            $"}}";
+
         public static void GenerateSubSystem(string name)
         {
             // Path calculation
             string path = $"{SubSystemFolder}/{name}";
             path.TryCreateFolder();
 
-            string resPath = $"{path}/Resources";
-            resPath.TryCreateFolder();
-
+            // Runtime Code
             string runtimePath = $"{path}/Runtime";
             runtimePath.TryCreateFolder();
+            File.WriteAllText($"{runtimePath}/Setting{name}.cs", GetSubSystemSettingCode(name), Encoding.UTF8);
+            File.WriteAllText($"{runtimePath}/{name}.cs", GetSubSystemCode(name), Encoding.UTF8);
 
+            // Editor Code
             string editorPath = $"{path}/Editor";
             editorPath.TryCreateFolder();
-
-            // Code
-            string settingPath = $"{runtimePath}/Setting{name}.cs";
-            string settingCode =
-                $"namespace IceEngine.Internal\r\n" +
-                $"{{\r\n" +
-                $"    public class Setting{name} : Framework.IceSetting<Setting{name}>\r\n" +
-                $"    {{\r\n" +
-                $"\r\n" +
-                $"    }}\r\n" +
-                $"}}";
-            File.WriteAllText(settingPath, settingCode, Encoding.UTF8);
-
-            string systemPath = $"{runtimePath}/{name}.cs";
-            string systemCode =
-                $"using IceEngine;\r\n" +
-                $"\r\n" +
-                $"namespace Ice\r\n" +
-                $"{{\r\n" +
-                $"    public sealed class {name} : IceEngine.Framework.IceSystem<IceEngine.Internal.Setting{name}>\r\n" +
-                $"    {{\r\n" +
-                $"\r\n" +
-                $"    }}\r\n" +
-                $"}}";
-            File.WriteAllText(systemPath, systemCode, Encoding.UTF8);
-
-            string drawerPath = $"{editorPath}/{name}Drawer.cs";
-            string drawerCode =
-                $"using System;\r\n" +
-                $"using IceEngine;\r\n" +
-                $"\r\n" +
-                $"using static IceEditor.IceGUI;\r\n" +
-                $"using static IceEditor.IceGUIAuto;\r\n" +
-                $"using Sys = Ice.{name};\r\n" +
-                $"using SysSetting = IceEngine.Internal.Setting{name};\r\n" +
-                $"\r\n" +
-                $"namespace IceEditor.Internal\r\n" +
-                $"{{\r\n" +
-                $"    internal sealed class {name}Drawer : Framework.IceSystemDrawer<Sys, SysSetting>\r\n" +
-                $"    {{\r\n" +
-                $"        public override void OnToolBoxGUI()\r\n" +
-                $"        {{\r\n" +
-                $"            Label(\"{name}\");\r\n" +
-                $"        }}\r\n" +
-                $"    }}\r\n" +
-                $"}}";
-            File.WriteAllText(drawerPath, drawerCode, Encoding.UTF8);
-
-            string asmrefPath = $"{editorPath}/IceEditor.asmref";
-            string asmrefCode =
-                $"{{\n" +
-                $"    \"reference\": \"IceEditor\"" +
-                $"}}";
-            File.WriteAllText(asmrefPath, asmrefCode, Encoding.UTF8);
+            File.WriteAllText($"{editorPath}/IceEditor.asmref", AsmrefCode, Encoding.UTF8);
+            File.WriteAllText($"{editorPath}/{name}Drawer.cs", GetSubSystemDrawerCode(name), Encoding.UTF8);
 
             AssetDatabase.Refresh();
         }
@@ -135,14 +131,19 @@ namespace IceEditor.Internal
         {
             using (GROUP) using (SectionFolder("子系统"))
             {
+                var name = GetString("系统名字");
+                bool isSystem = false;
+
                 using (Vertical(StlSystemBox))
                 {
                     using (HORIZONTAL)
                     {
                         if (ToggleButton("Island", CurDrawer == null, StlScriptTab)) CurDrawer = null;
+                        if (name == "Island") isSystem = true;
                         foreach (var d in SystemDrawers)
                         {
                             if (ToggleButton(d.SystemName, CurDrawer == d, StlScriptTab)) CurDrawer = d;
+                            if (d.SystemName == name) isSystem = true;
                         }
                     }
                     using (Vertical(StlBackground))
@@ -159,11 +160,25 @@ namespace IceEditor.Internal
                 }
                 using (Horizontal(StlGroup)) using (LabelWidth(60))
                 {
-                    var name = TextField("系统名字");
-                    if (IceButton("生成"))
+                    TextField("系统名字");
+                    if (isSystem)
                     {
-                        GenerateSubSystem(name);
-                        DialogNoCancel($"{name}系统生成完成！");
+                        var settingPath = $"Assets/Resources/Setting{name}.asset";
+                        if (File.Exists(settingPath) && IceButton("删除".Color(Color.red)) && Dialog($"将删除{name}，无法撤销，确定？"))
+                        {
+                            // 删除Setting File
+                            AssetDatabase.DeleteAsset(settingPath);
+                            AssetDatabase.DeleteAsset($"{SubSystemFolder}/{name}");
+                            AssetDatabase.Refresh();
+                        }
+                    }
+                    else
+                    {
+                        if (IceButton("生成"))
+                        {
+                            GenerateSubSystem(name);
+                            DialogNoCancel($"{name}系统生成完成！");
+                        }
                     }
                 }
             }

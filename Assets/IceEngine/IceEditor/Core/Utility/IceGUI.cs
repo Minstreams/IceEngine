@@ -37,6 +37,8 @@ namespace IceEditor
         public static GUIStyle StlGraphPortLabel => _stlGraphPortLabel?.Check() ?? (_stlGraphPortLabel = new GUIStyle("ShurikenValue") { margin = new RectOffset(1, 1, 2, 2), padding = new RectOffset(3, 3, 0, 0), fontSize = 12, alignment = TextAnchor.MiddleCenter, fixedHeight = 0f, }); static GUIStyle _stlGraphPortLabel;
         public static GUIStyle StlSearchTextField => _stlSearchTextField?.Check() ?? (_stlSearchTextField = new GUIStyle("SearchTextField") { padding = new RectOffset(14, 3, 2, 1), fontSize = 12, fixedHeight = 0f, }); static GUIStyle _stlSearchTextField;
         public static GUIStyle StlFooterBtn => _stlFooterBtn?.Check() ?? (_stlFooterBtn = new GUIStyle("RL FooterButton") { fontSize = 14, fixedWidth = 25f, fixedHeight = 19f, fontStyle = FontStyle.Normal, richText = true }); static GUIStyle _stlFooterBtn;
+        public static GUIStyle StlPanelOptions => "PaneOptions";
+        public static GUIStyle StlBoldLabel => _stlBoldLabel?.Check() ?? (_stlBoldLabel = new GUIStyle("label") { margin = new RectOffset(4, 4, 0, 0), fontSize = 14, fontStyle = FontStyle.Bold, richText = true, }); static GUIStyle _stlBoldLabel;
         #endregion
 
         #region Scope

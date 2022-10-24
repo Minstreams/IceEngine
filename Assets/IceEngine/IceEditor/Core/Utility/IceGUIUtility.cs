@@ -436,6 +436,60 @@ namespace IceEditor
         /// </summary>
         [SettingsProvider]
         static SettingsProvider GetIceEditorSettingProvider() => GetIceSettingProvider<IceEditorSetting>("IceEditor", "EditorSetting");
+        static void OnIceSettingGUI(string title, SerializedObject so)
+        {
+            var c = so.FindProperty("themeColor")?.colorValue ?? CurrentThemeColor;
+
+            using (GROUP)
+            {
+                using (ThemeColor(c))
+                {
+                    using (HORIZONTAL)
+                    {
+                        Label(title.Color(CurrentThemeColor), StlBoldLabel);
+                        if (Button(GUIContent.none, StlPanelOptions))
+                        {
+                            GenericMenu gm = new();
+                            if (so.targetObject is IceSetting i)
+                            {
+                                // IceSetting
+                                if (i.DefaultThemeColor != c)
+                                {
+                                    gm.AddItem(new GUIContent("还原颜色"), false, () =>
+                                    {
+                                        i.themeColor = i.DefaultThemeColor;
+                                        so.Update();
+                                    });
+                                    gm.AddItem(new GUIContent("锁定颜色"), false, () =>
+                                    {
+                                        AssetDatabase.SaveAssets();
+                                        static string GetSubSystemSettingPath(string name)
+                                        {
+                                            if (name == "Global") return "Assets/IceEngine/IceRuntime/Core/Settings/SettingGlobal.cs";
+                                            return $"{IceToolBox.SubSystemFolder}/{name}/Runtime/Setting{name}.cs";
+                                        }
+                                        var path = GetSubSystemSettingPath(title);
+                                        IceCoreUtility.WriteToFileRegion("ThemeColor", IceToolBox.GetDefaultThemeColorCode(c), path);
+                                        AssetDatabase.ImportAsset(path);
+                                    });
+                                }
+                                else
+                                {
+                                    gm.AddDisabledItem(new GUIContent("还原颜色"));
+                                    gm.AddDisabledItem(new GUIContent("锁定颜色"), true);
+                                }
+                            }
+                            else
+                            {
+                                // IceEditorSetting
+                            }
+                            gm.ShowAsContext();
+                        }
+                    }
+                    DrawSerializedObject(so);
+                }
+            }
+        }
         /// <summary>
         /// 在Project窗口部署某一配置类所有的子类实例
         /// </summary>
@@ -447,7 +501,7 @@ namespace IceEditor
             Type baseSettingType = typeof(TSetting);
 
             // soMap
-            Dictionary<string, (SerializedObject, Color?)> iceSettingSOMap = new();
+            Dictionary<string, SerializedObject> iceSettingSOMap = new();
 
             // 从所有相关的Assembly中收集数据
             var settingCollection = TypeCache.GetTypesDerivedFrom<TSetting>();
@@ -459,8 +513,7 @@ namespace IceEditor
                 var title = settingType.Name.StartsWith(prefix) ? settingType.Name[prefix.Length..] : settingType.Name;
                 var setting = settingType.BaseType.GetProperty("Setting", settingType).GetValue(null) as TSetting;
                 var so = new SerializedObject(setting);
-                var color = so.FindProperty("themeColor")?.colorValue;
-                iceSettingSOMap.Add(title, (so, color));
+                iceSettingSOMap.Add(title, so);
             }
 
             // 选择的项目字段
@@ -474,32 +527,24 @@ namespace IceEditor
                 {
                     if (selectedSetting == null)
                     {
-                        foreach ((string title, (SerializedObject so, Color? color)) in iceSettingSOMap)
+                        foreach ((string title, SerializedObject so) in iceSettingSOMap)
                         {
-                            using (GROUP) using (color == null ? null : ThemeColor(color.Value))
-                            {
-                                Header(title);
-                                DrawSerializedObject(so);
-                            }
+                            OnIceSettingGUI(title, so);
                         }
                         return;
                     }
                     else
                     {
-                        (SerializedObject so, Color? color) = iceSettingSOMap[selectedSetting];
-                        using (GROUP) using (color == null ? null : ThemeColor(color.Value))
-                        {
-                            Header(selectedSetting);
-                            DrawSerializedObject(so);
-                        }
+                        SerializedObject so = iceSettingSOMap[selectedSetting];
+                        OnIceSettingGUI(selectedSetting, so);
                     }
                 },
                 titleBarGuiHandler = () =>
                 {
-                    foreach ((string title, (_, Color? color)) in iceSettingSOMap)
+                    foreach ((string title, var so) in iceSettingSOMap)
                     {
                         string t = title;
-                        Color c = color ?? CurrentThemeColor;
+                        Color c = so.FindProperty("themeColor")?.colorValue ?? CurrentThemeColor;
                         //using (color == null ? null : ThemeColor(color.Value))
                         if (selectedSetting == title || selectedSetting == null) t = t.Color(c);
                         if (IceButton(t)) selectedSetting = selectedSetting == title ? null : title;

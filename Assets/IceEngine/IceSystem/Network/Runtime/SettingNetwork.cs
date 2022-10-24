@@ -1,13 +1,13 @@
 ﻿using System.Net;
+using UnityEngine;
 
 namespace IceEngine.Internal
 {
     public class SettingNetwork : Framework.IceSetting<SettingNetwork>
     {
-        public SettingNetwork()
-        {
-            themeColor = new UnityEngine.Color(0.1259f, 0.4575f, 0.6509f);
-        }
+        #region ThemeColor
+        public override Color DefaultThemeColor => new(0.1259f, 0.4575f, 0.6509f);
+        #endregion
 
         public int initialBufferSize = 4096;
         public byte magicByte = 0xC9;

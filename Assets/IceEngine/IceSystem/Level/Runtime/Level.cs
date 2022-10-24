@@ -1,5 +1,4 @@
 ﻿using UnityEngine.SceneManagement;
-using IceEngine;
 
 namespace Ice
 {
