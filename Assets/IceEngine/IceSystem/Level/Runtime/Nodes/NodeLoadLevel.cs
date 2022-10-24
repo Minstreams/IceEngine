@@ -1,8 +1,5 @@
-﻿using System;
-using System.Net;
-using UnityEngine;
-using IceEngine.Framework;
-using IceEngine.Networking.Framework;
+﻿using IceEngine.Framework;
+using Sys = Ice.Level;
 
 namespace IceEngine.IceprintNodes
 {
@@ -10,6 +7,6 @@ namespace IceEngine.IceprintNodes
     public class NodeLoadLevel : IceprintNode
     {
         // Ports
-        [IceprintPort] public void LoadLevel(string sceneName) => Ice.Level.LoadLevel(sceneName);
+        [IceprintPort] public void LoadLevel(string sceneName) => Sys.LoadLevel(sceneName);
     }
 }

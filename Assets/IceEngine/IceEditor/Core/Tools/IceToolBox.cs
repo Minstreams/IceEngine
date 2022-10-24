@@ -103,6 +103,19 @@ namespace IceEditor.Internal
             $"{{\n" +
             $"    \"reference\": \"IceEditor\"\n" +
             $"}}";
+        static string GetNodeCode(string name, string subSystem) =>
+            $"using IceEngine.Framework;\r\n" +
+            $"using Sys = Ice.{subSystem};\r\n" +
+            $"\r\n" +
+            $"namespace IceEngine.IceprintNodes\r\n" +
+            $"{{\r\n" +
+            $"    [IceprintMenuItem(\"Ice/{subSystem}/{name}\")]\r\n" +
+            $"    public class Node{name} : IceprintNode\r\n" +
+            $"    {{\r\n" +
+            $"        // Ports\r\n" +
+            $"        [IceprintPort] public void Test() {{ }}\r\n" +
+            $"    }}\r\n" +
+            $"}}\r\n";
 
         public static void GenerateSubSystem(string name)
         {
@@ -124,6 +137,16 @@ namespace IceEditor.Internal
 
             AssetDatabase.Refresh();
         }
+        public static void GenerateNode(string name, string subSystem)
+        {
+            // Path calculation
+            string path = $"{SubSystemFolder}/{subSystem}/Runtime/Nodes";
+
+            path.TryCreateFolder();
+            File.WriteAllText($"{path}/Node{name}.cs", GetNodeCode(name, subSystem), Encoding.UTF8);
+
+            AssetDatabase.Refresh();
+        }
         #endregion
 
         protected override void OnWindowGUI(Rect position)
@@ -134,19 +157,23 @@ namespace IceEditor.Internal
                 var selectedSysName = GetString("Selected SubSystem");
                 IceSystemDrawer curDrawer = null;
                 bool isSystem = false;
-                foreach (var d in SystemDrawers)
+                if (sysName == "Island") isSystem = true;
+                else
                 {
-                    var n = d.SystemName;
-                    if (n == sysName) isSystem = true;
-                    if (n == selectedSysName) curDrawer = d;
+                    foreach (var d in SystemDrawers)
+                    {
+                        var n = d.SystemName;
+                        if (n == sysName) isSystem = true;
+                        if (n == selectedSysName) curDrawer = d;
+                    }
                 }
+                bool isSubSystem = isSystem && sysName != "Island";
 
                 using (Vertical(StlSystemBox))
                 {
                     using (HORIZONTAL)
                     {
                         if (ToggleButton("Island", curDrawer == null, StlScriptTab)) SetString("Selected SubSystem", null);
-                        if (sysName == "Island") isSystem = true;
                         foreach (var d in SystemDrawers)
                         {
                             var n = d.SystemName;
@@ -170,13 +197,16 @@ namespace IceEditor.Internal
                     TextField("系统名字");
                     if (isSystem)
                     {
-                        if (sysName != "Island" && IceButton("删除".Color(Color.red)) && Dialog($"将删除{sysName}，无法撤销，确定？"))
+                        if (isSubSystem)
                         {
-                            var settingPath = $"Assets/Resources/Setting{sysName}.asset";
-                            // 删除Setting File
-                            AssetDatabase.DeleteAsset(settingPath);
-                            AssetDatabase.DeleteAsset($"{SubSystemFolder}/{sysName}");
-                            AssetDatabase.Refresh();
+                            if (IceButton("删除".Color(Color.red)) && Dialog($"将删除{sysName}，无法撤销，确定？"))
+                            {
+                                var settingPath = $"Assets/Resources/Setting{sysName}.asset";
+                                // 删除Setting File
+                                AssetDatabase.DeleteAsset(settingPath);
+                                AssetDatabase.DeleteAsset($"{SubSystemFolder}/{sysName}");
+                                AssetDatabase.Refresh();
+                            }
                         }
                     }
                     else
@@ -185,6 +215,32 @@ namespace IceEditor.Internal
                         {
                             GenerateSubSystem(sysName);
                             DialogNoCancel($"{sysName}系统生成完成！");
+                        }
+                    }
+                }
+
+                if (isSubSystem)
+                {
+                    using (Horizontal(StlGroup)) using (LabelWidth(60))
+                    {
+                        var nodeName = TextField("节点名字");
+
+                        var path = $"{SubSystemFolder}/{sysName}/Runtime/Nodes/Node{nodeName}.cs";
+                        if (File.Exists(path))
+                        {
+                            if (IceButton("删除") && Dialog($"将删除{path}，无法撤销，确定？"))
+                            {
+                                AssetDatabase.DeleteAsset(path);
+                                AssetDatabase.Refresh();
+                            }
+                        }
+                        else
+                        {
+                            if (IceButton("生成"))
+                            {
+                                GenerateNode(nodeName, sysName);
+                                DialogNoCancel($"{sysName}/{nodeName}节点生成完成！");
+                            }
                         }
                     }
                 }

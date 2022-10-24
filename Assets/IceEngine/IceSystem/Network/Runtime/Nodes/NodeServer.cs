@@ -3,6 +3,7 @@ using System.Net;
 using UnityEngine;
 using IceEngine.Framework;
 using IceEngine.Networking.Framework;
+using Sys = Ice.Network;
 
 namespace IceEngine.IceprintNodes
 {
@@ -10,13 +11,13 @@ namespace IceEngine.IceprintNodes
     public class NodeServer : IceprintNode
     {
         // Ports
-        [IceprintPort] public void Launch() => Ice.Network.LaunchServer();
-        [IceprintPort] public void Shutdown() => Ice.Network.ShutdownServer();
-        [IceprintPort] public void OpenTCP() => Ice.Network.ServerOpenTCP();
-        [IceprintPort] public void CloseTCP() => Ice.Network.ServerCloseTCP();
-        [IceprintPort] public void Broadcast(Pkt pkt) => Ice.Network.ServerBroadcast(pkt);
-        [IceprintPort] public void Send(Pkt pkt, ServerBase.Connection conn) => Ice.Network.ServerSend(pkt, conn);
-        [IceprintPort] public void UDPBroadcast(Pkt pkt) => Ice.Network.ServerUDPBroadcast(pkt);
-        [IceprintPort] public void UDPSend(Pkt pkt, IPEndPoint remote) => Ice.Network.ServerUDPSend(pkt, remote);
+        [IceprintPort] public void Launch() => Sys.LaunchServer();
+        [IceprintPort] public void Shutdown() => Sys.ShutdownServer();
+        [IceprintPort] public void OpenTCP() => Sys.ServerOpenTCP();
+        [IceprintPort] public void CloseTCP() => Sys.ServerCloseTCP();
+        [IceprintPort] public void Broadcast(Pkt pkt) => Sys.ServerBroadcast(pkt);
+        [IceprintPort] public void Send(Pkt pkt, ServerBase.Connection conn) => Sys.ServerSend(pkt, conn);
+        [IceprintPort] public void UDPBroadcast(Pkt pkt) => Sys.ServerUDPBroadcast(pkt);
+        [IceprintPort] public void UDPSend(Pkt pkt, IPEndPoint remote) => Sys.ServerUDPSend(pkt, remote);
     }
 }
