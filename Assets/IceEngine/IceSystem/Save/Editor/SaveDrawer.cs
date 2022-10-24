@@ -12,7 +12,18 @@ namespace IceEditor.Internal
     {
         public override void OnToolBoxGUI()
         {
-
+            using (HORIZONTAL)
+            {
+                using (GROUP)
+                {
+                    Label("Json", StlBoldLabel);
+                    Label($"Format: {Sys.Json.Format.BodyName}");
+                }
+                using (GROUP)
+                {
+                    Label("Binary", StlBoldLabel);
+                }
+            }
         }
     }
 }

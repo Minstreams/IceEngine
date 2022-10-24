@@ -72,48 +72,48 @@ namespace Ice
         {
             #region Sync Interface
             // Load
-            public static object LoadFromFile(string path, bool absolutePath = false, int offset = 0, Type baseType = null)
+            public static object LoadFromFile(string path, bool absolutePath = false, int offset = 0, Type baseType = null, bool withExtraInfos = true)
             {
                 if (!absolutePath) path = ToAbsolutePath(path);
                 var bts = File.ReadAllBytes(path);
-                return IceBinaryUtility.FromBytes(bts, offset, baseType);
+                return IceBinaryUtility.FromBytes(bts, offset, baseType, withExtraInfos);
             }
-            public static void LoadFromFileOverwrite(object objectToOverwrite, string path, bool absolutePath = false, Type type = null, bool withHeader = true, int offset = 0)
+            public static void LoadFromFileOverwrite(object objectToOverwrite, string path, bool absolutePath = false, Type type = null, bool withHeader = true, int offset = 0, bool withExtraInfos = true)
             {
                 if (!absolutePath) path = ToAbsolutePath(path);
                 var bts = File.ReadAllBytes(path);
-                IceBinaryUtility.FromBytesOverwrite(bts, objectToOverwrite, type, withHeader, offset);
+                IceBinaryUtility.FromBytesOverwrite(bts, objectToOverwrite, type, withHeader, offset, withExtraInfos);
             }
 
             // Save
-            public static void SaveToFile(object data, string path, bool absolutePath = false, bool withHeader = true, Type baseType = null)
+            public static void SaveToFile(object data, string path, bool absolutePath = false, bool withHeader = true, Type baseType = null, bool withExtraInfos = true)
             {
                 if (!absolutePath) path = ToAbsolutePath(path);
-                var bts = IceBinaryUtility.ToBytes(data, withHeader, baseType);
+                var bts = IceBinaryUtility.ToBytes(data, withHeader, baseType, withExtraInfos);
                 File.WriteAllBytes(path, bts);
             }
             #endregion
 
             #region Async Interface
             // Load
-            public static async Task<object> LoadFromFileAsync(string path, bool absolutePath = false, int offset = 0, Type baseType = null, CancellationToken cancellationToken = default)
+            public static async Task<object> LoadFromFileAsync(string path, bool absolutePath = false, int offset = 0, Type baseType = null, bool withExtraInfos = true, CancellationToken cancellationToken = default)
             {
                 if (!absolutePath) path = ToAbsolutePath(path);
                 var bts = await File.ReadAllBytesAsync(path, cancellationToken);
-                return IceBinaryUtility.FromBytes(bts, offset, baseType);
+                return IceBinaryUtility.FromBytes(bts, offset, baseType, withExtraInfos);
             }
-            public static async void LoadFromFileOverwriteAsync(object objectToOverwrite, string path, bool absolutePath = false, Type type = null, bool withHeader = true, int offset = 0, CancellationToken cancellationToken = default)
+            public static async void LoadFromFileOverwriteAsync(object objectToOverwrite, string path, bool absolutePath = false, Type type = null, bool withHeader = true, int offset = 0, bool withExtraInfos = true, CancellationToken cancellationToken = default)
             {
                 if (!absolutePath) path = ToAbsolutePath(path);
                 var bts = await File.ReadAllBytesAsync(path, cancellationToken);
-                IceBinaryUtility.FromBytesOverwrite(bts, objectToOverwrite, type, withHeader, offset);
+                IceBinaryUtility.FromBytesOverwrite(bts, objectToOverwrite, type, withHeader, offset, withExtraInfos);
             }
 
             // Save
-            public static Task SaveToFileAsync(object data, string path, bool absolutePath = false, bool withHeader = true, Type baseType = null, CancellationToken cancellationToken = default)
+            public static Task SaveToFileAsync(object data, string path, bool absolutePath = false, bool withHeader = true, Type baseType = null, bool withExtraInfos = true, CancellationToken cancellationToken = default)
             {
                 if (!absolutePath) path = ToAbsolutePath(path);
-                var bts = IceBinaryUtility.ToBytes(data, withHeader, baseType);
+                var bts = IceBinaryUtility.ToBytes(data, withHeader, baseType, withExtraInfos);
                 return File.WriteAllBytesAsync(path, bts, cancellationToken);
             }
             #endregion

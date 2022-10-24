@@ -261,15 +261,55 @@ namespace IceEngine
         /// </summary>
         public class LogScope : IDisposable
         {
-            readonly Action<string> logAction;
+            public static string Log { get; set; }
+
+            int? baseStack = null;
+            void OnSingleLog(string log)
+            {
+                string prefix = "";
+                System.Diagnostics.StackTrace st = new();
+                int fc = st.FrameCount;
+                if (baseStack is null)
+                {
+                    baseStack = fc;
+                    log = log.Replace("\n", "");
+                }
+                else
+                {
+                    int indent = fc - baseStack.Value;
+                    if (indent > 0)
+                    {
+                        for (int i = 0; i < indent; ++i) prefix += "┆       ".Color(GetColor(i));
+                        log = log.Replace("\n", $"\n{prefix}");
+                    }
+                }
+
+                string GetColor(int indent)
+                {
+                    return (indent % 3) switch
+                    {
+                        0 => "#000",
+                        1 => "#999",
+                        2 => "#842",
+                        _ => "#F00",
+                    };
+                }
+
+                Log += log;
+            }
+            Action<string> onLog;
+
             public LogScope(Action<string> onLog)
             {
-                logAction = onLog;
-                Logger += logAction;
+                baseStack = null;
+                Log = "";
+                this.onLog = onLog;
+                Logger += OnSingleLog;
             }
             void IDisposable.Dispose()
             {
-                Logger -= logAction;
+                Logger -= OnSingleLog;
+                onLog?.Invoke(Log);
             }
         }
 

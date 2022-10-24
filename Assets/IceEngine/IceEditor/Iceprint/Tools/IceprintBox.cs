@@ -1047,52 +1047,12 @@ namespace IceEditor.Internal
             }
             base.OnDebugGUI(position);
         }
-        int? baseStack = null;
-        void OnLog(string log)
-        {
-            string curLog = GetString("Console");
-
-            string prefix = "";
-            System.Diagnostics.StackTrace st = new();
-            int fc = st.FrameCount;
-            if (baseStack is null)
-            {
-                baseStack = fc;
-                log = log.Replace("\n", "");
-            }
-            else
-            {
-                int indent = fc - baseStack.Value;
-                if (indent > 0)
-                {
-                    for (int i = 0; i < indent; ++i) prefix += "┆       ".Color(GetColor(i));
-                    log = log.Replace("\n", $"\n{prefix}");
-                }
-            }
-
-            Color GetColor(int indent)
-            {
-                return (indent % 3) switch
-                {
-                    0 => Color.black,
-                    1 => Color.gray,
-                    2 => new Color(0.4f, 0.2f, 0.1f),
-                    _ => Color.red,
-                };
-            }
-
-            curLog += log;
-
-            SetString("Console", curLog);
-        }
         IceBinaryUtility.LogScope LOG
         {
             get
             {
                 if (!DebugMode) return null;
-                baseStack = null;
-                SetString("Console", "");
-                return new IceBinaryUtility.LogScope(OnLog);
+                return new IceBinaryUtility.LogScope(log => SetString("Console", log));
             }
         }
         #endregion

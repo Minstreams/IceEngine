@@ -153,9 +153,7 @@ public class TestWindow2 : IceEditorWindow
     }
     void TB(object obj)
     {
-        baseStack = null;
-        SetString("Console", "");
-        using (new IceBinaryUtility.LogScope(OnLog))
+        using (new IceBinaryUtility.LogScope(log => SetString("Console", log)))
         {
             var bytes = IceBinaryUtility.ToBytes(obj, withExtraInfo: GetBool("extraInfo"));
             var res = IceBinaryUtility.FromBytes(bytes, withExtraInfo: GetBool("extraInfo"));
@@ -163,33 +161,6 @@ public class TestWindow2 : IceEditorWindow
             SetString("Console3", PrintJson(obj));
             SetString("Console4", PrintJson(res));
         }
-    }
-    int? baseStack = null;
-    void OnLog(string log)
-    {
-        string curLog = GetString("Console");
-
-        string prefix = "";
-        System.Diagnostics.StackTrace st = new();
-        int fc = st.FrameCount;
-        if (baseStack == null)
-        {
-            baseStack = fc;
-            log = log.Replace("\n", "");
-        }
-        else
-        {
-            int indent = fc - baseStack.Value;
-            if (indent > 0)
-            {
-                for (int i = 0; i < indent; ++i) prefix += "        ";
-                log = log.Replace("\n", $"\n{prefix}");
-            }
-        }
-
-        curLog += log;
-
-        SetString("Console", curLog);
     }
     #endregion
 }
