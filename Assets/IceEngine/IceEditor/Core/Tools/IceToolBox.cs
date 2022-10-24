@@ -49,7 +49,6 @@ namespace IceEditor.Internal
 
         #region SubSystem Management
         List<IceSystemDrawer> SystemDrawers => IceSystemDrawer.Drawers;
-        IceSystemDrawer CurDrawer { get; set; }
         void OnIslandGUI()
         {
             Label("Island");
@@ -131,30 +130,38 @@ namespace IceEditor.Internal
         {
             using (GROUP) using (SectionFolder("子系统"))
             {
-                var name = GetString("系统名字");
+                var sysName = GetString("系统名字");
+                var selectedSysName = GetString("Selected SubSystem");
+                IceSystemDrawer curDrawer = null;
                 bool isSystem = false;
+                foreach (var d in SystemDrawers)
+                {
+                    var n = d.SystemName;
+                    if (n == sysName) isSystem = true;
+                    if (n == selectedSysName) curDrawer = d;
+                }
 
                 using (Vertical(StlSystemBox))
                 {
                     using (HORIZONTAL)
                     {
-                        if (ToggleButton("Island", CurDrawer == null, StlScriptTab)) CurDrawer = null;
-                        if (name == "Island") isSystem = true;
+                        if (ToggleButton("Island", curDrawer == null, StlScriptTab)) SetString("Selected SubSystem", null);
+                        if (sysName == "Island") isSystem = true;
                         foreach (var d in SystemDrawers)
                         {
-                            if (ToggleButton(d.SystemName, CurDrawer == d, StlScriptTab)) CurDrawer = d;
-                            if (d.SystemName == name) isSystem = true;
+                            var n = d.SystemName;
+                            if (ToggleButton(n, curDrawer == d, StlScriptTab)) SetString("Selected SubSystem", n);
                         }
                     }
                     using (Vertical(StlBackground))
                     {
-                        if (CurDrawer == null)
+                        if (curDrawer == null)
                         {
                             OnIslandGUI();
                         }
                         else
                         {
-                            CurDrawer.OnToolBoxGUI();
+                            curDrawer.OnToolBoxGUI();
                         }
                     }
                 }
@@ -163,12 +170,12 @@ namespace IceEditor.Internal
                     TextField("系统名字");
                     if (isSystem)
                     {
-                        var settingPath = $"Assets/Resources/Setting{name}.asset";
-                        if (File.Exists(settingPath) && IceButton("删除".Color(Color.red)) && Dialog($"将删除{name}，无法撤销，确定？"))
+                        var settingPath = $"Assets/Resources/Setting{sysName}.asset";
+                        if (File.Exists(settingPath) && IceButton("删除".Color(Color.red)) && Dialog($"将删除{sysName}，无法撤销，确定？"))
                         {
                             // 删除Setting File
                             AssetDatabase.DeleteAsset(settingPath);
-                            AssetDatabase.DeleteAsset($"{SubSystemFolder}/{name}");
+                            AssetDatabase.DeleteAsset($"{SubSystemFolder}/{sysName}");
                             AssetDatabase.Refresh();
                         }
                     }
@@ -176,8 +183,8 @@ namespace IceEditor.Internal
                     {
                         if (IceButton("生成"))
                         {
-                            GenerateSubSystem(name);
-                            DialogNoCancel($"{name}系统生成完成！");
+                            GenerateSubSystem(sysName);
+                            DialogNoCancel($"{sysName}系统生成完成！");
                         }
                     }
                 }

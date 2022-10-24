@@ -134,7 +134,7 @@ namespace Ice
         public static void ClientOpenUDP() => Client?.OpenUDP();
         public static void ClientCloseUDP() => Client?.CloseUDP();
         public static void ClientConnectTo(IPAddress serverIPAddress) => Client?.StartTCPConnecting(serverIPAddress);
-        public static void ClientConnectToDefaultServer() => Client?.StartTCPConnecting(Setting.DefaultServerAddress);
+        public static void ClientConnectToDefaultServerIP() => Client?.StartTCPConnecting(Setting.DefaultServerAddress);
         public static void ClientConnectToDefaultServerDomain() => Client?.StartTCPConnecting(Setting.DefaultServerDomain);
         public static void ClientDisconnect() => Client?.StopTCPConnecting();
         public static void ClientSend(Pkt pkt)

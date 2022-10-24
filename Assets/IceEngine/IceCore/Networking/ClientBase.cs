@@ -32,15 +32,16 @@ namespace IceEngine.Networking.Framework
         {
             if (isDestroyed)
             {
-                Log("Disposed.");
+                Log("already disposed.");
                 return;
             }
             isDestroyed = true;
 
-            Log("Destroy");
             CloseUDP();
             StopTCPConnecting();
             CallDestroy();
+
+            Log("Destroyed");
         }
 
         public ClientBase()
@@ -84,6 +85,7 @@ namespace IceEngine.Networking.Framework
         #region UDP
 
         #region Interface
+        public bool IsUdpOn => udpClient != null;
         public void OpenUDP()
         {
             if (udpClient != null)
