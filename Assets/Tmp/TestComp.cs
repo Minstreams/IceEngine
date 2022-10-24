@@ -10,7 +10,7 @@ using UnityEngine.Events;
 [LabelWidth(48)]
 public class TestComp : IceprintNodeComponent
 {
-    [Group("bs", "Output")]
+    [Group("Output")]
     [IceprintPort]
     public UnityEvent<int, string, bool> testEvent2;
     //[Header("testHeader")]

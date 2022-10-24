@@ -1,9 +1,8 @@
 ﻿using System;
-using IceEngine;
 
+using IceEngine;
 using static IceEditor.IceGUI;
 using static IceEditor.IceGUIAuto;
-
 using Sys = Ice.Save;
 using SysSetting = IceEngine.Internal.SettingSave;
 

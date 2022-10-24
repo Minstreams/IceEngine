@@ -1,9 +1,9 @@
 ﻿using System;
 using UnityEditor;
+
 using IceEngine;
 using static IceEditor.IceGUI;
 using static IceEditor.IceGUIAuto;
-
 using Sys = Ice.Network;
 using SysSetting = IceEngine.Internal.SettingNetwork;
 

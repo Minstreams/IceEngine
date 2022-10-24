@@ -81,8 +81,8 @@ namespace IceEditor.Internal
             $"}}";
         static string GetSubSystemDrawerCode(string name) =>
             $"using System;\r\n" +
-            $"using IceEngine;\r\n" +
             $"\r\n" +
+            $"using IceEngine;\r\n" +
             $"using static IceEditor.IceGUI;\r\n" +
             $"using static IceEditor.IceGUIAuto;\r\n" +
             $"using Sys = Ice.{name};\r\n" +
@@ -170,9 +170,9 @@ namespace IceEditor.Internal
                     TextField("系统名字");
                     if (isSystem)
                     {
-                        var settingPath = $"Assets/Resources/Setting{sysName}.asset";
-                        if (File.Exists(settingPath) && IceButton("删除".Color(Color.red)) && Dialog($"将删除{sysName}，无法撤销，确定？"))
+                        if (sysName != "Island" && IceButton("删除".Color(Color.red)) && Dialog($"将删除{sysName}，无法撤销，确定？"))
                         {
+                            var settingPath = $"Assets/Resources/Setting{sysName}.asset";
                             // 删除Setting File
                             AssetDatabase.DeleteAsset(settingPath);
                             AssetDatabase.DeleteAsset($"{SubSystemFolder}/{sysName}");
