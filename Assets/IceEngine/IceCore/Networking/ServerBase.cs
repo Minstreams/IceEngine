@@ -173,10 +173,15 @@ namespace IceEngine.Networking.Framework
                 isDestroyed = true;
 
                 ServerInstance.CallServerDisconnection(this);
+                ServerInstance.connections.Remove(this);
                 stream?.Close();
                 client?.Close();
                 Log("Server.connection Destroyed.");
-                receiveThread?.Abort();
+                try
+                {
+                    receiveThread?.Abort();
+                }
+                catch { }
             }
             public void SendRaw(byte[] data)
             {
@@ -279,12 +284,12 @@ namespace IceEngine.Networking.Framework
                 catch (SocketException ex)
                 {
                     ServerInstance.Log(ex);
-                    ServerInstance.CloseConnection(this);
+                    Destroy();
                 }
                 catch (Exception ex)
                 {
                     ServerInstance.Log(ex);
-                    ServerInstance.CloseConnection(this);
+                    Destroy();
                 }
             }
             void Log(string message) => ServerInstance.Log(message + $"(id:{NetId})");
@@ -322,7 +327,6 @@ namespace IceEngine.Networking.Framework
         public void CloseConnection(Connection conn)
         {
             conn.Destroy();
-            connections.Remove(conn);
         }
         public void DisconnectAll()
         {

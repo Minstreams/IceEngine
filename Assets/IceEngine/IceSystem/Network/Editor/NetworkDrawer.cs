@@ -30,7 +30,7 @@ namespace IceEditor.Internal
                     }
                 }
             }
-            using (GROUP) using (SectionFolder("Runtime")) using (Disable(!UnityEditor.EditorApplication.isPlaying))
+            using (GROUP) using (SectionFolder("Runtime")) using (Disable(!EditorApplication.isPlaying))
             {
                 using (BOX)
                 {
@@ -53,7 +53,16 @@ namespace IceEditor.Internal
                             bool bTcpOn = ser.IsTcpOn;
                             if (bTcpOn)
                             {
-                                serverStatus = $"connections {ser.ConnectionCount} - tcp on - running";
+                                int count = ser.ConnectionCount;
+                                serverStatus = $"connections {count} - tcp on - running";
+                                for (int i = 0; i < count; ++i)
+                                {
+                                    var conn = ser.GetConnection(i);
+                                    using (GROUP) using (SectionFolder($"Conn {i}", labelOverride: $"Connection {conn.NetId}"))
+                                    {
+                                        if (Button("Disconnect")) conn.Destroy();
+                                    }
+                                }
                             }
                             else
                             {
@@ -64,11 +73,11 @@ namespace IceEditor.Internal
 
                             if (bTcpOn)
                             {
-                                if (Button("CloseTCP")) Sys.ServerCloseTCP();
+                                if (Button("CloseTCP")) ser.CloseTCP();
                             }
                             else
                             {
-                                if (Button("OpenTCP")) Sys.ServerOpenTCP();
+                                if (Button("OpenTCP")) ser.OpenTCP();
                             }
                             if (Button("Shutdown")) Sys.ShutdownServer();
                         }
@@ -98,23 +107,23 @@ namespace IceEditor.Internal
                             {
                                 clientStatus = $"connected - udp {(bUdpOn ? "on" : "off")} - running";
                                 _TextField("Server Address", cli.ServerIPAddress?.ToString());
-                                if (Button("Disconnect")) Sys.ClientDisconnect();
+                                if (Button("Disconnect")) cli.StopTCPConnecting();
                             }
                             else
                             {
                                 clientStatus = $"disconncected - udp {(bUdpOn ? "on" : "off")} - running";
                                 if (Button("ConnectToDefaultServerIP")) Sys.ClientConnectToDefaultServerIP();
                                 if (Button("ConnectToDefaultServerDomain")) Sys.ClientConnectToDefaultServerDomain();
-                                if (Button("Disconnect")) Sys.ClientDisconnect();
+                                if (Button("Disconnect")) cli.StopTCPConnecting();
                             }
 
                             if (bUdpOn)
                             {
-                                if (Button("CloseUDP")) Sys.ClientCloseUDP();
+                                if (Button("CloseUDP")) cli.CloseUDP();
                             }
                             else
                             {
-                                if (Button("OpenUDP")) Sys.ClientOpenUDP();
+                                if (Button("OpenUDP")) cli.OpenUDP();
                             }
                             if (Button("Shutdown")) Sys.ShutdownClient();
                         }
