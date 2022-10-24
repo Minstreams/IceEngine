@@ -46,8 +46,13 @@ namespace IceEngine
     [AttributeUsage(AttributeTargets.Field, AllowMultiple = false)]
     public sealed class GroupAttribute : Attribute
     {
+        public string Key { get; private set; }
         public string Label { get; private set; }
-        public GroupAttribute(string label = null) => Label = label;
+        public GroupAttribute(string key = null, string label = null)
+        {
+            Key = key;
+            Label = label;
+        }
     }
     #endregion
 

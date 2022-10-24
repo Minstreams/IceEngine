@@ -136,7 +136,7 @@ namespace IceEditor
             public float? labelWidth = null;
             public Color? themeColor = null;
             public Dictionary<string, string> labelMap = new();
-            public Dictionary<string, string> groupMap = new();
+            public Dictionary<string, (string, string)> groupMap = new();
             public HashSet<string> runtimeConstSet = new();
             public List<(string text, Action<object> action)> buttonList = new();
 
@@ -182,7 +182,7 @@ namespace IceEditor
 
                     // 处理 Group
                     {
-                        if (f.GetCustomAttribute<GroupAttribute>() is not null and var a) groupMap.Add(path, a.Label);
+                        if (f.GetCustomAttribute<GroupAttribute>() is not null and var a) groupMap.Add(path, (a.Key, a.Label));
                     }
 
                     // 处理 RuntimeConst
@@ -233,13 +233,13 @@ namespace IceEditor
                     scopeV = null;
                 }
             }
-            void DoGroup(string label = null)
+            void DoGroup(string key = null, string label = null)
             {
                 EndGroup();
                 scopeV = GROUP;
-                if (!label.IsNullOrEmpty())
+                if (!key.IsNullOrEmpty())
                 {
-                    scopeF = SectionFolder(label);
+                    scopeF = SectionFolder(key, labelOverride: label);
                 }
             }
 
@@ -251,7 +251,7 @@ namespace IceEditor
                 if (!info.labelMap.TryGetValue(path, out string label)) label = itr.displayName;
 
                 // 处理 Group
-                if (info.groupMap.TryGetValue(path, out string group)) DoGroup(group);
+                if (info.groupMap.TryGetValue(path, out var group)) DoGroup(group.Item1, group.Item2);
 
                 // 处理 RuntimeConst
                 bool disabled = info.runtimeConstSet.Contains(path) && EditorApplication.isPlayingOrWillChangePlaymode;

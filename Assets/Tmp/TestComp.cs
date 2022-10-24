@@ -7,8 +7,10 @@ using IceEngine.Framework;
 using UnityEngine.Events;
 
 [ThemeColor(1, 0, 1)]
+[LabelWidth(48)]
 public class TestComp : IceprintNodeComponent
 {
+    [Group("bs", "Output")]
     [IceprintPort]
     public UnityEvent<int, string, bool> testEvent2;
     //[Header("testHeader")]
@@ -16,6 +18,7 @@ public class TestComp : IceprintNodeComponent
     [Label("标签te")]
     public UnityEvent<int> testEvent;
 
+    [Group]
     public string testStr;
     public float a;
     [RuntimeConst]
