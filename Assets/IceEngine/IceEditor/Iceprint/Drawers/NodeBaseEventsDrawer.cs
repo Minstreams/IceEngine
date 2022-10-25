@@ -1,17 +1,12 @@
-﻿using UnityEditor;
-using UnityEngine;
+﻿using UnityEngine;
 
 using IceEngine;
 using IceEngine.IceprintNodes;
-using IceEngine.Internal;
-using IceEditor.Framework;
 using static IceEditor.IceGUI;
-using static IceEditor.IceGUIAuto;
-using IceEngine.Framework;
 
 namespace IceEditor.Internal
 {
-    internal class NodeBaseEventsDrawer : IceprintNodeDrawer<NodeBaseEvents>
+    internal class NodeBaseEventsDrawer : Framework.IceprintNodeDrawer<NodeBaseEvents>
     {
         public override Vector2 GetSizeTitle(NodeBaseEvents node) => new Vector2(96, 16);
         public override Vector2 GetSizeBody(NodeBaseEvents node) => new Vector2(115, 48);

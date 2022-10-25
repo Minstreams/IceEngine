@@ -1,17 +1,12 @@
-﻿using UnityEditor;
-using UnityEngine;
+﻿using UnityEngine;
 
 using IceEngine;
 using IceEngine.IceprintNodes;
-using IceEngine.Internal;
-using IceEditor.Framework;
 using static IceEditor.IceGUI;
-using static IceEditor.IceGUIAuto;
-using IceEngine.Framework;
 
 namespace IceEditor.Internal
 {
-    internal class NodeLoggerDrawer : IceprintNodeDrawer<NodeLogger>
+    internal class NodeLoggerDrawer : Framework.IceprintNodeDrawer<NodeLogger>
     {
         public override Vector2 GetSizeBody(NodeLogger node)
         {

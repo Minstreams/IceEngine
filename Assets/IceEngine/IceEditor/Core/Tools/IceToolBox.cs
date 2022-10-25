@@ -115,7 +115,21 @@ namespace IceEditor.Internal
             $"        // Ports\r\n" +
             $"        [IceprintPort] public void Test() {{ }}\r\n" +
             $"    }}\r\n" +
-            $"}}\r\n";
+            $"}}";
+        static string GetNodeDrawerCode(string name) =>
+            $"using UnityEngine;\r\n" +
+            $"\r\n" +
+            $"using IceEngine;\r\n" +
+            $"using IceEngine.IceprintNodes;\r\n" +
+            $"using static IceEditor.IceGUI;\r\n" +
+            $"\r\n" +
+            $"namespace IceEditor.Internal\r\n" +
+            $"{{\r\n" +
+            $"    internal class Node{name}Drawer : Framework.IceprintNodeDrawer<Node{name}>\r\n" +
+            $"    {{\r\n" +
+            $"\r\n" +
+            $"    }}\r\n" +
+            $"}}";
 
         public static void GenerateSubSystem(string name)
         {
@@ -137,13 +151,34 @@ namespace IceEditor.Internal
 
             AssetDatabase.Refresh();
         }
+        public static void DeleteSubSystem(string name)
+        {
+            var settingPath = $"Assets/Resources/Setting{name}.asset";
+            // 删除Setting File
+            AssetDatabase.DeleteAsset(settingPath);
+            AssetDatabase.DeleteAsset($"{SubSystemFolder}/{name}");
+            AssetDatabase.Refresh();
+        }
         public static void GenerateNode(string name, string subSystem)
         {
-            // Path calculation
-            string path = $"{SubSystemFolder}/{subSystem}/Runtime/Nodes";
+            // Runtime Code
+            string runtimePath = $"{SubSystemFolder}/{subSystem}/Runtime/Nodes";
+            runtimePath.TryCreateFolder();
+            File.WriteAllText($"{runtimePath}/Node{name}.cs", GetNodeCode(name, subSystem), Encoding.UTF8);
 
-            path.TryCreateFolder();
-            File.WriteAllText($"{path}/Node{name}.cs", GetNodeCode(name, subSystem), Encoding.UTF8);
+            // Editor Code
+            string editorPath = $"{SubSystemFolder}/{subSystem}/Editor/Drawers";
+            editorPath.TryCreateFolder();
+            File.WriteAllText($"{editorPath}/Node{name}Drawer.cs", GetNodeDrawerCode(name), Encoding.UTF8);
+
+            AssetDatabase.Refresh();
+        }
+        public static void GenerateNodeDrawer(string name, string subSystem)
+        {
+            // Editor Code
+            string editorPath = $"{SubSystemFolder}/{subSystem}/Editor/Drawers";
+            editorPath.TryCreateFolder();
+            File.WriteAllText($"{editorPath}/Node{name}Drawer.cs", GetNodeDrawerCode(name), Encoding.UTF8);
 
             AssetDatabase.Refresh();
         }
@@ -201,11 +236,7 @@ namespace IceEditor.Internal
                         {
                             if (IceButton("删除".Color(Color.red)) && Dialog($"将删除{sysName}，无法撤销，确定？"))
                             {
-                                var settingPath = $"Assets/Resources/Setting{sysName}.asset";
-                                // 删除Setting File
-                                AssetDatabase.DeleteAsset(settingPath);
-                                AssetDatabase.DeleteAsset($"{SubSystemFolder}/{sysName}");
-                                AssetDatabase.Refresh();
+                                DeleteSubSystem(sysName);
                             }
                         }
                     }
@@ -225,12 +256,20 @@ namespace IceEditor.Internal
                     {
                         var nodeName = TextField("节点名字");
 
-                        var path = $"{SubSystemFolder}/{sysName}/Runtime/Nodes/Node{nodeName}.cs";
-                        if (File.Exists(path))
+                        var nodePath = $"{SubSystemFolder}/{sysName}/Runtime/Nodes/Node{nodeName}.cs";
+                        var drawerPath = $"{SubSystemFolder}/{sysName}/Editor/Drawers/Node{nodeName}Drawer.cs";
+                        bool bNodeExist = File.Exists(nodePath);
+                        bool bDrawerExist = File.Exists(drawerPath);
+                        if (bNodeExist)
                         {
-                            if (IceButton("删除") && Dialog($"将删除{path}，无法撤销，确定？"))
+                            if (!bDrawerExist && IceButton("生成Drawer"))
                             {
-                                AssetDatabase.DeleteAsset(path);
+                                GenerateNodeDrawer(nodeName, sysName);
+                            }
+                            if (IceButton("删除".Color(Color.red)) && Dialog($"将删除{nodePath}，无法撤销，确定？"))
+                            {
+                                AssetDatabase.DeleteAsset(nodePath);
+                                if (bDrawerExist) AssetDatabase.DeleteAsset(drawerPath);
                                 AssetDatabase.Refresh();
                             }
                         }

@@ -1,17 +1,12 @@
-﻿using UnityEditor;
-using UnityEngine;
+﻿using UnityEngine;
 
 using IceEngine;
 using IceEngine.IceprintNodes;
-using IceEngine.Internal;
-using IceEditor.Framework;
 using static IceEditor.IceGUI;
-using static IceEditor.IceGUIAuto;
-using IceEngine.Framework;
 
 namespace IceEditor.Internal
 {
-    internal class NodeSubSystemCallerDrawer : IceprintNodeDrawer<NodeSubSystemCaller>
+    internal class NodeSubSystemCallerDrawer : Framework.IceprintNodeDrawer<NodeSubSystemCaller>
     {
         public override string GetDisplayName(NodeSubSystemCaller node) => "CallSubSystem";
         public override Vector2 GetSizeBody(NodeSubSystemCaller node)
