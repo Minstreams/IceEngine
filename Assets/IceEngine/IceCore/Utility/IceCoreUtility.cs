@@ -200,6 +200,7 @@ namespace IceEngine
         public static readonly Type delegateType = typeof(Delegate);
         public static readonly Type icePacketBaseType = typeof(IcePacketBase);
         public static readonly Type icePacketAttributeType = typeof(IcePacketAttribute);
+        public static readonly Type iPacketSerializationHashcode = typeof(IPacketSerializationHashcode);
 
         static readonly Dictionary<string, Type> _typeCacheMap = new();
         static readonly HashSet<Type> serializableCollection = new()
@@ -339,7 +340,7 @@ namespace IceEngine
         public static Type HashCodeToPacketType(ushort hash)
         {
             if (Hash2PktMap.TryGetValue(hash, out var type)) return type;
-            throw new Exception($"{hash} is not a packet hash!");
+            return null;
         }
         public static ushort PacketTypeToHashCode(Type type)
         {

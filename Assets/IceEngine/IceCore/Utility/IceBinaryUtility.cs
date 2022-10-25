@@ -1,4 +1,5 @@
-﻿using System;
+﻿using IceEngine.Framework;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -312,6 +313,23 @@ namespace IceEngine
                 onLog?.Invoke(Log);
             }
         }
+        public class FallbackScope : IDisposable
+        {
+            public static Func<Type, object, object, (Type, object)> onFallback;
+            public static (Type, object) Fallback(Type type, object instance, object userData)
+            {
+                if (onFallback != null) return onFallback(type, instance, userData);
+                return (type, instance);
+            }
+            public FallbackScope(Func<Type, object, object, (Type, object)> fallback)
+            {
+                onFallback = fallback;
+            }
+            void IDisposable.Dispose()
+            {
+                onFallback = null;
+            }
+        }
 
         // 内部接口
         [System.Diagnostics.Conditional("DEBUG")]
@@ -595,7 +613,16 @@ namespace IceEngine
                         else if (type.IsPacketType())
                         {
                             buffer.AddHeader(FieldBlockHeaderDefinitions.packetField);
-                            buffer.AddFieldBlock(IceCoreUtility.PacketTypeToHashCode(type), false, "typeHash");
+                            ushort hashcode;
+                            if (IceCoreUtility.iPacketSerializationHashcode.IsAssignableFrom(type))
+                            {
+                                hashcode = ((IPacketSerializationHashcode)obj).GetHashcode();
+                            }
+                            else
+                            {
+                                hashcode = IceCoreUtility.PacketTypeToHashCode(type);
+                            }
+                            buffer.AddFieldBlock(hashcode, false, "typeHash");
                         }
                         else
                         {
@@ -793,7 +820,15 @@ namespace IceEngine
         }
         static object ReadValueOfType(this byte[] bytes, ref int offset, Type type, object instance = null, bool withExtraInfo = false)
         {
-            if (type is null) return null;
+            if (type is null)
+            {
+                if (withExtraInfo)
+                {
+                    ushort blockLength = bytes.ReadUShort(ref offset);
+                    offset += blockLength;
+                }
+                return null;
+            }
             if (type.IsNullable()) type = type.GetGenericArguments()[0];
             if (type == TypeDefinitions.byteType) return bytes.ReadByte(ref offset);
             if (type == TypeDefinitions.sbyteType) return bytes.ReadSByte(ref offset);
@@ -877,6 +912,13 @@ namespace IceEngine
 
             if (headerToTypeMap.TryGetValue(header, out Type t)) return bytes.ReadValueOfType(ref offset, t);
 
+            if (header == FieldBlockHeaderDefinitions.packetField)
+            {
+                var hash = bytes.ReadUShort(ref offset);
+                (var tFallback, var ins) = FallbackScope.Fallback(IceCoreUtility.HashCodeToPacketType(hash), instance, hash);
+                return bytes.ReadValueOfType(ref offset, tFallback, ins, withExtraInfo);
+            }
+
             return header switch
             {
                 FieldBlockHeaderDefinitions.typeField => bytes.ReadType(ref offset),
@@ -885,8 +927,7 @@ namespace IceEngine
                 FieldBlockHeaderDefinitions.arrayField or
                 FieldBlockHeaderDefinitions.collectionField or
                 FieldBlockHeaderDefinitions.baseClassField => bytes.ReadValueOfType(ref offset, baseType, instance, withExtraInfo),
-                FieldBlockHeaderDefinitions.packetField => bytes.ReadValueOfType(ref offset, IceCoreUtility.HashCodeToPacketType(bytes.ReadUShort(ref offset)), instance, withExtraInfo),
-                _ => throw new Exception($"Not supported header! {header}"),
+                _ => throw new Exception($"Not supported header! {header:X2}"),
             };
         }
         static void ReadObjectOverride(this byte[] bytes, ref int offset, object obj, Type type = null, bool withExtraInfo = false)
@@ -936,7 +977,9 @@ namespace IceEngine
 
                 if (withExtraInfo)
                 {
+                    // 读完直接返回
                     if (offset - mark == blockLength) break;
+                    // 异常情况超出紧急返回
                     if (offset - mark > blockLength)
                     {
                         offset = mark + blockLength;
@@ -945,6 +988,7 @@ namespace IceEngine
                 }
             }
 
+            // 没读完补上
             if (withExtraInfo && offset - mark < blockLength)
             {
                 offset = mark + blockLength;

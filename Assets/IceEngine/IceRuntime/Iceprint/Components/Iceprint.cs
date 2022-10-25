@@ -33,18 +33,28 @@ namespace IceEngine
                     for (int pi = 0; pi < cd.Count; ++pi)
                     {
                         var pd = cd[pi];
-                        var ip = nodeList[pd.nodeId].inports[pd.portId];
-
-                        // 去掉无效连接
-                        if (!IsConnectable(ip, op))
+                        try
                         {
+                            var ip = nodeList[pd.nodeId].inports[pd.portId];
+
+                            // 去掉无效连接
+                            if (!IsConnectable(ip, op))
+                            {
+                                cd.RemoveAt(pi);
+                                --pi;
+                                continue;
+                            }
+
+                            cd[pi] = ip.data;
+                            ip.connectedPorts.Add(op);
+                        }
+                        catch
+                        {
+                            // ip取不到的时候处理一下
                             cd.RemoveAt(pi);
                             --pi;
                             continue;
                         }
-
-                        cd[pi] = ip.data;
-                        ip.connectedPorts.Add(op);
                     }
                 }
 
@@ -52,6 +62,18 @@ namespace IceEngine
                 for (int i = node.connectionData.Count - 1; i >= opCount; --i)
                 {
                     node.connectionData.RemoveAt(i);
+                }
+            }
+
+            // Step 3
+            foreach (var node in nodeList)
+            {
+                if (node is NodeMissing m)
+                {
+                    for (int i = m.inports.Count - 1; i >= 0 && !m.inports[i].IsConnected; --i)
+                    {
+                        m.inports.RemoveAt(i);
+                    }
                 }
             }
         }
@@ -91,7 +113,14 @@ namespace IceEngine
             }
             try
             {
-                IceBinaryUtility.FromBytesOverwrite(data, nodeList, withHeader: true, withExtraInfo: true);
+                using (new IceBinaryUtility.FallbackScope((nodeType, ins, ud) => nodeType switch
+                {
+                    null => (typeof(NodeMissing), new NodeMissing { Hashcode = (ushort)ud }),
+                    _ => (nodeType, ins),
+                }))
+                {
+                    IceBinaryUtility.FromBytesOverwrite(data, nodeList, withHeader: true, withExtraInfo: true);
+                }
                 OnDeserialized();
             }
             catch (Exception ex)
@@ -191,6 +220,8 @@ namespace IceEngine
             if (p1.IsOutport == p2.IsOutport) return false;
             if (!p1.isMultiple && p1.IsConnected) return false;
             if (!p2.isMultiple && p2.IsConnected) return false;
+
+            if (p1.node is NodeMissing || p2.node is NodeMissing) return true;
 
             (IceprintPort pin, IceprintPort pout) = p1.IsOutport ? (p2, p1) : (p1, p2);
             if ((pin as IceprintInport).connectedPorts.Contains(pout as IceprintOutport)) return false;
