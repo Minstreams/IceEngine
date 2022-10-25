@@ -604,6 +604,8 @@ namespace IceEngine
                 }
                 else if (type.IsClass || type.IsValueType)
                 {
+                    bool hasExtraInfo = withExtraInfo && !type.IsValueType;
+
                     Log($"{(baseType ?? type).Name.Color("#4CA")} {name.Color("#AF0")} = {obj}");
 
                     Log("\n{       ");
@@ -631,7 +633,7 @@ namespace IceEngine
                         }
                     }
                     string extraInfoColor = "#C5F";
-                    if (withExtraInfo)
+                    if (hasExtraInfo)
                     {
                         buffer.Add(0);
                         buffer.Add(0);
@@ -668,7 +670,7 @@ namespace IceEngine
                         buffer.AddFieldBlock(fobj, fType.HasHeader(), f.Name, fType, withExtraInfo);
                     }
 
-                    if (withExtraInfo)
+                    if (hasExtraInfo)
                     {
                         int length = buffer.Count - mark;
                         if (length > ushort.MaxValue) throw new OverflowException($"Length of block overflow! | {(baseType ?? type).Name.Color("#4CA")} {name.Color("#AF0")}");
@@ -933,9 +935,10 @@ namespace IceEngine
         static void ReadObjectOverride(this byte[] bytes, ref int offset, object obj, Type type = null, bool withExtraInfo = false)
         {
             if (type is null) type = obj.GetType();
+            bool hasExtraInfo = withExtraInfo && !type.IsValueType;
 
             ushort blockLength = ushort.MaxValue;
-            if (withExtraInfo)
+            if (hasExtraInfo)
             {
                 blockLength = bytes.ReadUShort(ref offset);
             }
@@ -975,7 +978,7 @@ namespace IceEngine
                     f.SetValue(obj, bytes.ReadValueOfType(ref offset, fType, null, withExtraInfo));
                 }
 
-                if (withExtraInfo)
+                if (hasExtraInfo)
                 {
                     // 读完直接返回
                     if (offset - mark == blockLength) break;
@@ -989,7 +992,7 @@ namespace IceEngine
             }
 
             // 没读完补上
-            if (withExtraInfo && offset - mark < blockLength)
+            if (hasExtraInfo && offset - mark < blockLength)
             {
                 offset = mark + blockLength;
             }
