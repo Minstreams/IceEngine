@@ -930,6 +930,17 @@ namespace IceEditor.Internal
                     // 拖拽
                     case EventType.DragPerform:
                         var objs = DragAndDrop.objectReferences;
+                        void DragComp(IceprintNodeComponent comp, Vector3 pos)
+                        {
+                            var node = Graph.AddNode(new NodeMonoBehaviour()
+                            {
+                                targetType = comp.GetType(),
+                            }, pos) as NodeMonoBehaviour;
+
+                            node.target.Value = comp;
+
+                            selectedNodes.Add(node);
+                        }
                         foreach (var o in objs)
                         {
                             if (o is GameObject go)
@@ -939,18 +950,15 @@ namespace IceEditor.Internal
                                 Vector2 offset = Vector2.zero;
                                 foreach (var comp in comps)
                                 {
-                                    var node = Graph.AddNode(new NodeMonoBehaviour()
-                                    {
-                                        targetType = comp.GetType(),
-                                    }, E.mousePosition + offset) as NodeMonoBehaviour;
-
-                                    node.target.Value = comp;
-
-                                    selectedNodes.Add(node);
-
+                                    DragComp(comp, E.mousePosition + offset);
                                     offset += Vector2.one * 32;
                                 }
                                 if (comps.Length > 0) RecordForUndo();
+                            }
+                            else if (o is IceprintNodeComponent comp)
+                            {
+                                DragComp(comp, E.mousePosition);
+                                RecordForUndo();
                             }
                         }
                         break;

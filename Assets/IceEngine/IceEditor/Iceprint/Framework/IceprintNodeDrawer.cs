@@ -24,9 +24,9 @@ namespace IceEditor.Framework
 
             #region Configuration
             internal virtual Type NodeType => null;
-            public virtual GUIStyle StlGraphNodeBackground => _stlGraphNodeBackground?.Check() ?? (_stlGraphNodeBackground = new GUIStyle("flow node 0") { margin = new RectOffset(6, 6, 4, 4), padding = new RectOffset(10, 10, 6, 6), contentOffset = new Vector2(0f, 0f), }); GUIStyle _stlGraphNodeBackground;
-            public virtual Vector2 GetSizeTitle(IceprintNode node) => new(128, 16);
-            public virtual void OnGUI_Title(IceprintNode node, Rect rect) => StyleBox(rect.ApplyBorder(0, -1), StlHeader, GetDisplayName(node));
+            public virtual GUIStyle StlGraphNodeBackground => _stlGraphNodeBackground?.Check() ?? (_stlGraphNodeBackground = new GUIStyle("AnimationEventTooltip") { overflow = new RectOffset(2, 2, 2, 2), contentOffset = new Vector2(0f, 0f), }); GUIStyle _stlGraphNodeBackground;
+            public virtual Vector2 GetSizeTitle(IceprintNode node) => new(128, 20);
+            public virtual void OnGUI_Title(IceprintNode node, Rect rect) => StyleBox(rect.ApplyBorder(-4), StlLabel, GetDisplayName(node).Color(IceGUIUtility.CurrentThemeColor).Bold());
             public virtual Vector2 GetSizeBody(IceprintNode node) => new(128, 48);
             public virtual void OnGUI_Body(IceprintNode node, Rect rect) => StyleBox(rect, StlBackground, "╮(๑•́ ₃•̀๑)╭");
             public virtual string GetDisplayName(IceprintNode node) => GetNodeDisplayName(node.GetType().Name);

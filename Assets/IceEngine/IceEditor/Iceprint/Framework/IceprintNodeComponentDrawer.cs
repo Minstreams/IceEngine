@@ -29,7 +29,7 @@ namespace IceEditor.Framework
                 Space(8);
                 Label(node.GetPath(), GUILayout.ExpandWidth(true));
             }
-            public virtual string GetDisplayName(IceprintNodeComponent node) => node.GetType().Name;
+            public virtual string GetDisplayName(IceprintNodeComponent node) => node.ToString();
             #endregion
         }
     }

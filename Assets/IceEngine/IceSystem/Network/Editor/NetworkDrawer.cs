@@ -1,4 +1,5 @@
 ﻿using System;
+using UnityEngine;
 using UnityEditor;
 
 using IceEngine;
@@ -29,6 +30,11 @@ namespace IceEditor.Internal
                         EditorUtility.SetDirty(Setting);
                     }
                 }
+            }
+            using (Horizontal(StlGroup)) using (LabelWidth(80))
+            {
+                Sys.LatencyOverrideMS = _FloatField("延迟模拟(ms)", Sys.LatencyOverrideMS);
+                Label(Sys.LatencySimulationEnabled ? "已开启".Color(Setting.themeColor) : "未开启".Color(Color.gray), StlIce);
             }
             using (GROUP) using (SectionFolder("Runtime")) using (Disable(!EditorApplication.isPlaying))
             {

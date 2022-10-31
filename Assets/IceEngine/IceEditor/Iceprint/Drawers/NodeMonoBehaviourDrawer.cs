@@ -11,7 +11,6 @@ namespace IceEditor.Internal
 {
     public class NodeMonoBehaviourDrawer : Framework.IceprintNodeDrawer<NodeMonoBehaviour>
     {
-        public override GUIStyle StlGraphNodeBackground => _stlGraphNodeBackground?.Check() ?? (_stlGraphNodeBackground = new GUIStyle("NotificationBackground") { overflow = new RectOffset(8, 8, 8, 8), richText = true, }); GUIStyle _stlGraphNodeBackground;
         public override string GetDisplayName(NodeMonoBehaviour node)
         {
             if (node.target.Value != null) return node.target.Value.GetDisplayName();

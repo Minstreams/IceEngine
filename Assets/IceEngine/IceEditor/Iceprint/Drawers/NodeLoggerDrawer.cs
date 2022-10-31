@@ -24,7 +24,7 @@ namespace IceEditor.Internal
                 using (AreaRaw(rect.ApplyBorder(-2))) using (HORIZONTAL)
                 {
                     Label("Logger".Bold(), StlIce);
-                    Label(node.message);
+                    Label(node.message, GUILayout.ExpandWidth(true));
                 }
             }
             else
@@ -36,7 +36,7 @@ namespace IceEditor.Internal
         {
             using (Area(rect)) using (LabelWidth(56))
             {
-                Label("Message");
+                Label("Message", GUILayout.ExpandWidth(true));
                 TextField(ref node.message);
             }
         }
