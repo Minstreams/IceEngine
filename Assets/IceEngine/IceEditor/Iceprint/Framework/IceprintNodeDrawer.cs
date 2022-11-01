@@ -25,12 +25,13 @@ namespace IceEditor.Framework
             #region Configuration
             internal virtual Type NodeType => null;
             public virtual GUIStyle StlGraphNodeBackground => _stlGraphNodeBackground?.Check() ?? (_stlGraphNodeBackground = new GUIStyle("AnimationEventTooltip") { overflow = new RectOffset(2, 2, 2, 2), contentOffset = new Vector2(0f, 0f), }); GUIStyle _stlGraphNodeBackground;
-            public virtual Vector2 GetSizeTitle(IceprintNode node) => new(128, 20);
-            public virtual void OnGUI_Title(IceprintNode node, Rect rect) => StyleBox(rect.ApplyBorder(-4), StlLabel, GetDisplayName(node).Color(IceGUIUtility.CurrentThemeColor).Bold());
+            public virtual GUIStyle StlGraphNodeTitle => _stlGraphNodeTitle?.Check() ?? (_stlGraphNodeTitle = new GUIStyle("CN CountBadge") { margin = new RectOffset(4, 4, 4, 4), padding = new RectOffset(6, 6, 2, 2), fontSize = 16, fontStyle = FontStyle.Bold, fixedHeight = 0f, stretchWidth = false, }.Initialize(stl => { stl.normal.textColor = new Color(0f, 0f, 0f); stl.hover.textColor = IceGUIUtility.CurrentThemeColor; })); GUIStyle _stlGraphNodeTitle;
+            public virtual Vector2 GetSizeTitle(IceprintNode node) => StlGraphNodeTitle.CalcSize(TempContent(GetDisplayName(node))) + new Vector2(StlGraphNodeTitle.margin.horizontal, StlGraphNodeTitle.margin.vertical);
+            public virtual void OnGUI_Title(IceprintNode node, Rect rect) => StyleBox(rect, StlGraphNodeTitle, GetDisplayName(node), true, isHover: node.GetArea().Contains(E.mousePosition));
             public virtual Vector2 GetSizeBody(IceprintNode node) => new(128, 48);
             public virtual void OnGUI_Body(IceprintNode node, Rect rect) => StyleBox(rect, StlBackground, "╮(๑•́ ₃•̀๑)╭");
             public virtual string GetDisplayName(IceprintNode node) => GetNodeDisplayName(node.GetType().Name);
-            public virtual void OnSelect(IceprintNode node) { }
+            public virtual void OnSingleSelect(IceprintNode node) { }
             #endregion
         }
     }
@@ -47,7 +48,7 @@ namespace IceEditor.Framework
         public virtual void OnGUI_Body(Node node, Rect rect) => base.OnGUI_Body(node, rect);
         public sealed override string GetDisplayName(IceprintNode node) => GetDisplayName(node as Node);
         public virtual string GetDisplayName(Node node) => GetNodeDisplayName(typeof(Node).Name);
-        public sealed override void OnSelect(IceprintNode node) => OnSelect(node as Node);
-        public virtual void OnSelect(Node node) { }
+        public sealed override void OnSingleSelect(IceprintNode node) => OnSingleSelect(node as Node);
+        public virtual void OnSingleSelect(Node node) { }
     }
 }

@@ -8,11 +8,10 @@ namespace IceEditor.Internal
 {
     internal class NodeBaseEventsDrawer : Framework.IceprintNodeDrawer<NodeBaseEvents>
     {
-        public override Vector2 GetSizeTitle(NodeBaseEvents node) => new Vector2(96, 16);
-        public override Vector2 GetSizeBody(NodeBaseEvents node) => new Vector2(115, 48);
+        public override Vector2 GetSizeBody(NodeBaseEvents node) => new Vector2(128, 36);
         public override void OnGUI_Body(NodeBaseEvents node, Rect rect)
         {
-            using (Area(rect)) using (LabelWidth(64))
+            using (Area(rect))
             {
                 Label("Base events of MonoBehaviour");
             }

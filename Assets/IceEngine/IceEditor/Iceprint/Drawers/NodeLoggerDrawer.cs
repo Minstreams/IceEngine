@@ -10,21 +10,26 @@ namespace IceEditor.Internal
     {
         public override Vector2 GetSizeBody(NodeLogger node)
         {
-            return new(Mathf.Max(96, StlIce.CalcSize(TempContent(node.message)).x + 12), 48);
+            return new(Mathf.Max(96, StlSearchTextField.CalcSize(TempContent(node.message)).x + 14), 24);
         }
         public override Vector2 GetSizeTitle(NodeLogger node)
         {
-            if (!node.folded) return new(96, 16);
-            return new(StlLabel.CalcSize(TempContent(node.message)).x + 58, 22);
+            if (!node.folded) return base.GetSizeTitle(node);
+            return new(StlLabel.CalcSize(TempContent(node.message)).x + 80, 32);
         }
         public override void OnGUI_Title(NodeLogger node, Rect rect)
         {
             if (node.folded)
             {
-                using (AreaRaw(rect.ApplyBorder(-2))) using (HORIZONTAL)
+                using (Area(rect)) using (HORIZONTAL)
                 {
-                    Label("Logger".Bold(), StlIce);
-                    Label(node.message, GUILayout.ExpandWidth(true));
+                    Label("Logger", StlGraphNodeTitle);
+                    using (VERTICAL)
+                    {
+                        Space();
+                        Label(node.message, GUILayout.ExpandWidth(true));
+                        Space();
+                    }
                 }
             }
             else
@@ -34,10 +39,9 @@ namespace IceEditor.Internal
         }
         public override void OnGUI_Body(NodeLogger node, Rect rect)
         {
-            using (Area(rect)) using (LabelWidth(56))
+            using (Area(rect))
             {
-                Label("Message", GUILayout.ExpandWidth(true));
-                TextField(ref node.message);
+                TextField(ref node.message, StlSearchTextField);
             }
         }
     }

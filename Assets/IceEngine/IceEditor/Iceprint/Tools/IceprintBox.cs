@@ -609,7 +609,7 @@ namespace IceEditor.Internal
                                 if (!E.control && !E.shift)
                                 {
                                     selectedNodes.Clear();
-                                    drawer.OnSelect(node);
+                                    drawer.OnSingleSelect(node);
                                 }
                                 selectedNodes.Add(node);
                             }

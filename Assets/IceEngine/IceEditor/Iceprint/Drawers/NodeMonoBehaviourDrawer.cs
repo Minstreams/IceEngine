@@ -83,7 +83,7 @@ namespace IceEditor.Internal
             }
         }
 
-        public override void OnSelect(NodeMonoBehaviour node)
+        public override void OnSingleSelect(NodeMonoBehaviour node)
         {
             var target = node.target.Value;
             if (target != null)
