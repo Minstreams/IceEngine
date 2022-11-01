@@ -8,9 +8,10 @@ namespace IceEditor.Internal
 {
     internal class NodeLoggerDrawer : Framework.IceprintNodeDrawer<NodeLogger>
     {
+        GUIStyle StlTextfield => "textfield";
         public override Vector2 GetSizeBody(NodeLogger node)
         {
-            return new(Mathf.Max(96, StlSearchTextField.CalcSize(TempContent(node.message)).x + 14), 24);
+            return new(Mathf.Max(96, StlTextfield.CalcSize(TempContent(node.message)).x + 8), 24);
         }
         public override Vector2 GetSizeTitle(NodeLogger node)
         {
@@ -41,7 +42,7 @@ namespace IceEditor.Internal
         {
             using (Area(rect))
             {
-                TextField(ref node.message, StlSearchTextField);
+                TextField(ref node.message, StlTextfield);
             }
         }
     }

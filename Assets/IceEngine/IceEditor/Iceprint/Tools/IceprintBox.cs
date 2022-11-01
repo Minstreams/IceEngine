@@ -852,7 +852,8 @@ namespace IceEditor.Internal
                             {
                                 Vector2 sText = StlGraphPortName.CalcSize(TempContent(port.name));
                                 Rect rText = new(port.IsOutport ? rPort.xMax + StlGraphPortName.margin.left : rPort.x - sText.x - StlGraphPortName.margin.right, rPort.y + 0.5f * (rPort.height - sText.y), sText.x, sText.y);
-                                StyleBox(rText, StlGraphPortName, port.name, isHover: hover);
+                                bool bHover = hover ?? rText.Contains(E.mousePosition);
+                                StyleBox(rText, StlGraphPortName, port.name, isHover: bHover, isActive: bHover);
                             }
 
                             void DrawTextWithType(bool focus)
