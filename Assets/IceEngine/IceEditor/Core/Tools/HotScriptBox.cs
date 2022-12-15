@@ -313,7 +313,6 @@ using static IceEditor.IceGUIAuto;
         public void Compile() => Compile(CurScript.code, CurScript.type == HotScriptType.GUI, CurScript.name);
         #endregion
 
-
         #region GUI
         readonly static Regex jsonReg = new("^\\{\\r?\\n\\s*\"name\":[\\w\\W]*\\}\\s*$", RegexOptions.Multiline);
         void BoxScriptTab(int i)
@@ -494,7 +493,6 @@ using static IceEditor.IceGUIAuto;
             }
         }
         #endregion
-
 
         #region ReplaceTest
         MethodInfo mCur;
