@@ -8,7 +8,8 @@ using UnityEngine.Events;
 
 [ThemeColor(1, 0, 1)]
 [LabelWidth(48)]
-public class TestComp : IceprintNodeComponent
+    [IceprintNode]
+public class TestComp : MonoBehaviour
 {
     [Group("Output")]
     [IceprintPort]

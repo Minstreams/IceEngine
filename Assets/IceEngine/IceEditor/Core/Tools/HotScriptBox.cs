@@ -189,6 +189,25 @@ using static IceEditor.IceGUIAuto;
             Setting.scripts.Add(CurScript = new HotScriptItem());
             Setting.Save();
         }
+
+        void RemoveScriptAt(int i)
+        {
+            CallNextFrame(() =>
+            {
+                Setting.scripts.RemoveAt(i);
+                int j = i;
+                if (j >= Setting.scripts.Count) --j;
+                if (j >= 0) CurScript = Setting.scripts[j];
+                else CurScript = null;
+                Setting.Save();
+            });
+        }
+
+        Action updateAction = null;
+        void CallNextFrame(Action action)
+        {
+            updateAction += action;
+        }
         #endregion
 
         #region Life Circle
@@ -201,6 +220,11 @@ using static IceEditor.IceGUIAuto;
         }
         private void Update()
         {
+            if (updateAction != null)
+            {
+                updateAction();
+                updateAction = null;
+            }
             Repaint();
         }
         #endregion
@@ -290,91 +314,93 @@ using static IceEditor.IceGUIAuto;
         #endregion
 
 
-
+        #region GUI
         readonly static Regex jsonReg = new("^\\{\\r?\\n\\s*\"name\":[\\w\\W]*\\}\\s*$", RegexOptions.Multiline);
+        void BoxScriptTab(int i)
+        {
+            var script = Setting.scripts[i];
+            var name = script.GetDisplayName(i);
+            bool selected = CurScript == script;
+            if (selected)
+            {
+                var stlOn = i == 0 ? StlScriptTabOnFirst : StlScriptTabOn;
+                StyleBox(GetRect(TempContent(name), stlOn), stlOn, name, on: true);
+                var rBtn = GetRect(1, 16);
+                if (GUI.Button(rBtn.MoveEdge(left: -15).Move(-4, 2), string.Empty, "WinBtnClose"))
+                {
+                    RemoveScriptAt(i);
+                }
+            }
+            else
+            {
+                if (ToggleButton(name, false, StlScriptTab)) CurScript = script;
+            }
+        }
+        List<int> lineCounts = new();
         protected override void OnWindowGUI(Rect position)
         {
-            var indexList = new List<List<HotScriptItem>>();
-            float maxWidth = EditorGUIUtility.currentViewWidth - 16;
-            float width = 0;
-            for (int i = 0, l = 4; i < Setting.scripts.Count; ++i)
+            // 计算lineCounts
             {
-                var script = Setting.scripts[i];
-                if (indexList.Count <= l) indexList.Add(new List<HotScriptItem>());
-                var line = indexList[l];
-
-                line.Add(script);
-            }
-
-            //// Dock
-            //foreach(var line in indexList)
-            //{
-            //    //using (Horizontal(StlScriptTabDock))
-            //    //{
-            //    //    foreach(var script in line)
-            //    //    {
-            //    //        var name = script.name.IsNullOrEmpty() ? $"指令{i}" : script.name;
-            //    //        bool selected = CurScript == script;
-            //    //        if (selected)
-            //    //        {
-            //    //            var stlOn = i == 0 ? StlScriptTabOnFirst : StlScriptTabOn;
-            //    //            StyleBox(GetRect(TempContent(name), stlOn), stlOn, name, on: true);
-            //    //            var rBtn = GetRect(1, 16);
-            //    //            if (GUI.Button(rBtn.MoveEdge(left: -15).Move(-4, 2), string.Empty, "WinBtnClose"))
-            //    //            {
-            //    //                Setting.scripts.RemoveAt(i);
-            //    //                int j = i;
-            //    //                if (j >= Setting.scripts.Count) --j;
-            //    //                if (j >= 0) CurScript = Setting.scripts[j];
-            //    //                else CurScript = null;
-            //    //                Setting.Save();
-            //    //                --i;
-            //    //            }
-            //    //        }
-            //    //        else
-            //    //        {
-            //    //            if (ToggleButton(name, false, StlScriptTab)) CurScript = script;
-            //    //        }
-            //    //    }
-            //    //    Shader.EnableKeyword("_VT_OFF")
-            //    //}
-            //}
-            using (Horizontal(StlScriptTabDock))
-            {
+                lineCounts.Clear();
+                float maxWidth = Mathf.Max(16, EditorGUIUtility.currentViewWidth - 40);
+                float width = 0;
+                int count = 0;
                 for (int i = 0; i < Setting.scripts.Count; ++i)
                 {
                     var script = Setting.scripts[i];
-                    using (HORIZONTAL)
+                    var name = script.GetDisplayName(i);
+                    var w = StlScriptTab.CalcSize(TempContent(name)).x;
+
+                    width += w;
+                    ++count;
+
+                    if (width > maxWidth)
                     {
-                        var name = script.name.IsNullOrEmpty() ? $"指令{i}" : script.name;
-                        bool selected = CurScript == script;
-                        if (selected)
+                        if (count > 1)
                         {
-                            var stlOn = i == 0 ? StlScriptTabOnFirst : StlScriptTabOn;
-                            StyleBox(GetRect(TempContent(name), stlOn), stlOn, name, on: true);
-                            var rBtn = GetRect(1, 16);
-                            if (GUI.Button(rBtn.MoveEdge(left: -15).Move(-4, 2), string.Empty, "WinBtnClose"))
-                            {
-                                Setting.scripts.RemoveAt(i);
-                                int j = i;
-                                if (j >= Setting.scripts.Count) --j;
-                                if (j >= 0) CurScript = Setting.scripts[j];
-                                else CurScript = null;
-                                Setting.Save();
-                                --i;
-                            }
+                            lineCounts.Add(count - 1);
+
+                            width = w;
+                            count = 1;
                         }
                         else
                         {
-                            if (ToggleButton(name, false, StlScriptTab)) CurScript = script;
+                            lineCounts.Add(count);
+
+                            width = 0;
+                            count = 0;
                         }
                     }
                 }
-                Space();
-                if (Button(string.Empty, "OL Plus", GUILayout.ExpandWidth(false))) AddScript();
+
+                if (count > 0)
+                {
+                    lineCounts.Add(count);
+                }
             }
 
-            var r = position.MoveEdge(top: indexList.Count * 24 + 24);
+            // 画Tab
+            {
+                int i = 0;
+                for (int l = 0; l < lineCounts.Count; l++)
+                {
+                    int lineCount = lineCounts[l];
+                    using (Horizontal(StlScriptTabDock))
+                    {
+                        for (int k = 0; k < lineCount; ++k)
+                        {
+                            BoxScriptTab(i++);
+                        }
+                        Space();
+                        if (l == lineCounts.Count - 1 && Button(string.Empty, "OL Plus", GUILayout.ExpandWidth(false)))
+                        {
+                            AddScript();
+                        }
+                    }
+                }
+            }
+
+            var r = position.MoveEdge(top: lineCounts.Count * 24);
             using (SubArea(r, out var rMain, out var rSub, "MainArea", 280, IceGUIDirection.Left, "dragtab scroller prev"))
             {
                 using (Area(rMain)) using (GUICHECK)
@@ -467,6 +493,7 @@ using static IceEditor.IceGUIAuto;
                 }
             }
         }
+        #endregion
 
 
         #region ReplaceTest

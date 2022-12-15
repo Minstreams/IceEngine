@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using IceEngine;
 using IceEditor.Framework;
 
 namespace IceEditor.Internal
@@ -21,5 +22,6 @@ namespace IceEditor.Internal
         public HotScriptType type;
         public List<string> assemblies = new();
         public string code = @"";
+        public string GetDisplayName(int index = 0) => name.IsNullOrEmpty() ? $"指令{index}" : name;
     }
 }
