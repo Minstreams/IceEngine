@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Net;
 using System.Net.Sockets;
 using System.Threading;
+using IceEngine.Threading;
 
 namespace IceEngine.Networking.Framework
 {
@@ -50,7 +51,7 @@ namespace IceEngine.Networking.Framework
             {
                 buffer = new byte[InitialBufferSize];
                 bufferMagic = new byte[1] { MagicByte };
-                Log("Client activated……");
+                Log("Client activated");
             }
             catch (Exception ex)
             {
@@ -85,51 +86,45 @@ namespace IceEngine.Networking.Framework
         #region UDP
 
         #region Interface
-        public bool IsUdpOn => udpClient != null;
+        public bool IsUdpOn => udpClient is not null;
         public void OpenUDP()
         {
-            if (udpClient != null)
+            if (IsUdpOn)
             {
                 Log("UDP already opened!");
                 return;
             }
-            while (true)
+
+            try
             {
-                try
-                {
-                    udpClient = new UdpClient(ClientUDPPort, AddressFamily.InterNetwork) { EnableBroadcast = true };
-                    break;
-                }
-                catch (SocketException ex)
-                {
-                    Log(ex);
-                    throw ex;
-                }
-                catch (Exception ex)
-                {
-                    Log(ex);
-                    CloseUDP();
-                    throw ex;
-                }
+                udpClient = new UdpClient(ClientUDPPort, AddressFamily.InterNetwork) { EnableBroadcast = true };
             }
-            udpReceiveThread = new Thread(UDPReceiveThread);
-            udpReceiveThread.Start();
+            catch (Exception ex)
+            {
+                Log(ex);
+                CloseUDP();
+                return;
+            }
+
+            udpReceiveThread = new IceThread(UDPReceiveThread);
+            Log("UDP opened");
         }
         public void CloseUDP()
         {
-            if (udpClient is null)
+            if (!IsUdpOn)
             {
                 Log("UDP already closed!");
                 return;
             }
-            udpReceiveThread?.Abort();
+            udpReceiveThread?.Dispose();
+            udpReceiveThread = null;
             udpClient?.Close();
             udpClient = null;
+            Log("UDP closed");
         }
         public void UDPSend(Pkt pkt, IPEndPoint remote)
         {
-            if (udpClient
-                is null)
+            if (!IsUdpOn)
             {
                 Log("UDP not opened!");
                 return;
@@ -142,18 +137,19 @@ namespace IceEngine.Networking.Framework
 
         #region PRIVATE
         UdpClient udpClient;
-        Thread udpReceiveThread;
+        IceThread udpReceiveThread;
 
-        void UDPReceiveThread()
+        void UDPReceiveThread(CancellationTokenSource cancel)
         {
             Log("Start receiving udp packet……:" + ClientUDPPort);
             while (true)
             {
                 try
                 {
-                    IPEndPoint remoteIP = new IPEndPoint(IPAddress.Any, ClientUDPPort);
+                    IPEndPoint remoteIP = new(IPAddress.Any, ClientUDPPort);
                     byte[] buffer = udpClient.Receive(ref remoteIP);
                     // Block --------------------------------
+                    cancel.Token.ThrowIfCancellationRequested();
                     Pkt pkt = IceBinaryUtility.FromBytes(buffer) as Pkt;
                     Log($"UDPReceive{remoteIP}:{pkt}|{buffer.Hex()}");
                     CallUDPReceive(pkt, remoteIP);
@@ -163,7 +159,7 @@ namespace IceEngine.Networking.Framework
                     Log(ex);
                     continue;
                 }
-                catch (ThreadAbortException)
+                catch (OperationCanceledException)
                 {
                     Log("UDPReceive Thread Aborted.");
                     return;
@@ -200,34 +196,33 @@ namespace IceEngine.Networking.Framework
                 Log("Connection already existed!");
                 return;
             }
-            while (true)
+
+            try
             {
-                try
-                {
-                    client = new TcpClient(AddressFamily.InterNetwork);
-                    break;
-                }
-                catch (SocketException ex)
-                {
-                    Log(ex);
-                    if (ex.SocketErrorCode == SocketError.AddressAlreadyInUse)
-                    {
-                        // 系统自动分配的port被占用，理论上不可能出现这种情况
-                        throw ex;
-                    }
-                    else throw ex;
-                }
-                catch (Exception ex)
-                {
-                    Log(ex);
-                    client.Close();
-                    client = null;
-                    throw ex;
-                }
+                client = new TcpClient(AddressFamily.InterNetwork);
             }
+            catch (SocketException ex)
+            {
+                Log(ex);
+                client?.Close();
+                client = null;
+
+                if (ex.SocketErrorCode == SocketError.AddressAlreadyInUse)
+                {
+                    // 系统自动分配的port被占用，理论上不可能出现这种情况
+                }
+                return;
+            }
+            catch (Exception ex)
+            {
+                Log(ex);
+                client?.Close();
+                client = null;
+                return;
+            }
+
             ServerIPAddress = serverIPAddress;
-            connectThread = new Thread(ConnectThread);
-            connectThread.Start();
+            connectThread = new IceThread(ConnectThread);
         }
         public void StopTCPConnecting()
         {
@@ -237,11 +232,14 @@ namespace IceEngine.Networking.Framework
                 Log("Connection already closed!");
                 return;
             }
-            connectThread?.Abort();
-            receiveThread?.Abort();
+            connectThread?.Dispose();
+            connectThread = null;
+            receiveThread?.Dispose();
+            receiveThread = null;
             stream?.Close();
             client?.Close();
             client = null;
+            Log("Connection closed");
         }
         public void Send(byte[] data)
         {
@@ -261,13 +259,13 @@ namespace IceEngine.Networking.Framework
         #region PRIVATE
         //int port;
         TcpClient client;
-        Thread connectThread;
+        IceThread connectThread;
         NetworkStream stream;
-        Thread receiveThread;
+        IceThread receiveThread;
         byte[] buffer;
         readonly byte[] bufferMagic;
 
-        void ConnectThread()
+        void ConnectThread(CancellationTokenSource cancel)
         {
             do
             {
@@ -276,6 +274,7 @@ namespace IceEngine.Networking.Framework
                 {
                     client.Connect(new IPEndPoint(ServerIPAddress, ServerTCPPort));
                     // Block --------------------------------
+                    cancel.Token.ThrowIfCancellationRequested();
                 }
                 catch (SocketException ex)
                 {
@@ -288,6 +287,7 @@ namespace IceEngine.Networking.Framework
                     }
                     else if (ex.SocketErrorCode == SocketError.AddressNotAvailable)
                     {
+                        Log(ex);
                         client.Close();
                         client = null;
                         return;
@@ -295,7 +295,7 @@ namespace IceEngine.Networking.Framework
                     Thread.Sleep(1000);
                     continue;
                 }
-                catch (ThreadAbortException)
+                catch (OperationCanceledException)
                 {
                     Log("Connect Thread Aborted.");
                     return;
@@ -312,10 +312,9 @@ namespace IceEngine.Networking.Framework
             Log("Connected!");
 
             stream = client.GetStream();
-            receiveThread = new Thread(ReceiveThread);
-            receiveThread.Start();
+            receiveThread = new IceThread(ReceiveThread);
         }
-        void ReadStream(ushort length)
+        void ReadStream(ushort length, CancellationTokenSource cancel)
         {
             if (buffer.Length < length)
             {
@@ -328,16 +327,17 @@ namespace IceEngine.Networking.Framework
             {
                 int count = stream.Read(buffer, offset, length - offset);
                 // Block --------------------------------
+                cancel.Token.ThrowIfCancellationRequested();
                 if (count <= 0) throw new Exception("Disconnected from server!");
 
                 offset += count;
             }
         }
-        void ReceiveThread()
+        void ReceiveThread(CancellationTokenSource cancel)
         {
             try
             {
-                ReadStream(4);
+                ReadStream(4, cancel);
                 NetId = buffer.ToInt32();
                 CallConnection();
 
@@ -348,22 +348,23 @@ namespace IceEngine.Networking.Framework
                     {
                         int count = stream.Read(buffer, 0, 1);
                         // Block --------------------------------
+                        cancel.Token.ThrowIfCancellationRequested();
                         if (count <= 0) throw new Exception("Disconnected from server!");
                     }
                     while (buffer[0] != MagicByte);
 
                     // Length
-                    ReadStream(2);
+                    ReadStream(2, cancel);
                     ushort length = buffer.ToUInt16();
 
                     // Data
-                    ReadStream(length);
+                    ReadStream(length, cancel);
                     Pkt pkt = IceBinaryUtility.FromBytes(buffer) as Pkt;
                     Log($"Receive{client.Client.LocalEndPoint}:{pkt}|{buffer.Hex(0, length)}");
                     CallReceive(pkt);
                 }
             }
-            catch (ThreadAbortException)
+            catch (OperationCanceledException)
             {
                 Log("Receive Thread Aborted.");
             }

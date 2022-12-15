@@ -89,6 +89,8 @@ namespace Ice
             Log("Shutdown Server");
             Server?.Destroy();
         }
+        public static void ServerOpenUDP() => Server?.OpenUDP();
+        public static void ServerCloseUDP() => Server?.CloseUDP();
         public static void ServerOpenTCP() => Server?.OpenTCP();
         public static void ServerCloseTCP() => Server?.CloseTCP();
         public static void ServerDisconnectAll() => Server?.DisconnectAll();
