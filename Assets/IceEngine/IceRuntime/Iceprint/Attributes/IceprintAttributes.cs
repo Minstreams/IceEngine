@@ -9,6 +9,12 @@ namespace IceEngine
     public class IceprintPortAttribute : Attribute { }
 
     /// <summary>
+    /// 用于标注组件节点
+    /// </summary>
+    [AttributeUsage(AttributeTargets.Class, AllowMultiple = false, Inherited = false)]
+    public class IceprintNodeAttribute : Attribute { }
+
+    /// <summary>
     /// 标记一个IceprintNode的菜单路径
     /// </summary>
     [AttributeUsage(AttributeTargets.Class, AllowMultiple = true, Inherited = false)]

@@ -1,7 +1,10 @@
-﻿using System.Collections;
+﻿using System;
+using System.Linq;
+using System.Collections;
 using System.Collections.Generic;
 
 using UnityEngine;
+using UnityEditor;
 
 using IceEngine;
 using IceEngine.Framework;
@@ -10,8 +13,6 @@ using IceEngine.IceprintNodes;
 using static IceEditor.IceGUI;
 using static IceEditor.IceGUIAuto;
 using IceEditor.Framework;
-using UnityEditor;
-using System;
 
 namespace IceEditor.Internal
 {
@@ -268,7 +269,7 @@ namespace IceEditor.Internal
 
             foreach (var g in Graph.gameObject.scene.GetRootGameObjects())
             {
-                var nodeComps = g.GetComponentsInChildren<IceprintNodeComponent>();
+                var nodeComps = g.GetComponentsInChildren<MonoBehaviour>().Where(c => c.IsIceprintNode());
                 foreach (var nodeComp in nodeComps)
                 {
                     gm.AddItem(new GUIContent(GetMenuPath(nodeComp)), false, () =>
@@ -287,7 +288,7 @@ namespace IceEditor.Internal
                 }
             }
 
-            string GetMenuPath(IceprintNodeComponent node) => $"Components/{node.GetPath()}";
+            string GetMenuPath(MonoBehaviour node) => $"Components/{node.GetPath()}";
 
             gm.ShowAsContext();
         }
@@ -318,8 +319,9 @@ namespace IceEditor.Internal
         static GUIStyle StlItemButton => _stlItemButton?.Check() ?? (_stlItemButton = new GUIStyle("textfield") { margin = new RectOffset(2, 2, 0, 0), padding = new RectOffset(4, 4, 1, 1), fontSize = 11, richText = true, stretchWidth = false, }); static GUIStyle _stlItemButton;
 
         [HierarchyItemGUICallback]
-        static void NodeComponentMarkGUI(IceprintNodeComponent comp, Rect selectionRect)
+        static void NodeComponentMarkGUI(MonoBehaviour comp, Rect selectionRect)
         {
+            if (!comp.IsIceprintNode()) return;
             Label(comp.GetType().Name, StlNodeLabel);
         }
 
@@ -931,7 +933,7 @@ namespace IceEditor.Internal
                     // 拖拽
                     case EventType.DragPerform:
                         var objs = DragAndDrop.objectReferences;
-                        void DragComp(IceprintNodeComponent comp, Vector3 pos)
+                        void DragComp(MonoBehaviour comp, Vector3 pos)
                         {
                             var node = Graph.AddNode(new NodeMonoBehaviour()
                             {
@@ -946,7 +948,8 @@ namespace IceEditor.Internal
                         {
                             if (o is GameObject go)
                             {
-                                var comps = go.GetComponents<IceprintNodeComponent>();
+                                var comps = go.GetComponents<MonoBehaviour>().Where(c => c.IsIceprintNode()).ToArray();
+
                                 if (comps.Length > 0) selectedNodes.Clear();
                                 Vector2 offset = Vector2.zero;
                                 foreach (var comp in comps)
@@ -956,7 +959,7 @@ namespace IceEditor.Internal
                                 }
                                 if (comps.Length > 0) RecordForUndo();
                             }
-                            else if (o is IceprintNodeComponent comp)
+                            else if (o is MonoBehaviour comp)
                             {
                                 DragComp(comp, E.mousePosition);
                                 RecordForUndo();

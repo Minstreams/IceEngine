@@ -1,4 +1,5 @@
 ﻿using System;
+using UnityEngine;
 using IceEngine.Framework;
 
 namespace IceEngine.IceprintNodes
@@ -8,7 +9,7 @@ namespace IceEngine.IceprintNodes
     {
         #region Serialized Data
         public Type targetType;
-        public NodeField<IceprintNodeComponent> target = new();
+        public NodeField<MonoBehaviour> target = new();
         #endregion
 
         public override void Initialize()

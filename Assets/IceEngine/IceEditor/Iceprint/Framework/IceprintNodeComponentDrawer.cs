@@ -16,36 +16,31 @@ namespace IceEditor.Framework
         {
             #region Configuration
             internal virtual Type NodeType => null;
-            public virtual Vector2 GetSizeTitle(IceprintNodeComponent node) => new(128, 16);
-            public virtual Vector2 GetSizeBody(IceprintNodeComponent node) => new(224, 32);
-            public virtual void OnGUI_Title(IceprintNodeComponent node, Rect rect)
+            public virtual GUIStyle StlGraphNodeTitle => _stlGraphNodeTitle?.Check() ?? (_stlGraphNodeTitle = new GUIStyle("CN CountBadge") { margin = new RectOffset(4, 4, 4, 4), padding = new RectOffset(6, 6, 2, 2), fontSize = 16, fontStyle = FontStyle.Bold, fixedHeight = 0f, stretchWidth = false, }.Initialize(stl => { stl.normal.textColor = new Color(0f, 0f, 0f); stl.hover.textColor = IceGUIUtility.CurrentThemeColor; })); GUIStyle _stlGraphNodeTitle;
+            public virtual Vector2 GetSizeTitle(MonoBehaviour node) => StlGraphNodeTitle.CalcSize(TempContent(GetDisplayName(node))) + new Vector2(StlGraphNodeTitle.margin.horizontal, StlGraphNodeTitle.margin.vertical);
+            public virtual Vector2 GetSizeBody(MonoBehaviour node) => new(192, 32);
+            public virtual void OnGUI_Title(MonoBehaviour node, Rect rect) => StyleBox(rect.Resize(GetSizeTitle(node)), StlGraphNodeTitle, GetDisplayName(node), true, rect.MoveEdge(bottom: GetSizeBody(node).y).Contains(E.mousePosition));
+            public virtual void OnGUI_Body(MonoBehaviour node, Rect rect)
             {
-                StyleBox(rect, StlLabel, GetDisplayName(node).Color(IceGUIUtility.CurrentThemeColor).Bold());
+                StyleBox(rect, StlLabelNonWrap, node.GetPath(), true);
             }
-            public virtual void OnGUI_Body(IceprintNodeComponent node, Rect rect)
-            {
-                using var _ = Area(rect);
-
-                Space(8);
-                Label(node.GetPath(), GUILayout.ExpandWidth(true));
-            }
-            public virtual string GetDisplayName(IceprintNodeComponent node) => node.ToString();
+            public virtual string GetDisplayName(MonoBehaviour node) => node.ToString();
             #endregion
         }
     }
 
-    public abstract class IceprintNodeComponentDrawer<NodeComp> : Internal.IceprintNodeComponentDrawer where NodeComp : IceprintNodeComponent
+    public abstract class IceprintNodeComponentDrawer<NodeComp> : Internal.IceprintNodeComponentDrawer where NodeComp : MonoBehaviour
     {
         internal sealed override Type NodeType => typeof(NodeComp);
-        public sealed override Vector2 GetSizeTitle(IceprintNodeComponent node) => GetSizeTitle(node as NodeComp);
+        public sealed override Vector2 GetSizeTitle(MonoBehaviour node) => GetSizeTitle(node as NodeComp);
         public virtual Vector2 GetSizeTitle(NodeComp node) => base.GetSizeTitle(node);
-        public sealed override void OnGUI_Title(IceprintNodeComponent node, Rect rect) => OnGUI_Title(node as NodeComp, rect);
+        public sealed override void OnGUI_Title(MonoBehaviour node, Rect rect) => OnGUI_Title(node as NodeComp, rect);
         public virtual void OnGUI_Title(NodeComp node, Rect rect) => base.OnGUI_Title(node, rect);
-        public sealed override Vector2 GetSizeBody(IceprintNodeComponent node) => GetSizeBody(node as NodeComp);
+        public sealed override Vector2 GetSizeBody(MonoBehaviour node) => GetSizeBody(node as NodeComp);
         public virtual Vector2 GetSizeBody(NodeComp node) => base.GetSizeBody(node);
-        public sealed override void OnGUI_Body(IceprintNodeComponent node, Rect rect) => OnGUI_Body(node as NodeComp, rect);
+        public sealed override void OnGUI_Body(MonoBehaviour node, Rect rect) => OnGUI_Body(node as NodeComp, rect);
         public virtual void OnGUI_Body(NodeComp node, Rect rect) => base.OnGUI_Body(node, rect);
-        public sealed override string GetDisplayName(IceprintNodeComponent node) => GetDisplayName(node as NodeComp);
+        public sealed override string GetDisplayName(MonoBehaviour node) => GetDisplayName(node as NodeComp);
         public virtual string GetDisplayName(NodeComp node) => typeof(NodeComp).Name;
     }
 }

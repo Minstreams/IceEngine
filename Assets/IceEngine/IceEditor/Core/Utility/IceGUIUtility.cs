@@ -205,7 +205,7 @@ namespace IceEditor
                 // 只对根类型处理Methods
                 if (typeof(MonoBehaviour).IsAssignableFrom(type) || typeof(ScriptableObject).IsAssignableFrom(type))
                 {
-                    var methods = type.GetMethods();
+                    var methods = type.GetMethods(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
                     foreach (var m in methods)
                     {
                         // 处理 Button
@@ -686,7 +686,7 @@ namespace IceEditor
             }
         }
         static Dictionary<Type, IceprintNodeComponentDrawer> _nodeComponentDrawerMap = null;
-        public static IceprintNodeComponentDrawer GetDrawer(this IceprintNodeComponent node) => NodeComponentDrawerMap.TryGetValue(node.GetType(), out var drawer) ? drawer : _defaultComponentDrawer;
+        public static IceprintNodeComponentDrawer GetDrawer(this MonoBehaviour node) => NodeComponentDrawerMap.TryGetValue(node.GetType(), out var drawer) ? drawer : _defaultComponentDrawer;
         static readonly IceprintNodeComponentDrawer _defaultComponentDrawer = new();
         #endregion
 
@@ -698,11 +698,11 @@ namespace IceEditor
             node.GetSizeBody().y + node.GetSizeTitle().y
         );
         public static Vector2 GetSizeTitle(this IceprintNode node) => node.GetDrawer().GetSizeTitle(node);
-        public static Vector2 GetSizeTitle(this IceprintNodeComponent node) => node.GetDrawer().GetSizeTitle(node);
+        public static Vector2 GetSizeTitle(this MonoBehaviour node) => node.GetDrawer().GetSizeTitle(node);
         public static Vector2 GetSizeBody(this IceprintNode node) => node.GetDrawer().GetSizeBody(node);
-        public static Vector2 GetSizeBody(this IceprintNodeComponent node) => node.GetDrawer().GetSizeBody(node);
+        public static Vector2 GetSizeBody(this MonoBehaviour node) => node.GetDrawer().GetSizeBody(node);
         public static string GetDisplayName(this IceprintNode node) => node.GetDrawer().GetDisplayName(node);
-        public static string GetDisplayName(this IceprintNodeComponent node) => node.GetDrawer().GetDisplayName(node);
+        public static string GetDisplayName(this MonoBehaviour node) => node.GetDrawer().GetDisplayName(node);
         #endregion
 
         #region Toolbar

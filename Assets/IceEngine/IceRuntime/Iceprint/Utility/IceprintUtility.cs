@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Reflection;
 using System.Linq.Expressions;
+using UnityEngine;
 using UnityEngine.Events;
 
 using IceEngine.Internal;
+using System.Collections.Generic;
 
 namespace IceEngine
 {
@@ -53,5 +55,21 @@ namespace IceEngine
             }
         }
         static MethodInfo[] _outportInvokeMethods = null;
+
+        static HashSet<Type> _nodeComponentTypeSet = null;
+        internal static HashSet<Type> NodeComponentTypeSet
+        {
+            get
+            {
+                if (_nodeComponentTypeSet == null)
+                {
+                    _nodeComponentTypeSet = new HashSet<Type>();
+                    var ts = UnityEditor.TypeCache.GetTypesWithAttribute<IceprintNodeAttribute>();
+                    foreach (var t in ts) _nodeComponentTypeSet.Add(t);
+                }
+                return _nodeComponentTypeSet;
+            }
+        }
+        public static bool IsIceprintNode(this MonoBehaviour self) => NodeComponentTypeSet.Contains(self.GetType());
     }
 }

@@ -6,6 +6,7 @@ using IceEngine;
 using IceEngine.Framework;
 using IceEngine.IceprintNodes;
 using static IceEditor.IceGUI;
+using System.Reflection;
 
 namespace IceEditor.Internal
 {
@@ -14,18 +15,18 @@ namespace IceEditor.Internal
         public override string GetDisplayName(NodeMonoBehaviour node)
         {
             if (node.target.Value != null) return node.target.Value.GetDisplayName();
-            if (node.targetType != null) return $"{node.targetType.Name.Color(IceGUIUtility.CurrentThemeColor)} (Missing)";
+            if (node.targetType != null) return $"{"Missing".Color(Color.red)} ({node.targetType.Name})";
             return "空组件";
         }
         public override Vector2 GetSizeTitle(NodeMonoBehaviour node)
         {
             if (node.target.Value != null) return node.target.Value.GetSizeTitle();
-            return new(128, 16);
+            return base.GetSizeTitle(node);
         }
         public override Vector2 GetSizeBody(NodeMonoBehaviour node)
         {
             if (node.target.Value != null) return node.target.Value.GetSizeBody();
-            return new(224, 32);
+            return new(192, 32);
         }
         public override void OnGUI_Title(NodeMonoBehaviour node, Rect rect)
         {
@@ -36,7 +37,7 @@ namespace IceEditor.Internal
                 return;
             }
 
-            StyleBox(rect, StlLabel, GetDisplayName(node).Color(IceGUIUtility.CurrentThemeColor).Bold());
+            base.OnGUI_Title(node, rect);
         }
 
         public override void OnGUI_Body(NodeMonoBehaviour node, Rect rect)
@@ -48,17 +49,17 @@ namespace IceEditor.Internal
                 return;
             }
 
-            using (AreaRaw(rect)) using (GUICHECK)
+            using (Area(rect)) using (GUICHECK)
             {
-                IceprintNodeComponent val;
-                Space(8);
+                MonoBehaviour val;
+                Space(6);
                 if (node.targetType == null)
                 {
                     val = _ObjectField(target, true);
                 }
                 else
                 {
-                    val = (IceprintNodeComponent)EditorGUILayout.ObjectField(target, node.targetType, true);
+                    val = (MonoBehaviour)EditorGUILayout.ObjectField(target, node.targetType, true);
                 }
 
                 if (GUIChanged && val != target)

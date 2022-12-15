@@ -134,6 +134,21 @@ namespace IceEngine
         /// </summary>
         public static Rect MoveEdge(this Rect self, float left = 0, float right = 0, float top = 0, float bottom = 0) => Rect.MinMaxRect(self.xMin + left, self.yMin + top, self.xMax + right, self.yMax + bottom);
         /// <summary>
+        /// 沿指定pivot缩放
+        /// </summary>
+        public static Rect Resize(this Rect self, float? width = null, float? height = null, float pivotX = 0, float pivotY = 0)
+        {
+            float ow = self.width;
+            float oh = self.height;
+            float w = width ?? ow;
+            float h = height ?? oh;
+            return new Rect(self.x + pivotX * (ow - w), self.y + pivotY * (oh - h), w, h);
+        }
+        /// <summary>
+        /// 沿指定pivot缩放
+        /// </summary>
+        public static Rect Resize(this Rect self, Vector2 size, Vector2 pivot = default) => new Rect(self.position + pivot * (self.size - size), size);
+        /// <summary>
         /// 移动
         /// </summary>
         public static Rect Move(this Rect self, float x = 0, float y = 0) => new Rect(self.x + x, self.y + y, self.width, self.height);
@@ -162,10 +177,6 @@ namespace IceEngine
         /// 是否包含另一个Rect
         /// </summary>
         public static bool Contains(this Rect self, Rect other) => self.xMin <= other.xMin && self.xMax >= other.xMax && self.yMin <= other.yMin && self.yMax >= other.yMax;
-        #endregion
-
-        #region Vector2
-        public static Rect RangeRect(this Vector2 from, Vector2 to) => Rect.MinMaxRect(Mathf.Min(from.x, to.x), Mathf.Min(from.y, to.y), Mathf.Max(from.x, to.x), Mathf.Max(from.y, to.y));
         #endregion
 
         #region Render Texture
@@ -285,6 +296,16 @@ namespace IceEngine
         /// 从中心点向外扩展成Rect
         /// </summary>
         public static Rect ExpandToRect(this Vector2 center, Vector2 halfSize) => new Rect(center - halfSize, halfSize + halfSize);
+        public static Rect RangeRect(this Vector2 from, Vector2 to) => Rect.MinMaxRect(Mathf.Min(from.x, to.x), Mathf.Min(from.y, to.y), Mathf.Max(from.x, to.x), Mathf.Max(from.y, to.y));
+        public static Vector2 xx(this Vector3 self) => new(self.x, self.x);
+        public static Vector2 xy(this Vector3 self) => new(self.x, self.y);
+        public static Vector2 xz(this Vector3 self) => new(self.x, self.z);
+        public static Vector2 yx(this Vector3 self) => new(self.y, self.x);
+        public static Vector2 yy(this Vector3 self) => new(self.y, self.y);
+        public static Vector2 yz(this Vector3 self) => new(self.y, self.z);
+        public static Vector2 zx(this Vector3 self) => new(self.z, self.x);
+        public static Vector2 zy(this Vector3 self) => new(self.z, self.y);
+        public static Vector2 zz(this Vector3 self) => new(self.z, self.z);
         #endregion
 
         #region MonoBehaviour
