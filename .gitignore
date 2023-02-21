@@ -39,3 +39,5 @@ sysinfo.txt
 *.unitypackage
 UserSettings/
 IceEditorSettings/EditorSettingHotScriptBox.asset
+
+.gitignore
